@@ -32,7 +32,7 @@ Das meiste steht schon in `roblox-studio-setup.md`. Hier nur die Reihenfolge und
 - [x] **Ju/Jos:** Place-ID und Universe-ID an Claude geben (Claude trägt sie in `../technik/zusammenarbeit-roblox-studio.md` ein)
 - [x] **Ju/Jos:** Rojo installieren und Test durchführen („Server started“ / „Client started“ in der Ausgabe) – *Rojo 7.7.1 + Studio-Plugin sind auf Jus PC installiert, Test bei Ju erfolgreich; Jos hat Rojo ebenfalls installiert*
 - [x] **Ju/Jos:** Blender installiert (für die 3D-Modelle, siehe Phase 4) – *Jos hat Blender; bei Ju ist es mit Claude verbunden*
-- [ ] **Claude:** Prüfen, ob `default.project.json` zur Rojo-Version passt, und Anleitung Schritt für Schritt für Anfänger ergänzen
+- [x] **Claude:** Prüfen, ob `default.project.json` zur Rojo-Version passt, und Anleitung Schritt für Schritt für Anfänger ergänzen
 
 ## Phase 3 – Konzept für M1 ausformulieren (Claude)
 

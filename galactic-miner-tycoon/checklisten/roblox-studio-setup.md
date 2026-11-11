@@ -20,3 +20,13 @@ Siehe Hintergrund in `../technik/zusammenarbeit-roblox-studio.md` und `../entsch
 ## Faustregeln für gleichzeitiges Arbeiten
 - [ ] Wir haben uns abgesprochen, wer welchen Bereich der Welt baut (steht im Auftrag)
 - [ ] Scripts bearbeiten wir nur in den Dateien in `src/`, nicht direkt in Studio
+
+## Rojo starten – Schritt für Schritt (getestet am 11.11.2026, Rojo 7.7.1, Windows)
+1. Terminal öffnen (PowerShell) und in den Spielordner wechseln: `cd C:\Users\<Name>\Projects\JosUndJu\galactic-miner-tycoon`
+2. Server starten: `rojo serve`. Wird `rojo` nicht gefunden, das Terminal ganz neu öffnen oder den vollen Pfad nutzen: `& "$env:LOCALAPPDATA\Programs\rojo\rojo.exe" serve`
+3. Es erscheint „Rojo server listening … Port 34872“. Das Terminal offen lassen.
+4. In Studio den Place öffnen, **Plugins → Rojo → Connect**, bei Rückfrage bestätigen.
+5. Danach stehen `Shared`, `Server` und `Client` aus `src/` in Studio. Scripts nur im Repo bearbeiten, nicht in Studio.
+6. Beenden mit `Strg+C` im Terminal.
+
+Das Studio-Plugin installiert man mit `rojo plugin install`. Die Datei `default.project.json` baut mit dieser Rojo-Version fehlerfrei.
