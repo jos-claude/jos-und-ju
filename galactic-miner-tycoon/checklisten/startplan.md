@@ -15,13 +15,13 @@ Ohne diese Antworten kann ich keinen Code und keine Zahlen festlegen. Ich schlag
 
 | # | Frage | Mein Vorschlag (Standard) | Wer entscheidet | Erledigt |
 |---|---|---|---|---|
-| 1 | Vision & Stimmung bestätigen (Zielgruppe 8–16, bunt-comichaft, kein Kampf) | ja, so übernehmen | beide | [ ] |
-| 2 | Singleplayer-Basis oder gemeinsame Basis? | **Jeder Spieler hat seine eigene Basis**, Koop später | beide | [ ] |
-| 3 | Ein Place, Planeten als Zonen? (`004`) | ja, ein Place | beide | [ ] |
-| 4 | Rojo + Team Create? (`002`) | ja | beide | [ ] |
-| 5 | Was ist „Hub & Hazard“? (`../ideen/hub-and-hazard-konzept.md`) | erst nach M3 klären, nicht für den Start nötig | beide | [ ] |
-| 6 | Dritte Währung? | erst mal nur **Credits** (Gems später) | beide | [ ] |
-| 7 | Wer macht was (Aufgabenverteilung Jos / Ju)? | Vorschlag: eine Person Welt/Modelle in Studio, die andere UI und Zahlen; Code machen die Claudes | beide | [ ] |
+| 1 | Vision & Stimmung bestätigen (Zielgruppe 8–16, bunt-comichaft, kein Kampf) | ja, so übernehmen | beide | [x] |
+| 2 | Singleplayer-Basis oder gemeinsame Basis? | **Jeder Spieler hat seine eigene Basis**, Koop später | beide | [x] |
+| 3 | Ein Place, Planeten als Zonen? (`004`) | **Nein: jeder Planet ein eigener Place** (Entscheidung 005) | beide | [x] |
+| 4 | Rojo + Team Create? (`002`) | ja | beide | [x] |
+| 5 | Was ist „Hub & Hazard“? (`../ideen/hub-and-hazard-konzept.md`) | erst nach M3 klären, nicht für den Start nötig | beide | [x] |
+| 6 | Dritte Währung? | **Keine Credits: Rohstoffe (Metall u. ä.) sind die Währung** (Entscheidung 006) | beide | [x] |
+| 7 | Wer macht was (Aufgabenverteilung Jos / Ju)? | Jos (Max-Abo) übernimmt die umfangreichen Aufgaben, Ju die kleineren (Entscheidung 007) | beide | [x] |
 
 ## Phase 2 – Werkzeuge einrichten (einmalig, Mensch)
 
@@ -30,7 +30,7 @@ Das meiste steht schon in `roblox-studio-setup.md`. Hier nur die Reihenfolge und
 - [ ] **Ju/Jos:** Roblox Studio installiert und eingeloggt
 - [ ] **Ju/Jos:** Place „Galactic Miner Tycoon“ anlegen, Team Create an, den anderen einladen
 - [ ] **Ju/Jos:** Place-ID und Universe-ID an Claude geben (Claude trägt sie in `../technik/zusammenarbeit-roblox-studio.md` ein)
-- [ ] **Ju/Jos:** Rojo installieren und Test durchführen („Server started“ / „Client started“ in der Ausgabe)
+- [ ] **Ju/Jos:** Rojo installieren und Test durchführen („Server started“ / „Client started“ in der Ausgabe) – *Rojo 7.7.1 + Studio-Plugin sind auf Jus PC installiert, Test in Studio steht noch aus; Jos muss selbst installieren*
 - [ ] **Ju/Jos:** Blender installiert (für die 3D-Modelle, siehe Phase 4)
 - [ ] **Claude:** Prüfen, ob `default.project.json` zur Rojo-Version passt, und Anleitung Schritt für Schritt für Anfänger ergänzen
 
@@ -41,7 +41,7 @@ Nur die Dateien, die M1 braucht, werden „abgestimmt“. Der Rest bleibt Entwur
 - [ ] `../spiel/02-heimatplanet.md`: Aufbau des Heimatplaneten festlegen (wo steht was, wie viele Bauplätze)
 - [ ] `../spiel/03-abbau-und-automatisierung.md`: Wie fördert ein Bohrer? (Rate pro Sekunde, wohin gehen die Rohstoffe)
 - [ ] `../spiel/10-wirtschaft-und-waehrungen.md`: Credits verdienen und ausgeben (Verkaufspreise, Gebäudepreise)
-- [ ] `../spiel/14-ui-und-bedienung.md`: HUD für M1 (Credits-Anzeige, Kauf-Buttons, Handy-tauglich)
+- [ ] `../spiel/14-ui-und-bedienung.md`: HUD für M1 (Rohstoff-Anzeige, Kauf-Buttons, Handy-tauglich)
 - [ ] `../daten/gebaeude.md`: alle `_` durch konkrete Startwerte ersetzen
 - [ ] `../daten/ressourcen.md`: Verkaufspreise ergänzen
 - [ ] `../daten/upgrades.md`: erste Bohrer-Upgrades
@@ -63,7 +63,7 @@ Vorhanden: `src/` mit Config (`Currencies`, `Planets`, `Resources`) und `DataSer
 
 - [ ] `Shared/Config/Buildings.luau` (aus `../daten/gebaeude.md`)
 - [ ] `Shared/Config/Upgrades.luau` (aus `../daten/upgrades.md`)
-- [ ] `CurrencyService` (Credits hinzufügen/abziehen, nur auf dem Server)
+- [ ] `ResourceService` statt CurrencyService (Rohstoffe hinzufügen/abziehen, nur auf dem Server)
 - [ ] `BuildService` (Kauf-Anfrage prüfen, Gebäude erscheinen lassen)
 - [ ] `MiningService` (Bohrer fördern automatisch)
 - [ ] Remotes festlegen (`../technik/remotes-und-netzwerk.md`)

@@ -1,6 +1,6 @@
 # Entscheidung 002: Zusammenarbeit in Roblox Studio (Rojo + Git)
 
-- **Status:** Vorschlag (bitte bestätigen)
+- **Status:** Beschlossen (11.11.2026, Ju)
 - **Datum:** 11.11.2026
 - **Von:** Claude (Vorschlag für Jos und Ju)
 

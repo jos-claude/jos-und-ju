@@ -1,6 +1,6 @@
 # Entscheidung 004: Ein Place, Planeten als Zonen
 
-- **Status:** Vorschlag (technisch wichtig – bitte früh klären)
+- **Status:** Ersetzt durch 005
 - **Datum:** 11.11.2026
 - **Von:** Claude (Vorschlag)
 
