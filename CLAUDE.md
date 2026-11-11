@@ -33,4 +33,4 @@ Sprache: Deutsch (Doku). Code und Namen im Code: Englisch.
 
 ## Wer ist wer
 - **Jos** – GitHub-Account `jos-claude`
-- **Ju** – (GitHub-Name hier eintragen, sobald bekannt)
+- **Ju** – GitHub-Account `jummp7`
