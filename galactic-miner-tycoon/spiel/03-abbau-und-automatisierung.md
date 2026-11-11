@@ -24,9 +24,9 @@ Der Spieler setzt immer mehr Bohrer auf Erzvorkommen und verbindet sie mit Förd
 
 ## Offene Fragen
 - Bänder verlegt man Punkt für Punkt per Antippen (011).
-- [ ] Gibt es Abzweigungen und Zusammenführungen von Bändern?
+- Zusammenführen von Bändern: später kaufbar mit Materialien (Entscheidung 012). Anfangs nur Einzelbänder.
 - [ ] Sind Vorkommen unendlich oder versiegen sie?
-- [ ] Bohrer aufwertbar?
+- Bohrer sind aufwertbar (012), siehe `../daten/upgrades.md`.
 
 ## Verknüpft mit
 `04`, `08-forschung-und-techbaum.md`, `../daten/gebaeude.md`

@@ -20,3 +20,4 @@ Regeln:
 | 009 | [Heimatplanet im Satisfactory-Stil](009-satisfactory-stil.md) | Beschlossen | 11.11.2026 |
 | 010 | [Lager mit Erz-Kästen, zufällige Vorkommen, selbst verlegte Bänder](010-lager-erzvorkommen-foerderbaender.md) | Beschlossen | 11.11.2026 |
 | 011 | [Mindestradius und Spawn nach Fortschritt](011-vorkommen-radius-und-fortschritt.md) | Beschlossen | 11.11.2026 |
+| 012 | [Bänder zusammenführen später, Bohrer aufwertbar, 6 Räume](012-baender-spaeter-bohrer-upgrades-raeume.md) | Beschlossen | 11.11.2026 |

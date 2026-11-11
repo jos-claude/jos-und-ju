@@ -23,7 +23,7 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 - [ ] Förderbänder selbst verlegen (Bohrer zu Kasten), kosten Erze
 - [ ] Fabrik wandelt Rohstoff in Material um
 - [ ] Silos mit Kapazität
-- [ ] Spieler-Upgrades (Stärke, Geschwindigkeit)
+- [ ] Spieler-Upgrades (Stärke, Geschwindigkeit) und Bohrer-Level
 
 ## M3 – Rakete & erster Planet
 - [ ] Rakete auf dem Heimatplaneten, Planetenauswahl

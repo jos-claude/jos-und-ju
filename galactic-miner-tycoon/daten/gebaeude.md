@@ -45,3 +45,8 @@ Beispiel: 80 Studs Band sind 20 Segmente = 40 Eisen.
 | ID | Name | Kosten | Wirkung |
 |---|---|---|---|
 | `factory_basic` | Fabrik | _ | verarbeitet |
+
+## Band-Zusammenführung (später, Entscheidung 012)
+| ID | Name | Kosten | Wirkung |
+|---|---|---|---|
+| `belt_merger` | Sammler/Verteiler | _ (kaufbar in der Förderband-Werkstatt) | führt mehrere Bänder zu einem zusammen |

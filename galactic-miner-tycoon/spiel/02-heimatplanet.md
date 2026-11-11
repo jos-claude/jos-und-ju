@@ -25,10 +25,12 @@ Der Startplanet. Der Spieler baut wie in Satisfactory eine immer größere Basis
 - **Räume:** Raum 2: 50 Eisen. Raum 3: 100 Eisen + 15 Kupfer. Weitere in `../daten/gebaeude.md`.
 - **Lager** steht in Raum 1. Die Kästen für weitere Erze kauft man dort.
 
+## Beschlossen (012)
+- Vorerst 6 Räume, später änderbar.
+- Bohrer sind aufwertbar.
+
 ## Offene Fragen
 - [ ] Wie viele Vorkommen pro Erz?
-- [ ] Wie viele Räume am Ende?
-- [ ] Soll der Spieler die Bohrer später aufwerten können?
 
 ## Verknüpft mit
 `03`, `04`, `14-ui-und-bedienung.md`, `../technik/architektur.md` (PlotService, BuildService)
