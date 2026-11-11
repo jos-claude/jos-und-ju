@@ -22,3 +22,9 @@ Sprache: Deutsch.
 ## Wer ist wer
 - **Jos** – GitHub-Account `jos-claude`
 - **Ju** – (GitHub-Name hier eintragen, sobald bekannt)
+
+## jos-und-ju/ (gemeinsames Spiel mit Ju)
+- Eigenes Git-Repo (in .gitignore). Dort immer zuerst `git pull`.
+- Dort gelten die Regeln aus `jos-und-ju/CLAUDE.md` (Aufträge, Commit auf Deutsch usw.).
+- Ändere nur Dateien in `jos-und-ju/`. Die anderen Spiele (Stack Your Pets, Rapping-Game, …) dienen als Referenz und werden dafür nicht geändert.
+- Wenn es um Vorbilder oder Ideen geht, lies zuerst in den anderen Spielen nach.
