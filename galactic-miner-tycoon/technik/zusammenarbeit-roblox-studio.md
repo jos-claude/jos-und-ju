@@ -17,6 +17,6 @@ Hintergrund: `../entscheidungen/002-zusammenarbeit-roblox-studio.md` (Vorschlag,
 4. Vor dem Arbeiten `git pull`, danach `git push`.
 
 ## Place-Daten (bitte eintragen, sobald vorhanden)
-- Place-ID: _
-- Universe-ID: _
+- Place-ID (Heimatplanet): 81903956971405
+- Universe-ID: 10775982291
 - Roblox-Account Jos: _ · Roblox-Account Ju: _

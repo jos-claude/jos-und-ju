@@ -29,8 +29,8 @@ Das meiste steht schon in `roblox-studio-setup.md`. Hier nur die Reihenfolge und
 
 - [ ] **Ju/Jos:** Roblox Studio installiert und eingeloggt
 - [ ] **Ju/Jos:** Place „Galactic Miner Tycoon“ anlegen, Team Create an, den anderen einladen
-- [ ] **Ju/Jos:** Place-ID und Universe-ID an Claude geben (Claude trägt sie in `../technik/zusammenarbeit-roblox-studio.md` ein)
-- [ ] **Ju/Jos:** Rojo installieren und Test durchführen („Server started“ / „Client started“ in der Ausgabe) – *Rojo 7.7.1 + Studio-Plugin sind auf Jus PC installiert, Test in Studio steht noch aus; Jos muss selbst installieren*
+- [x] **Ju/Jos:** Place-ID und Universe-ID an Claude geben (Claude trägt sie in `../technik/zusammenarbeit-roblox-studio.md` ein)
+- [x] **Ju/Jos:** Rojo installieren und Test durchführen („Server started“ / „Client started“ in der Ausgabe) – *Rojo 7.7.1 + Studio-Plugin sind auf Jus PC installiert, Test bei Ju erfolgreich; Jos muss selbst installieren*
 - [ ] **Ju/Jos:** Blender installiert (für die 3D-Modelle, siehe Phase 4)
 - [ ] **Claude:** Prüfen, ob `default.project.json` zur Rojo-Version passt, und Anleitung Schritt für Schritt für Anfänger ergänzen
 
