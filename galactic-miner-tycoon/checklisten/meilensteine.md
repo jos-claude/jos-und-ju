@@ -25,21 +25,20 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 - [ ] Silos mit Kapazität
 - [ ] Spieler-Upgrades (Stärke, Geschwindigkeit) und Bohrer-Level
 
-## M3 – Rakete & erster Planet
-- [ ] Rakete auf dem Heimatplaneten, Planetenauswahl
-- [ ] Reise zum ersten Planeten und zurück
-- [ ] Erste Werkzeuge (Laserpickel) – Ressourcen abbauen und heimbringen
-- [ ] Erste Gefahr auf dem Planeten
+## M3 – Rakete & Insel 2 (Entscheidung 013)
+- [ ] Rakete wird aus vielen Erzen gebaut (Raum 6, Raketenstartplatz)
+- [ ] Rakete betreten: automatischer Wechsel zu Insel 2 (Teleport)
+- [ ] Insel 2: eigene Erze und Gefahren klären, Grundaufbau
 
 ## M4 – Forschung & Raumschiff-Upgrades
 - [ ] Forschungslabor mit erstem Techbaum-Zweig
 - [ ] Schiff-Upgrades: Triebwerk, Schild
 - [ ] Geologischer Scanner, Terraforming-Werkzeug
 
-## M5 – Alle drei Startplaneten
-- [ ] Lava-Planet
-- [ ] Eis-Welt
-- [ ] Dschungel-Welt
+## M5 – Weitere Inseln
+- [ ] Insel 3 (z. B. Lava)
+- [ ] Insel 4 (z. B. Eis)
+- [ ] Insel 5 (z. B. Dschungel)
 - [ ] Verarbeitung der Planeten-Ressourcen zu Advanced Materials
 
 ## M6 – Politur & Monetarisierung

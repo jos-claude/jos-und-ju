@@ -1,8 +1,11 @@
 # 06 – Planeten (Fremde Welten)
 
-- **Status:** Entwurf
+- **Status:** Entwurf (Rolle der Planeten geändert durch Entscheidung 013: Inseln sind Level, keine Rohstoff-Reisen mehr)
 - **Zuletzt geändert:** 11.11.2026
 - **Mindmap-Ast:** Exploration Planets / Alien Worlds (Lava, Eis, Dschungel)
+
+## Hinweis (Entscheidung 013)
+Jede Insel ist ein Level (ca. 1 Stunde Spielzeit). Die Rakete wird aus sehr vielen Erzen gebaut. Betritt man sie, kommt man automatisch auf die nächste Insel. Die Texte unten stammen noch aus der Zeit davor und werden später angepasst.
 
 ## Worum geht es?
 Fremde Planeten, auf denen der Spieler selbst abbaut. Jeder Planet hat ein eigenes Aussehen, eigene Ressourcen und eigene Gefahren.

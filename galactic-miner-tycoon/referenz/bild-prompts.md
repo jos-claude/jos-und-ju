@@ -1,6 +1,6 @@
 # Bild-Prompts für KI-Referenzbilder (ChatGPT / Gemini)
 
-- **Status:** Stil-Richtung von Ju vorgegeben (Satisfactory im Weltraum-Look mit Roblox-Haptik), Ergebnisse noch nicht bestätigt
+- **Status:** Stil bestätigt (Ju, 11.11.2026)
 - **Zuletzt geändert:** 11.11.2026
 
 Ziel: Referenzbilder als Vorlage für die 3D-Modelle, die Claude in Blender nachbaut. Die Prompts sind auf Englisch, weil die Bild-KIs damit bessere Ergebnisse liefern.
@@ -118,7 +118,7 @@ Diese Prompts sind noch nicht auf den neuen Stil angepasst. Bitte vor der Nutzun
 | Text im Bild | „no text, no letters, no numbers“ |
 
 ## Offene Fragen
-- [ ] Gefällt der Stil nach den ersten Bildern (Bohrer, Lager-Kasten)?
+- [x] Stil bestätigt (Ju, 11.11.2026)
 - [ ] Welche Bild-KI ist Standard (Gemini)?
 
 ## Verknüpft mit

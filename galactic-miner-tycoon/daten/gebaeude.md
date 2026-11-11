@@ -50,3 +50,8 @@ Beispiel: 80 Studs Band sind 20 Segmente = 40 Eisen.
 | ID | Name | Kosten | Wirkung |
 |---|---|---|---|
 | `belt_merger` | Sammler/Verteiler | _ (kaufbar in der Förderband-Werkstatt) | führt mehrere Bänder zu einem zusammen |
+
+## Rakete (Ziel der Insel, Entscheidung 013)
+| ID | Name | Kosten | Wirkung |
+|---|---|---|---|
+| `rocket` | Rakete | _ sehr viel von allen Erzen, am meisten Titan (Balancing mit Test, Ziel: Insel dauert ca. 1 Stunde) | Betreten bringt zur nächsten Insel |
