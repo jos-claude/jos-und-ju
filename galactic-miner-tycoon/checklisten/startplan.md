@@ -38,13 +38,13 @@ Das meiste steht schon in `roblox-studio-setup.md`. Hier nur die Reihenfolge und
 
 Nur die Dateien, die M1 braucht, werden „abgestimmt“. Der Rest bleibt Entwurf.
 
-- [ ] `../spiel/02-heimatplanet.md`: Aufbau des Heimatplaneten festlegen (wo steht was, wie viele Bauplätze)
-- [ ] `../spiel/03-abbau-und-automatisierung.md`: Wie fördert ein Bohrer? (Rate pro Sekunde, wohin gehen die Rohstoffe)
-- [ ] `../spiel/10-wirtschaft-und-waehrungen.md`: Credits verdienen und ausgeben (Verkaufspreise, Gebäudepreise)
-- [ ] `../spiel/14-ui-und-bedienung.md`: HUD für M1 (Rohstoff-Anzeige, Kauf-Buttons, Handy-tauglich)
-- [ ] `../daten/gebaeude.md`: alle `_` durch konkrete Startwerte ersetzen
-- [ ] `../daten/ressourcen.md`: Verkaufspreise ergänzen
-- [ ] `../daten/upgrades.md`: erste Bohrer-Upgrades
+- [x] `../spiel/02-heimatplanet.md`: Aufbau des Heimatplaneten festlegen (wo steht was, wie viele Bauplätze)
+- [x] `../spiel/03-abbau-und-automatisierung.md`: Wie fördert ein Bohrer? (Rate pro Sekunde, wohin gehen die Rohstoffe)
+- [x] `../spiel/10-wirtschaft-und-waehrungen.md`: Credits verdienen und ausgeben (Verkaufspreise, Gebäudepreise)
+- [x] `../spiel/14-ui-und-bedienung.md`: HUD für M1 (Rohstoff-Anzeige, Kauf-Buttons, Handy-tauglich)
+- [x] `../daten/gebaeude.md`: alle `_` durch konkrete Startwerte ersetzen
+- [x] `../daten/ressourcen.md`: Verkaufspreise ergänzen
+- [x] `../daten/upgrades.md`: erste Bohrer-Upgrades
 - [ ] Alle ausgefüllten Dateien den Nutzern zeigen und **nur nach Bestätigung** auf „abgestimmt“ setzen
 
 ## Phase 4 – Look festlegen und erste Modelle (beide)
@@ -61,8 +61,8 @@ Nur die Dateien, die M1 braucht, werden „abgestimmt“. Der Rest bleibt Entwur
 
 Vorhanden: `src/` mit Config (`Currencies`, `Planets`, `Resources`) und `DataService`. Fehlt für M1:
 
-- [ ] `Shared/Config/Buildings.luau` (aus `../daten/gebaeude.md`)
-- [ ] `Shared/Config/Upgrades.luau` (aus `../daten/upgrades.md`)
+- [x] `Shared/Config/Buildings.luau` (aus `../daten/gebaeude.md`)
+- [x] `Shared/Config/Upgrades.luau` (aus `../daten/upgrades.md`)
 - [ ] `ResourceService` statt CurrencyService (Rohstoffe hinzufügen/abziehen, nur auf dem Server)
 - [ ] `BuildService` (Kauf-Anfrage prüfen, Gebäude erscheinen lassen)
 - [ ] `MiningService` (Bohrer fördern automatisch)

@@ -10,9 +10,9 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 
 ## M1 – Heimatplanet-Prototyp (Tycoon-Kern)
 - [ ] Heimatplanet-Welt in Studio (Boden, Himmel, Bauplatz)
-- [ ] Kauf-Buttons in der Welt funktionieren (Credits abziehen, Gebäude erscheint)
+- [ ] Kauf-Buttons in der Welt funktionieren (Rohstoffe abziehen, Gebäude erscheint)
 - [ ] Erster Bohrer fördert automatisch Rohstoffe
-- [ ] Credits-Anzeige im HUD
+- [ ] Rohstoff-Anzeige im HUD
 - [ ] Speichern und Laden (DataStore)
 
 ## M2 – Automatisierung & Verarbeitung

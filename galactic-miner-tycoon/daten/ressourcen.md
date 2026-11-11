@@ -22,5 +22,5 @@ Status: **Platzhalter-Vorschlag** (Namen und Werte sind nicht abgestimmt).
 | `plasma_cell` | Plasmazelle | 1 Biofaser + 1 Schaltkreis + 1 Kühlmittel |
 
 ## Offen
-- Verkaufspreise (Credits pro Einheit)?
+- Verkaufen? (Vorschlag: in M1 nicht, Rohstoffe sind die Währung, Entscheidung 006)
 - Gibt es seltene Zufalls-Ressourcen?
