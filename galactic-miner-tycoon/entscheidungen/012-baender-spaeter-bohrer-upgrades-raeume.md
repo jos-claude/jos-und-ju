@@ -13,3 +13,6 @@
 
 ## Folgen
 - `../spiel/03`, `02`, `../daten/upgrades.md` (Bohrer-Level), `../daten/gebaeude.md` (Sammler später).
+
+## Ergänzung: Routenvorschlag (11.11.2026, Ju)
+Beim Verlegen eines Bands **schlägt das Spiel eine Route vor** (vom Bohrer zum passenden Kasten, mit Vorschau und Preis). Der Spieler kann sie **annehmen** oder **die Route selbst Punkt für Punkt legen**. Auch am Handy gedacht: ein Tipp genügt, wenn der Vorschlag passt.

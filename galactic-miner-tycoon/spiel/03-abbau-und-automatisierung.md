@@ -23,7 +23,7 @@ Der Spieler setzt immer mehr Bohrer auf Erzvorkommen und verbindet sie mit Förd
 - **Offline-Ertrag: ja** (Entscheidung 011). Begrenzt durch die Kasten-Kapazität: Sind die Kästen voll, passiert nichts mehr. Vorschlag: Beim Einloggen wird aus der Zeit seit dem letzten Speichern berechnet, was Bohrer mit Band geliefert hätten (höchstens bis die Kästen voll sind). Bohrer ohne Band füllen nur ihren Puffer (50).
 
 ## Offene Fragen
-- Bänder verlegt man Punkt für Punkt per Antippen (011).
+- Bänder verlegt man Punkt für Punkt per Antippen (011). Zusätzlich schlägt das Spiel eine Route vor (Vorschau mit Preis), die man annehmen oder durch eigenes Verlegen ersetzen kann (012).
 - Zusammenführen von Bändern: später kaufbar mit Materialien (Entscheidung 012). Anfangs nur Einzelbänder.
 - [ ] Sind Vorkommen unendlich oder versiegen sie?
 - Bohrer sind aufwertbar (012), siehe `../daten/upgrades.md`.

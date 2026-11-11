@@ -20,7 +20,7 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 - [ ] Speichern und Laden (DataStore)
 
 ## M2 – Automatisierung & Verarbeitung
-- [ ] Förderbänder selbst verlegen (Bohrer zu Kasten), kosten Erze
+- [ ] Förderbänder verlegen (Bohrer zu Kasten): Routenvorschlag annehmen oder selbst legen, kosten Erze
 - [ ] Fabrik wandelt Rohstoff in Material um
 - [ ] Silos mit Kapazität
 - [ ] Spieler-Upgrades (Stärke, Geschwindigkeit) und Bohrer-Level
