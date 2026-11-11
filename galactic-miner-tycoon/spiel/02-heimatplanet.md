@@ -14,17 +14,19 @@ Der Startplanet. Der Spieler baut wie in Satisfactory eine immer größere Basis
 - Zur Basis gehört ein **Lager** mit einem Kasten pro Erz (Glaswand, Füllstand sichtbar). Die Kästen sind das Inventar (010).
 - **Erzvorkommen** liegen verteilt auf der Karte. Man platziert Bohrer darauf (010).
 
+## Beschlossen (011)
+- Jeder Spieler hat seine eigene Karte, einmal zufällig erzeugt und gespeichert.
+- Mindestradius pro Erz und Spawn nach Fortschritt.
+
 ## Vorschlag (Zahlen noch nicht bestätigt)
 - **Aufbau:** Basis mit Lager in der Mitte. Rundherum die offene Landschaft mit den Vorkommen.
-- **Verteilung:** Die Position der Vorkommen ist zufällig, aber seltene Erze liegen eher weiter weg (Ringe um die Basis, siehe `../daten/ressourcen.md`). Eisen gibt es auch direkt an der Basis.
+- **Verteilung:** Position zufällig, aber jedes Erz hat einen **Mindestradius** um die Basis (Entscheidung 011, Radien in `../daten/ressourcen.md`). Seltene Erze erscheinen nie nah an der Basis.
+- **Spawn nach Fortschritt:** Vorkommen sind am Anfang nicht alle da. Sie erscheinen nach und nach mit dem Fortschritt des Spielers (Regeln in `../daten/ressourcen.md`).
 - **Räume:** Raum 2: 50 Eisen. Raum 3: 100 Eisen + 15 Kupfer. Weitere in `../daten/gebaeude.md`.
 - **Lager** steht in Raum 1. Die Kästen für weitere Erze kauft man dort.
 
 ## Offene Fragen
-- [ ] Zufällig neu bei jedem Spielstart oder pro Spieler einmal festgelegt und gespeichert? (Vorschlag: einmal pro Spieler, gespeichert)
-- [ ] Hat jeder Spieler eine eigene Karte oder teilen sich alle im Place dieselbe? (Vorschlag: eigener Bereich pro Spieler)
 - [ ] Wie viele Vorkommen pro Erz?
-- [ ] Sind seltene Erze wirklich immer weiter weg, oder ganz zufällig?
 - [ ] Wie viele Räume am Ende?
 - [ ] Soll der Spieler die Bohrer später aufwerten können?
 

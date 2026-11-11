@@ -19,3 +19,4 @@ Regeln:
 | 008 | [Bestätigte Startvorschläge](008-bestaetigte-startvorschlaege.md) | Beschlossen | 11.11.2026 |
 | 009 | [Heimatplanet im Satisfactory-Stil](009-satisfactory-stil.md) | Beschlossen | 11.11.2026 |
 | 010 | [Lager mit Erz-Kästen, zufällige Vorkommen, selbst verlegte Bänder](010-lager-erzvorkommen-foerderbaender.md) | Beschlossen | 11.11.2026 |
+| 011 | [Mindestradius und Spawn nach Fortschritt](011-vorkommen-radius-und-fortschritt.md) | Beschlossen | 11.11.2026 |
