@@ -45,7 +45,7 @@ Nur die Dateien, die M1 braucht, werden „abgestimmt“. Der Rest bleibt Entwur
 - [x] `../daten/gebaeude.md`: alle `_` durch konkrete Startwerte ersetzen
 - [x] `../daten/ressourcen.md`: Verkaufspreise ergänzen
 - [x] `../daten/upgrades.md`: erste Bohrer-Upgrades
-- [ ] Alle ausgefüllten Dateien den Nutzern zeigen und **nur nach Bestätigung** auf „abgestimmt“ setzen
+- [x] Alle ausgefüllten Dateien den Nutzern zeigen und nur nach Bestätigung auf „abgestimmt“ setzen (11.11.2026, Ju; Jos soll gegenlesen)
 
 ## Phase 4 – Look festlegen und erste Modelle (beide)
 

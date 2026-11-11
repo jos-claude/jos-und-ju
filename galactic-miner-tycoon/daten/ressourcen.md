@@ -1,6 +1,6 @@
 # Ressourcen
 
-Status: **Vorschlag, nicht bestätigt**. Namen sind frei erfunden und änderbar. Regeln: Entscheidungen 010 und 011.
+Status: **abgestimmt für M1 (11.11.2026, Ju), Zahlen dürfen später angepasst werden**. Namen sind frei erfunden und änderbar. Regeln: Entscheidungen 010 und 011.
 
 ## Rohstoffe auf dem Heimatplaneten
 Vorkommen sind zufällig verteilt, ungefährlich und haben einen **Mindestradius** um die Basis. Sie erscheinen erst mit dem Fortschritt des Spielers.

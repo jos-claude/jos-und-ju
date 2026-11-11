@@ -1,6 +1,6 @@
 # 10 – Wirtschaft & Währungen
 
-- **Status:** Richtung beschlossen (Entscheidungen 009, 010), Zahlen sind Vorschlag
+- **Status:** abgestimmt für M1 (11.11.2026, Ju). Zahlen dürfen später angepasst werden.
 - **Zuletzt geändert:** 11.11.2026
 - **Mindmap-Ast:** Credits, Gems (Credits entfallen, siehe Entscheidung 006)
 
@@ -13,7 +13,7 @@ Womit der Spieler bezahlt und wie schnell Preise steigen.
 
 - Räume, Bohrer, Förderbänder und Upgrades werden mit den Erzen bezahlt, die man schon hat. Wer neue Erze will, muss weiter hinaus und baut dafür Förderbänder.
 
-## Vorschlag (Zahlen noch nicht bestätigt)
+## Festlegung für M1 (Zahlen änderbar)
 - **Kein Verkaufen** in M1: Erze werden nur ausgegeben.
 - Preise steigen mit jedem Kauf: `Preis(n) = Basispreis × 1,15^n`. Räume haben feste Kosten (siehe `../daten/gebaeude.md`).
 - Jeder Raum verlangt etwas vom aktuellen Erz und eine Kleinigkeit vom nächsten, damit man weiter hinaus muss.

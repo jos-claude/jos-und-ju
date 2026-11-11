@@ -1,6 +1,6 @@
 # Gebäude (Basis)
 
-Status: **Vorschlag, Zahlen nicht bestätigt**. Richtung: Entscheidungen 009 und 010. Währung sind Erze (006). Bohrer-Preis: `Preis(n) = Basispreis × 1,15^n`, n = schon gekaufte Bohrer dieses Erzes.
+Status: **abgestimmt für M1 (11.11.2026, Ju), Zahlen dürfen später angepasst werden**. Richtung: Entscheidungen 009 und 010. Währung sind Erze (006). Bohrer-Preis: `Preis(n) = Basispreis × 1,15^n`, n = schon gekaufte Bohrer dieses Erzes.
 
 ## Lager-Kästen (schalten das Erz frei)
 | ID | Kasten für | Kosten | Start-Kapazität |

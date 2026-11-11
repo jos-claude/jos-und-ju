@@ -1,6 +1,6 @@
 # 14 – UI & Bedienung
 
-- **Status:** Richtung beschlossen (Entscheidungen 009, 010), Zahlen sind Vorschlag
+- **Status:** abgestimmt für M1 (11.11.2026, Ju). Zahlen dürfen später angepasst werden.
 - **Zuletzt geändert:** 11.11.2026
 - **Mindmap-Ast:** Base Building (Buttons)
 
@@ -11,7 +11,7 @@ Wie der Spieler das Spiel bedient: Kaufflächen in der Welt, HUD, Menüs – auc
 - Kaufen und Bauen per Kauffläche in der Welt (Tycoon-Stil).
 - Roblox läuft auf PC, Handy und Konsole, die UI muss überall bedienbar sein.
 
-## Vorschlag (noch nicht bestätigt)
+## Festlegung für M1 (änderbar)
 - **HUD:** Oben die Erze im Inventar mit Symbol und Menge. Darunter, was der Spieler gerade trägt (z. B. „12/20“).
 - **Bohrer:** Über jedem Bohrer steht der Puffer („30/50“). Per Taste/Berührung nimmt man das Erz heraus.
 - **Lager:** Die Erz-Kästen mit Glaswand zeigen den Füllstand. Das Getragene legt man in den passenden Kasten (Knopf oder hinlaufen).

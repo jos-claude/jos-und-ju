@@ -1,6 +1,6 @@
 # 03 – Abbau & Automatisierung
 
-- **Status:** Richtung beschlossen (Entscheidungen 009, 010), Zahlen sind Vorschlag
+- **Status:** abgestimmt für M1 (11.11.2026, Ju). Zahlen dürfen später angepasst werden.
 - **Zuletzt geändert:** 11.11.2026
 - **Mindmap-Ast:** Automated Mining (Automated Drills, Conveyor Belts, Banner Drills)
 
@@ -15,7 +15,7 @@ Der Spieler setzt immer mehr Bohrer auf Erzvorkommen und verbindet sie mit Förd
 5. **Lager-Kästen** haben ein Limit und müssen aufgerüstet werden. Ist ein Kasten voll, wird nichts mehr eingelagert.
 6. Neues Erz geht erst, wenn sein Kasten gekauft ist.
 
-## Vorschlag (Zahlen noch nicht bestätigt)
+## Festlegung für M1 (Zahlen änderbar)
 - Bohrer-Rate: Eisen 1,0/s. Puffer 50 Einheiten, dann stoppt er.
 - Der Spieler trägt anfangs 20 Einheiten. Das Upgrade „Stärke“ erhöht das.
 - Förderband in Segmenten (Raster), ein Segment kostet Material. Das Band ist Logik im Hintergrund plus Optik, keine echten Items (Performance). Durchsatz z. B. 5/s.

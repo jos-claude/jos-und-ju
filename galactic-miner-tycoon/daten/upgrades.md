@@ -1,6 +1,6 @@
 # Upgrades
 
-Status: **Spieler-Upgrades sind Vorschlag; Schiff, Forschung und Werkzeuge werden in M3/M4 gefüllt**.
+Status: **Spieler- und Bohrer-Upgrades abgestimmt für M1 (11.11.2026, Ju); Schiff, Forschung und Werkzeuge werden in M3/M4 gefüllt**.
 
 ## Schiff
 | ID | Name | Wirkung | Stufen |
@@ -26,7 +26,7 @@ Status: **Spieler-Upgrades sind Vorschlag; Schiff, Forschung und Werkzeuge werde
 `Preis(n) = Basispreis × 1,15^n`
 
 
-## Spieler-Upgrades an der Werkbank (Vorschlag, nicht bestätigt)
+## Spieler-Upgrades an der Werkbank (abgestimmt für M1)
 Ab Raum 2. Bezahlt mit Erzen. Preis `Basis × 1,15^Stufe`.
 
 | ID | Name | Wirkung | Stufen | Kosten (Basis) |
@@ -34,7 +34,7 @@ Ab Raum 2. Bezahlt mit Erzen. Preis `Basis × 1,15^Stufe`.
 | `carry_strength` | Stärke | trägt mehr (20 → +10 je Stufe) | 5 | 30 Eisen + 5 Kupfer |
 | `walk_speed` | Geschwindigkeit | läuft schneller (+2 je Stufe) | 5 | 30 Eisen + 5 Kupfer |
 
-## Bohrer-Upgrades (Vorschlag, nicht bestätigt; Entscheidung 012)
+## Bohrer-Upgrades (abgestimmt für M1; Entscheidung 012)
 Gilt je Bohrer, Level 1 bis 5. Jedes Level: +50 % der Grundrate und größerer Puffer.
 
 | Level | Rate (Faktor) | Puffer | Kosten Eisen-Bohrer |

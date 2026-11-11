@@ -1,6 +1,6 @@
 # 02 – Heimatplanet (Tycoon-Basis)
 
-- **Status:** Richtung beschlossen (Entscheidungen 009, 010), Zahlen sind Vorschlag
+- **Status:** abgestimmt für M1 (11.11.2026, Ju). Zahlen dürfen später angepasst werden.
 - **Zuletzt geändert:** 11.11.2026
 - **Mindmap-Ast:** Home Planet Tycoon / Base Building
 
@@ -18,7 +18,7 @@ Der Startplanet. Der Spieler baut wie in Satisfactory eine immer größere Basis
 - Jeder Spieler hat seine eigene Karte, einmal zufällig erzeugt und gespeichert.
 - Mindestradius pro Erz und Spawn nach Fortschritt.
 
-## Vorschlag (Zahlen noch nicht bestätigt)
+## Festlegung für M1 (Zahlen änderbar)
 - **Aufbau:** Basis mit Lager in der Mitte. Rundherum die offene Landschaft mit den Vorkommen.
 - **Verteilung:** Position zufällig, aber jedes Erz hat einen **Mindestradius** um die Basis (Entscheidung 011, Radien in `../daten/ressourcen.md`). Seltene Erze erscheinen nie nah an der Basis.
 - **Spawn nach Fortschritt:** Vorkommen sind am Anfang nicht alle da. Sie erscheinen nach und nach mit dem Fortschritt des Spielers (Regeln in `../daten/ressourcen.md`).
