@@ -1,0 +1,19 @@
+# 15 – Optik & Audio
+
+- **Status:** Entwurf
+- **Zuletzt geändert:** 11.11.2026
+- **Mindmap-Ast:** –
+
+## Worum geht es?
+Look, Farben, Musik, Effekte.
+
+## Was wir schon wissen / Vorschläge
+- Die Mindmap-Grafik zeigt einen bunten, comichaften Low-Poly-Stil – als Richtung (Vorschlag) übernehmen.
+- Jeder Planet bekommt eine eigene Farbwelt (Lava = rot/orange, Eis = blau/weiß, Dschungel = grün).
+
+## Offene Fragen
+- [ ] Stil festlegen (Referenzbilder in `../referenz/` sammeln).
+- [ ] Musik/Sounds: selbst machen oder aus der Roblox-Bibliothek?
+
+## Verknüpft mit
+`06`, `../assets/README.md`

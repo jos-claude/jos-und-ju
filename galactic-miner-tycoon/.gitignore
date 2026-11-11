@@ -1,0 +1,6 @@
+# Rojo / Roblox
+sourcemap.json
+*.rbxl.lock
+*.rbxlx.lock
+Packages/
+ServerPackages/
