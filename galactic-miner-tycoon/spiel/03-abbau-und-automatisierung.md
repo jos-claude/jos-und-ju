@@ -20,7 +20,7 @@ Der Spieler setzt immer mehr Bohrer auf Erzvorkommen und verbindet sie mit Förd
 - Der Spieler trägt anfangs 20 Einheiten. Das Upgrade „Stärke“ erhöht das.
 - Förderband in Segmenten (Raster), ein Segment kostet Material. Das Band ist Logik im Hintergrund plus Optik, keine echten Items (Performance). Durchsatz z. B. 5/s.
 - Ein Band führt nur zu dem Kasten, der zum Erz des Bohrers passt.
-- **Offline:** kein Offline-Ertrag (Entscheidung 011). Die Förderung läuft nur im Spiel.
+- **Offline-Ertrag: ja** (Entscheidung 011). Begrenzt durch die Kasten-Kapazität: Sind die Kästen voll, passiert nichts mehr. Vorschlag: Beim Einloggen wird aus der Zeit seit dem letzten Speichern berechnet, was Bohrer mit Band geliefert hätten (höchstens bis die Kästen voll sind). Bohrer ohne Band füllen nur ihren Puffer (50).
 
 ## Offene Fragen
 - Bänder verlegt man Punkt für Punkt per Antippen (011).
