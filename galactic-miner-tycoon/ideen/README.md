@@ -10,5 +10,6 @@ Status: **neu** · **gut** · **übernommen** · **verworfen**
 | Schiffs-Skins (kosmetisch) als Gamepass | Claude | neu | siehe `../spiel/12-monetarisierung.md` |
 | Roboter-Helfer, die auf der Basis arbeiten | Claude | neu | Sichtbarer Fortschritt |
 | Tägliche Belohnung im Hub | Claude | neu | Wiederkehr-Anreiz |
+| Konzept „Hub & Hazard“: Co-op Extraction Shooter mit Tycoon-Basis (Loot geht bei Tod/Zeitablauf verloren) | Ju | neu | Widerspricht teils der Vision (kein Shooter, Fortschritt bleibt). Siehe [hub-and-hazard-konzept.md](hub-and-hazard-konzept.md) – erst abstimmen |
 
 _(Einfach neue Zeilen ergänzen. Ideen mit Bild/Skizze: Datei in diesem Ordner anlegen und verlinken.)_
