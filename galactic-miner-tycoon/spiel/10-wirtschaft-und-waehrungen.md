@@ -1,6 +1,6 @@
 # 10 – Wirtschaft & Währungen
 
-- **Status:** Richtung beschlossen (Entscheidung 009), Zahlen sind Vorschlag
+- **Status:** Richtung beschlossen (Entscheidungen 009, 010), Zahlen sind Vorschlag
 - **Zuletzt geändert:** 11.11.2026
 - **Mindmap-Ast:** Credits, Gems (Credits entfallen, siehe Entscheidung 006)
 

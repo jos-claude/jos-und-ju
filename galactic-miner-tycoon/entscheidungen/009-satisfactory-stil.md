@@ -23,3 +23,6 @@ Die Spieler wollen eine Basis, die immer weiter wächst, mit Automatisierung als
 - Ersetzt den Teil des M1-Vorschlags, in dem Bohrer direkt ohne Handarbeit Rohstoffe aufs Konto zahlen (Entscheidung 006 bleibt: Rohstoffe sind die Währung).
 - Förderbänder gehören jetzt zum Kern, nicht erst später. Siehe `../checklisten/meilensteine.md`.
 - Betrifft `../spiel/02`, `03`, `10`, `14`, `../daten/gebaeude.md`, `ressourcen.md`, `upgrades.md`.
+
+## Änderung
+Punkte 4 und 6 (Kiste, Förderstrecken) sind durch Entscheidung 010 genauer gefasst: Lager mit Erz-Kästen, Bohrer frei auf Vorkommen, Bänder selbst verlegen.

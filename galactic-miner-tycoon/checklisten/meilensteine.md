@@ -11,14 +11,16 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 ## M1 – Heimatplanet-Prototyp (Tycoon-Kern)
 - [ ] Heimatplanet-Welt in Studio (Boden, Himmel, Bauplatz)
 - [ ] Kauf-Buttons in der Welt funktionieren (Rohstoffe abziehen, Gebäude erscheint)
-- [ ] Bohrer fördert in seinen Puffer; Spieler holt das Erz von Hand und gibt es an der Kiste ab (Inventar)
+- [ ] Erzvorkommen verteilt, Bohrer lässt sich darauf platzieren, fördert in seinen Puffer
+- [ ] Spieler legt Erz von Hand in den passenden Lager-Kasten (Glaswand, Füllstand)
+- [ ] Kupfer-Kasten kaufen, Kasten-Kapazität aufrüsten
 - [ ] Raum 2 und 3 lassen sich mit Erzen freischalten
 - [ ] Erze: Eisen, Kupfer, Kohle mit steigender Entfernung
 - [ ] Rohstoff-Anzeige im HUD
 - [ ] Speichern und Laden (DataStore)
 
 ## M2 – Automatisierung & Verarbeitung
-- [ ] Förderstrecken vom Erzfeld zur Kiste (mindestens optisch, kosten Erze)
+- [ ] Förderbänder selbst verlegen (Bohrer zu Kasten), kosten Erze
 - [ ] Fabrik wandelt Rohstoff in Material um
 - [ ] Silos mit Kapazität
 - [ ] Spieler-Upgrades (Stärke, Geschwindigkeit)

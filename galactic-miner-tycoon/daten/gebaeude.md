@@ -1,36 +1,47 @@
 # Gebäude (Basis)
 
-Status: **Vorschlag, Zahlen nicht bestätigt**. Richtung: Entscheidung 009. Währung sind Erze (006). Preisformel für Bohrer: `Preis(n) = Basispreis × 1,15^n`, n = schon gekaufte Bohrer.
+Status: **Vorschlag, Zahlen nicht bestätigt**. Richtung: Entscheidungen 009 und 010. Währung sind Erze (006). Bohrer-Preis: `Preis(n) = Basispreis × 1,15^n`, n = schon gekaufte Bohrer dieses Erzes.
 
-## Bohrer und Kiste
-| ID | Name | Kosten | Wirkung | Voraussetzung |
+## Lager-Kästen (schalten das Erz frei)
+| ID | Kasten für | Kosten | Start-Kapazität |
+|---|---|---|---|
+| `bin_iron` | Eisen | gratis (steht schon) | 100 |
+| `bin_copper` | Kupfer | 40 Eisen | 100 |
+| `bin_coal` | Kohle | 60 Eisen + 30 Kupfer | 100 |
+| `bin_crystal` | Kristall | 100 Kupfer + 50 Kohle | 100 |
+| `bin_titanium` | Titan | 150 Kohle + 60 Kristall | 100 |
+
+**Kapazitäts-Upgrade (je Kasten):** Stufe 2 / 3 / 4 / 5 = Kapazität 250 / 500 / 1000 / 2500. Kosten: das Erz des Kastens selbst, 50 / 100 / 200 / 400.
+
+## Bohrer (werden auf Vorkommen platziert)
+Beliebig viele, solange Vorkommen da sind und man bezahlen kann.
+
+| ID | Name | Kosten (Basis) | Wirkung | Voraussetzung |
 |---|---|---|---|---|
-| `chest_main` | Kiste | gratis (steht schon) | Abgabe ins Inventar | – |
-| `drill_iron` | Eisen-Bohrer | 1. gratis, dann 20 Eisen (Basis) | 1,0 Eisen/s, Puffer 50 | – |
-| `drill_copper` | Kupfer-Bohrer | 40 Eisen (Basis) | 0,8 Kupfer/s, Puffer 50 | Raum 2 |
-| `drill_coal` | Kohle-Bohrer | 40 Eisen + 20 Kupfer (Basis) | 0,6 Kohle/s, Puffer 50 | Raum 3 |
-| `drill_crystal` | Kristall-Bohrer | 60 Kupfer + 30 Kohle (Basis) | 0,4 Kristall/s | Raum 4 |
-| `drill_titanium` | Titan-Bohrer | 80 Kohle + 40 Kristall (Basis) | 0,3 Titan/s | Raum 5 |
+| `drill_iron` | Eisen-Bohrer | 1. gratis, dann 20 Eisen | 1,0 Eisen/s, Puffer 50 | – |
+| `drill_copper` | Kupfer-Bohrer | 40 Eisen | 0,8 Kupfer/s | `bin_copper` |
+| `drill_coal` | Kohle-Bohrer | 40 Eisen + 20 Kupfer | 0,6 Kohle/s | `bin_coal` |
+| `drill_crystal` | Kristall-Bohrer | 60 Kupfer + 30 Kohle | 0,4 Kristall/s | `bin_crystal` |
+| `drill_titanium` | Titan-Bohrer | 80 Kohle + 40 Kristall | 0,3 Titan/s | `bin_titanium` |
+
+## Förderband
+| ID | Name | Kosten | Wirkung |
+|---|---|---|---|
+| `belt_segment` | Förderband-Segment (4 Studs) | 2 Eisen (ab Raum 4 zusätzlich 1 Kupfer) | transportiert bis zu 5 Erz/s Richtung Lager |
+
+Beispiel: 80 Studs Band sind 20 Segmente = 40 Eisen.
 
 ## Räume (feste Kosten)
 | Raum | Kosten | Enthält (Vorschlag) |
 |---|---|---|
-| 1 | gratis | Start-Halle, Kiste |
-| 2 | 50 Eisen | Werkbank (Upgrades Geschwindigkeit/Stärke) |
-| 3 | 100 Eisen + 15 Kupfer | Förderband-Station |
+| 1 | gratis | Start-Halle, Lager |
+| 2 | 50 Eisen | Werkbank (Geschwindigkeit, Stärke) |
+| 3 | 100 Eisen + 15 Kupfer | Förderband-Werkstatt |
 | 4 | 150 Eisen + 60 Kupfer + 20 Kohle | Raumschiff-Werft |
 | 5 | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Forschungslabor |
 | 6 | 400 Kupfer + 200 Kohle + 80 Kristall + 20 Titan | Raketenstartplatz |
-
-## Förderbänder
-| ID | Name | Kosten | Wirkung |
-|---|---|---|---|
-| `belt_route` | Förderstrecke (je Erzfeld) | 5 Eisen je 10 Studs Entfernung, ab Kohle zusätzlich 2 Kupfer je 10 Studs | liefert bis zu 5 Erz/s in die Kiste |
-
-Beispiel: Kupferfeld in 80 Studs Entfernung kostet 40 Eisen.
 
 ## Später
 | ID | Name | Kosten | Wirkung |
 |---|---|---|---|
 | `factory_basic` | Fabrik | _ | verarbeitet |
-| `silo_basic` | Silo | _ | Lager +_ |

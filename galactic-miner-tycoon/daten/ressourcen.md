@@ -2,7 +2,8 @@
 
 Status: **Vorschlag, nicht bestätigt**. Namen sind frei erfunden und änderbar.
 
-## Rohstoffe auf dem Heimatplaneten (nach Entfernung von der Basis)
+## Rohstoffe auf dem Heimatplaneten
+Die Vorkommen sind zufällig verteilt und ungefährlich (Entscheidung 010). Die Entfernung ist ein Vorschlag: seltene Erze liegen eher weiter weg.
 Je seltener, desto weiter weg (Entscheidung 009).
 
 | ID | Name | Entfernung (Studs) | Stufe |

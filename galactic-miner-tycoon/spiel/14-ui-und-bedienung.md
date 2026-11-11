@@ -1,6 +1,6 @@
 # 14 – UI & Bedienung
 
-- **Status:** Richtung beschlossen (Entscheidung 009), Zahlen sind Vorschlag
+- **Status:** Richtung beschlossen (Entscheidungen 009, 010), Zahlen sind Vorschlag
 - **Zuletzt geändert:** 11.11.2026
 - **Mindmap-Ast:** Base Building (Buttons)
 
@@ -14,7 +14,8 @@ Wie der Spieler das Spiel bedient: Kaufflächen in der Welt, HUD, Menüs – auc
 ## Vorschlag (noch nicht bestätigt)
 - **HUD:** Oben die Erze im Inventar mit Symbol und Menge. Darunter, was der Spieler gerade trägt (z. B. „12/20“).
 - **Bohrer:** Über jedem Bohrer steht der Puffer („30/50“). Per Taste/Berührung nimmt man das Erz heraus.
-- **Kiste:** Hier wird das Getragene ins Inventar übertragen (Knopf oder einfach hinlaufen).
+- **Lager:** Die Erz-Kästen mit Glaswand zeigen den Füllstand. Das Getragene legt man in den passenden Kasten (Knopf oder hinlaufen).
+- **Inventar-HUD:** Oben die Mengen aller freigeschalteten Erze aus den Kästen.
 - **Kaufflächen:** Man läuft darauf. Über der Fläche stehen Name und Preis mit Erz-Symbolen. Grün, wenn bezahlbar, sonst rot.
 - **Räume:** Verschlossene Türen zeigen den Preis und sind grau.
 - **Handy:** Große Knöpfe, kein Tastaturzwang. Große Zahlen als „1,2K“.
