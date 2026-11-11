@@ -10,7 +10,7 @@ Ziel: Referenzbilder als Vorlage für die 3D-Modelle, die Claude in Blender nach
 2. **Im selben Chat bleiben**, damit der Stil einheitlich bleibt. Gefällt etwas nicht, schreib „mach es …“ (z. B. „eckiger“, „weniger Details“, „orange statt gelb“).
 3. **Prüfen:** Zeigen alle 7 Felder wirklich dasselbe Objekt? Wenn nicht: „make all 7 panels show exactly the same object“.
 4. **Gute Bilder speichern** unter `referenz/bilder/<kategorie>/<name>.jpg` (z. B. `gebaeude/bohrer-01.jpg`) und mir den Pfad nennen.
-5. **Reihenfolge für M1:** zuerst 1 Bohrer, 2 Lager-Kasten, 3 Förderband, dann 4 Basis, 5 Vorkommen, 6 Erz-Brocken, 7 Heimatplanet, 8 Astronaut. Mit den ersten beiden Bildern legen wir den Stil fest.
+5. **Reihenfolge für M1:** zuerst 1 Bohrer, 2 Lager-Kasten, 3 Förderband, dann 4 Basis, 5 Vorkommen, 6 Erz-Brocken, 7 Heimatplanet. Alle sieben Bilder sind fertig.
 
 Stil in einem Satz: **Satisfactory, aber als fröhliche Weltraum-Kolonie im Roblox-Spielzeug-Look** (Orange, Gelb, Stahlgrau, Cyan-Leuchten, Warnstreifen, dicke einfache Formen).
 
@@ -89,17 +89,6 @@ Art style: stylized low-poly 3D game scene inspired by the chunky industrial loo
 Scene: an isometric game scene seen from above at 45 degrees, a floating diorama-style green home planet surface with bright grass, a few round trees and gentle hills, no dangers at all. In the center a small modular orange-and-grey space base with a wide door and a row of glass-fronted ore storage bins next to it. Around the base, ore deposits are scattered at different distances: grey-brown iron deposits close by, orange copper further out, black coal deposits even further, and pink crystals far at the edge. A few yellow-orange mining drills stand on the nearer deposits with short conveyor belts leading to the storage bins. Clean readable layout, no UI.
 ```
 
-### 8. Spieler-Astronaut
-_Spielfigur im Roblox-Blockstil, T-Pose zum Modellieren._
-
-```
-Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids. Plain light grey background, no text, no letters, no logos, no watermark.
-
-Layout: one single model sheet with 4 panels separated by thin white lines, all showing the exact same character: straight orthographic front view, back view, side view and an isometric 3/4 view, all in a T-pose, no perspective distortion in the straight views.
-
-Object: A cute blocky astronaut miner in the style of a Roblox character: white and orange space suit with steel-grey details, round helmet with a reflective cyan visor, a small backpack, thick boots and gloves, chunky simple proportions.
-```
-
 ---
 
 ## Später (M2 und weiter)
@@ -133,4 +122,6 @@ Diese Prompts sind noch nicht auf den neuen Stil angepasst. Bitte vor der Nutzun
 | Basis (Raum-Module) | `bilder/gebaeude/basis-01.jpg` |
 | Erzvorkommen (5 Erze) | `bilder/erze/erzvorkommen-01.jpg` |
 | Heimatplanet (Szene) | `bilder/welt/heimatplanet-01.jpg` |
-Noch offen: Erz-Brocken (Items), Astronaut.
+| Erz-Brocken (Items) | `bilder/erze/erz-brocken-01.jpg` |
+
+Ein Astronaut ist nicht nötig: Der Spieler behält seinen normalen Roblox-Skin.
