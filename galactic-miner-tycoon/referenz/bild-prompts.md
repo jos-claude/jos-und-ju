@@ -9,7 +9,7 @@ Ziel: Referenzbilder als Vorlage für die 3D-Modelle, die Claude in Blender nach
 1. **Ein Prompt = ein Objekt.** Jeder Block unten ist komplett und fertig: den ganzen Block kopieren und in Gemini einfügen. Du musst nichts zusammensetzen.
 2. **Im selben Chat bleiben**, damit der Stil einheitlich bleibt. Gefällt etwas nicht, schreib „mach es …“ (z. B. „eckiger“, „weniger Details“, „orange statt gelb“).
 3. **Prüfen:** Zeigen alle 7 Felder wirklich dasselbe Objekt? Wenn nicht: „make all 7 panels show exactly the same object“.
-4. **Gute Bilder speichern** unter `referenz/bilder/<kategorie>/<name>.png` (z. B. `gebaeude/bohrer-01.png`) und mir den Pfad nennen.
+4. **Gute Bilder speichern** unter `referenz/bilder/<kategorie>/<name>.jpg` (z. B. `gebaeude/bohrer-01.jpg`) und mir den Pfad nennen.
 5. **Reihenfolge für M1:** zuerst 1 Bohrer, 2 Lager-Kasten, 3 Förderband, dann 4 Basis, 5 Vorkommen, 6 Erz-Brocken, 7 Heimatplanet, 8 Astronaut. Mit den ersten beiden Bildern legen wir den Stil fest.
 
 Stil in einem Satz: **Satisfactory, aber als fröhliche Weltraum-Kolonie im Roblox-Spielzeug-Look** (Orange, Gelb, Stahlgrau, Cyan-Leuchten, Warnstreifen, dicke einfache Formen).
@@ -123,3 +123,14 @@ Diese Prompts sind noch nicht auf den neuen Stil angepasst. Bitte vor der Nutzun
 
 ## Verknüpft mit
 `../spiel/15-optik-und-audio.md`, `../daten/gebaeude.md`, `../daten/ressourcen.md`, `../assets/asset-liste.md`
+
+## Vorhandene Referenzbilder (11.11.2026)
+| Objekt | Datei |
+|---|---|
+| Bohrer (Eisen) | `bilder/gebaeude/bohrer-01.jpg` |
+| Lager-Kasten | `bilder/gebaeude/lager-kasten-01.jpg` |
+| Förderband | `bilder/gebaeude/foerderband-01.jpg` |
+| Basis (Raum-Module) | `bilder/gebaeude/basis-01.jpg` |
+| Erzvorkommen (5 Erze) | `bilder/erze/erzvorkommen-01.jpg` |
+| Heimatplanet (Szene) | `bilder/welt/heimatplanet-01.jpg` |
+Noch offen: Erz-Brocken (Items), Astronaut.
