@@ -1,215 +1,116 @@
 # Bild-Prompts für KI-Referenzbilder (ChatGPT / Gemini)
 
-- **Status:** Vorschlag (Stil ist noch nicht abgestimmt, siehe `../spiel/15-optik-und-audio.md`)
+- **Status:** Stil-Richtung von Ju vorgegeben (Satisfactory im Weltraum-Look mit Roblox-Haptik), Ergebnisse noch nicht bestätigt
 - **Zuletzt geändert:** 11.11.2026
 
-Ziel: Mit diesen Prompts erzeugen wir Referenzbilder, die als Vorlage für die 3D-Modelle in Roblox dienen. Die Prompts sind auf Englisch, weil die Bild-KIs damit bessere Ergebnisse liefern.
+Ziel: Referenzbilder als Vorlage für die 3D-Modelle, die Claude in Blender nachbaut. Die Prompts sind auf Englisch, weil die Bild-KIs damit bessere Ergebnisse liefern.
 
 ## So benutzt du sie
+1. **Ein Prompt = ein Objekt.** Jeder Block unten ist komplett und fertig: den ganzen Block kopieren und in Gemini einfügen. Du musst nichts zusammensetzen.
+2. **Im selben Chat bleiben**, damit der Stil einheitlich bleibt. Gefällt etwas nicht, schreib „mach es …“ (z. B. „eckiger“, „weniger Details“, „orange statt gelb“).
+3. **Prüfen:** Zeigen alle 7 Felder wirklich dasselbe Objekt? Wenn nicht: „make all 7 panels show exactly the same object“.
+4. **Gute Bilder speichern** unter `referenz/bilder/<kategorie>/<name>.png` (z. B. `gebaeude/bohrer-01.png`) und mir den Pfad nennen.
+5. **Reihenfolge für M1:** zuerst 1 Bohrer, 2 Lager-Kasten, 3 Förderband, dann 4 Basis, 5 Vorkommen, 6 Erz-Brocken, 7 Heimatplanet, 8 Astronaut. Mit den ersten beiden Bildern legen wir den Stil fest.
 
-1. **Reihenfolge in einer Nachricht: Stil-Block (A) + Multi-Ansichten-Layout (B) + Prompt des Objekts.** Für alles, was ich in Blender nachbauen soll (Schiff, Gebäude, Items, Werkzeuge, Astronaut), ist B Pflicht. Nur Planeten-Szenen (C) und der Hintergrund kommen ohne B aus.
-2. **Pro Objekt ein eigenes Bild.** Gefällt es nicht, schreib einfach „mach es …“ (z. B. „eckiger“, „bunter“, „weniger Details“).
-3. **Im selben Chat bleiben**, damit der Stil einheitlich bleibt. Beim ersten Bild den Stil-Block nutzen, danach reicht „Gleicher Stil wie vorher“.
-4. **Gute Bilder speichern** unter `referenz/bilder/<kategorie>/<name>.png` (z. B. `schiff/rakete-01.png`) und mir den Pfad nennen.
-5. **Tipp für 3D:** Lieber wenig Details. Je einfacher die Form, desto leichter baue ich sie in Roblox nach. Das Layout (B) liefert alle Seiten auf einem Bild, so kann ich Maße und Proportionen direkt ablesen. Prüfe das Ergebnis: Sehen alle Felder wirklich nach demselben Objekt aus? Wenn nicht, schreib „make all panels show exactly the same object“.
-
----
-
-## A – Stil-Block (immer vorne dranhängen)
-
-```
-Art style: colorful cartoon low-poly 3D game asset, chunky simple shapes, flat faceted surfaces,
-bold saturated colors, soft clean lighting, slight rim light, no realistic textures,
-friendly and kid-appropriate, like a polished Roblox tycoon game. Single object only,
-plain light grey background, centered, full object visible, no text, no logos, no watermark.
-```
-
-## B – Multi-Ansichten-Layout (für jedes Modell, das wir in Blender bauen)
-
-Ein Bild = ein Objekt aus allen Seiten, im Raster mit dünnen weißen Trennlinien. Layout: oben große 3/4-Ansicht, Vorderansicht, Seitenansicht; unten Draufsicht, Detail-Nahaufnahme und zwei kleine Detail-Ausschnitte.
-
-```
-Layout: a single model sheet divided into a grid of 7 panels separated by thin white lines, all panels show
-the exact same object with identical design, proportions and colors, on a plain light grey background:
-Top row: (1) large isometric 3/4 perspective view from front-left above, (2) straight orthographic front view,
-(3) straight orthographic side view.
-Bottom row: (4) straight top-down view, (5) medium close-up 3/4 view of the most important part,
-(6) and (7) two small macro close-ups of the smaller details (moving parts, ornaments, small items on it).
-Orthographic views must be perfectly straight with no perspective distortion, so the shapes can be measured
-and rebuilt in Blender. Soft even lighting with gentle shadows, no text, no labels, no arrows, no people.
-```
-
-**Variante mit Rück- und Unteransicht** (für Objekte, die von hinten anders aussehen, z. B. Schiff, Fabrik):
-```
-Same layout as described, but replace panel (7) with a straight orthographic back view,
-and panel (6) with a bottom view.
-```
-
-## C – Szenen-Zusatz (für Planeten / Basis-Überblick)
-
-```
-Show it as an isometric game scene seen from above at 45 degrees, floating diorama-style island,
-clean readable layout, no UI.
-```
+Stil in einem Satz: **Satisfactory, aber als fröhliche Weltraum-Kolonie im Roblox-Spielzeug-Look** (Orange, Gelb, Stahlgrau, Cyan-Leuchten, Warnstreifen, dicke einfache Formen).
 
 ---
 
-## 1. Raumschiff
+## M1 – Heimatplanet
 
-**Starter-Rakete (Stufe 1)**
-```
-A small cute starter rocket for a space mining game. Stubby rounded body, red and white paint,
-round porthole window, three small fins, a single simple engine nozzle, cargo hatch on the side,
-slightly dented and homemade look.
-```
+### 1. Bohrer (Eisen)
+_`drill_iron`, steht auf einem Erzvorkommen. Kupfer und Kohle bekommen später nur andere Akzentfarben._
 
-**Ausgebautes Schiff (späte Stufe)**
 ```
-A large upgraded mining spaceship, evolved from a small rocket: sleek metallic hull in white and blue
-with orange accents, twin big engines with glowing blue exhausts, glowing energy shield emitter on the nose,
-large cargo containers attached to the sides, small mining arm underneath.
+Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids, not futuristic and not overly complicated. Maximum about 15 distinct parts so it can be rebuilt in Blender from basic shapes (boxes, cylinders, wedges). Plain light grey background, no text, no letters, no logos, no watermark, no people.
+
+Layout: one single model sheet divided into a grid of 7 panels separated by thin white lines. All 7 panels show the exact same object with identical design, proportions and colors. Top row: (1) large isometric 3/4 perspective view from front-left above, (2) straight orthographic front view, (3) straight orthographic side view. Bottom row: (4) straight orthographic top-down view, (5) medium close-up 3/4 view of the most important part, (6) and (7) two small macro close-ups of the smaller details. Orthographic views must be perfectly straight with no perspective distortion, exactly 90 degrees, so the shapes can be measured and rebuilt in Blender.
+
+Object: A mining drill machine standing on an iron ore patch: chunky orange-yellow body on a thick steel base plate, a big drill bit pointing down into a small mound of grey-brown rock with rusty ore chunks, a squat motor housing on top with a vent and a small cyan status light, a small transparent glass buffer tank on the side showing collected iron ore chunks, a round output port on the side where a conveyor belt connects, hazard stripes on the base plate, bolted panels.
 ```
 
-**Upgrade-Teile (Triebwerk / Schild / Laderaum)**
+### 2. Lager-Kasten (Erz-Behälter)
+_`bin_iron`: ein Kasten pro Erz, dient als Inventar. Die Glaswand zeigt den Füllstand._
+
 ```
-Three separate spaceship upgrade parts shown side by side: 1) a glowing blue engine module,
-2) a round shield generator with a cyan energy ring, 3) a stackable cargo container with yellow stripes.
+Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids, not futuristic and not overly complicated. Maximum about 15 distinct parts so it can be rebuilt in Blender from basic shapes (boxes, cylinders, wedges). Plain light grey background, no text, no letters, no logos, no watermark, no people.
+
+Layout: one single model sheet divided into a grid of 7 panels separated by thin white lines. All 7 panels show the exact same object with identical design, proportions and colors. Top row: (1) large isometric 3/4 perspective view from front-left above, (2) straight orthographic front view, (3) straight orthographic side view. Bottom row: (4) straight orthographic top-down view, (5) medium close-up 3/4 view of the most important part, (6) and (7) two small macro close-ups of the smaller details. Orthographic views must be perfectly straight with no perspective distortion, exactly 90 degrees, so the shapes can be measured and rebuilt in Blender.
+
+Object: A large storage bin for ore, one of many standing in a row: a big rectangular steel container with a huge transparent glass front wall so the fill level is visible, filled about half with a heap of grey-brown iron ore chunks, thick steel corner frame with bolts, hazard stripes along the bottom edge, an intake funnel on top where conveyor belts deliver ore, a vertical orange level gauge bar next to the glass, and an upgrade plate on the side with three small glowing cyan lights. Panels (6) and (7) show the same bin completely empty and completely full.
 ```
 
-## 2. Basis-Gebäude (Heimatplanet)
+### 3. Förderband
+_`conveyor`: Segmente zum Verlegen (gerade, Kurve, Ende)._
 
-**Einfacher Bohrer** (`drill_basic`)
 ```
-A small ground drill machine for mining ore: stout yellow-orange body, big spinning drill bit pointing down,
-small exhaust pipe, rubber tracks, a little output chute at the side.
-```
+Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids, not futuristic and not overly complicated. Maximum about 15 distinct parts so it can be rebuilt in Blender from basic shapes (boxes, cylinders, wedges). Plain light grey background, no text, no letters, no logos, no watermark, no people.
 
-**Förderband** (`conveyor`)
-```
-A short straight conveyor belt segment: dark grey belt with yellow arrow markings, metal side rails,
-two support legs, ready to be chained together. Show one segment and one curved corner segment.
+Layout: one single model sheet divided into a grid of 7 panels separated by thin white lines. All 7 panels show the exact same object with identical design, proportions and colors. Top row: (1) large isometric 3/4 perspective view from front-left above, (2) straight orthographic front view, (3) straight orthographic side view. Bottom row: (4) straight orthographic top-down view, (5) medium close-up 3/4 view of the most important part, (6) and (7) two small macro close-ups of the smaller details. Orthographic views must be perfectly straight with no perspective distortion, exactly 90 degrees, so the shapes can be measured and rebuilt in Blender.
+
+Object: A conveyor belt kit for chaining together: one straight segment (dark grey belt with bright yellow arrow markings, thick steel side rails, two stubby support legs), one 90-degree curved segment and one end segment with a small funnel opening, all in the same size and style, all three shown together in every panel, with a few ore chunks riding on the straight belt.
 ```
 
-**Fabrik** (`factory_basic`)
+### 4. Basis (Raum-Module)
+_Die Basis besteht aus Räumen. Raum 1 ist die Start-Halle, weitere Räume sind noch gesperrt._
+
 ```
-A small compact factory building for processing ore: blocky grey and blue building,
-one tall chimney with soft steam, a large input hatch on one side and an output hatch on the other,
-glowing orange window, a gear symbol painted on the wall.
+Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids, not futuristic and not overly complicated. Maximum about 15 distinct parts so it can be rebuilt in Blender from basic shapes (boxes, cylinders, wedges). Plain light grey background, no text, no letters, no logos, no watermark, no people.
+
+Layout: one single model sheet divided into a grid of 7 panels separated by thin white lines. All 7 panels show the exact same object with identical design, proportions and colors. Top row: (1) large isometric 3/4 perspective view from front-left above, (2) straight orthographic front view, (3) straight orthographic side view. Bottom row: (4) straight orthographic top-down view, (5) medium close-up 3/4 view of the most important part, (6) and (7) two small macro close-ups of the smaller details. Orthographic views must be perfectly straight with no perspective distortion, exactly 90 degrees, so the shapes can be measured and rebuilt in Blender.
+
+Object: A modular space colony base made of connected chunky room modules in a straight row: a larger central start hall in orange and steel grey with a wide sliding door, round porthole windows, a flat roof with vents and a small antenna, and two smaller side rooms that are still locked with closed grey shutters and orange hazard stripes, a glowing cyan panel next to each door, steel legs lifting the base slightly off the ground, a floor plate around the entrance. The rooms are clearly separate modules so more rooms can be added later.
 ```
 
-**Silo** (`silo_basic`)
+### 5. Erzvorkommen (alle fünf in einem Bild)
+_Vorkommen auf der Karte, auf die der Spieler Bohrer setzt._
+
 ```
-A round storage silo for resources: tall cylinder with domed top, metallic silver with a blue stripe,
-a small ladder on the side, a glowing resource level window.
+Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids, not futuristic and not overly complicated. Plain light grey background, no text, no letters, no logos, no watermark, no people.
+
+Layout: one single image showing five ore deposits in a row from left to right, all the same size, same camera (isometric 3/4 view from above), evenly spaced, each on a small flat round ground patch. Each deposit is a cluster of chunky low-poly rocks with a clearly different color: (1) iron ore - grey-brown rock with rusty orange spots, (2) copper ore - orange rock with green-teal patina, (3) coal - black shiny rock with a few glowing orange cracks, (4) crystal - glowing pink-purple crystals, (5) titanium ore - silvery blue metallic rock with a bright cyan shimmer. Rare ores look slightly bigger and more special than iron. Harmless and friendly, no danger, no lava, no spikes.
 ```
 
-**Raketenstartplatz** (`rocket_pad`)
+### 6. Erz-Brocken (Items)
+_Die Brocken, die man aus dem Bohrer holt und trägt._
+
 ```
-A rocket launch pad: round concrete platform with hazard stripes, four metal support arms,
-a small control tower with a glowing window, landing lights around the edge. Empty, without a rocket.
+Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids. Plain light grey background, no text, no letters, no logos, no watermark, no people.
+
+Layout: one single image with five collectible ore chunks in a row, each shown large and the same size, isometric 3/4 view: iron ore (grey with rusty spots), copper ore (orange with green patina), coal (black with a faint glow), crystal (glowing pink), titanium ore (silvery blue). Each chunk is one simple faceted shape with at most 8 faces, readable even when very small.
 ```
 
-**Forschungslabor** (`research_lab`)
+### 7. Heimatplanet (Landschaft mit Basis)
+_Szene, kein Modell-Blatt._
+
 ```
-A research laboratory building: white dome with a big glass window, a small satellite dish on the roof,
-glowing green and blue tubes visible inside, a rotating atom symbol on a sign.
+Art style: stylized low-poly 3D game scene inspired by the chunky industrial look of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Flat faceted surfaces, soft clean lighting, warm palette of orange, yellow and steel grey with cyan glowing accents, toy-like and friendly for kids, not futuristic, no text, no logos, no people.
+
+Scene: an isometric game scene seen from above at 45 degrees, a floating diorama-style green home planet surface with bright grass, a few round trees and gentle hills, no dangers at all. In the center a small modular orange-and-grey space base with a wide door and a row of glass-fronted ore storage bins next to it. Around the base, ore deposits are scattered at different distances: grey-brown iron deposits close by, orange copper further out, black coal deposits even further, and pink crystals far at the edge. A few yellow-orange mining drills stand on the nearer deposits with short conveyor belts leading to the storage bins. Clean readable layout, no UI.
 ```
 
-**Basis-Überblick (früh vs. spät)**
-```
-Two images of the same home base: 1) early game - just a few drills, a short conveyor, a tiny silo and a rocket pad;
-2) late game - a big busy factory complex with many conveyors, tall silos, a research dome and a large rocket pad.
-Same green grassy planet island, same camera angle.
-```
-(am Ende zusätzlich den Szenen-Zusatz C anhängen)
+### 8. Spieler-Astronaut
+_Spielfigur im Roblox-Blockstil, T-Pose zum Modellieren._
 
-## 3. Planeten
+```
+Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids. Plain light grey background, no text, no letters, no logos, no watermark.
 
-Alle als **Oberflächen-Landschaft** (Szenen-Zusatz C) oder als **Kugel-Ansicht** erzeugen lassen. Wir brauchen beides.
+Layout: one single model sheet with 4 panels separated by thin white lines, all showing the exact same character: straight orthographic front view, back view, side view and an isometric 3/4 view, all in a T-pose, no perspective distortion in the straight views.
 
-**Heimatplanet** (`home`)
-```
-A friendly green home planet: bright grass meadows, a few round trees, gentle hills, small ponds,
-scattered chunks of iron ore (grey-brown), copper ore (orange-green) and a few glowing pink crystals.
-```
-
-**Lava-Planet** (`lava`)
-```
-A volcanic lava planet: dark rocky ground, rivers of glowing orange-red lava, a small erupting volcano,
-shiny black obsidian crystals sticking out of the ground, glowing embers in the air.
-```
-
-**Eis-Welt** (`ice`)
-```
-A frozen ice planet: white and light blue snowy terrain, frozen lakes, big ice spikes,
-glowing pale blue ice crystals in the ground, light snowfall, northern-light-like sky.
-```
-
-**Dschungel-Welt** (`jungle`)
-```
-A dense alien jungle planet: lush dark green and teal vegetation, huge leaves and glowing flowers,
-vines and fibrous plants, a friendly cartoon dinosaur in the background, misty light.
-```
-
-**Kugel-Ansicht (für die Planetenauswahl)**
-```
-Four small planets in a row on a dark starry background, each a simple round low-poly sphere:
-a green planet with clouds, a red-orange lava planet, a white-blue ice planet, a dark green jungle planet.
-Make the style clean and iconic so they work as menu buttons.
-```
-(hier den Hintergrund-Teil des Stil-Blocks weglassen, der Weltraum-Hintergrund ist gewollt)
-
-## 4. Rohstoffe & Items (`../daten/ressourcen.md`)
-
-**Rohstoffe** (ein Bild, alle zusammen, damit sie zueinander passen)
-```
-Six collectible resource items in a 3x2 grid, each a chunky low-poly chunk with a clearly different color:
-iron ore (grey with rusty spots), copper ore (orange with green patina), crystal (glowing pink),
-obsidian (black, glassy, red glow in cracks), ice crystal (light blue, translucent), bio fiber (green bundle of fibers).
-```
-
-**Verarbeitete Materialien**
-```
-Five crafted material items in a grid: an iron bar (silver ingot), a circuit board (green with gold lines),
-a heat shield plate (dark plate with orange edge glow), a coolant canister (blue glowing canister),
-a plasma cell (glowing purple energy battery).
-```
-
-**Währungen** (Platzhalter, Währungen sind noch nicht festgelegt)
-```
-Two game currency icons as 3D objects: a gold space coin with a star on it, and a rare glowing blue gem.
-```
-
-## 5. Spieler & Werkzeuge (optional)
-
-**Spieler-Astronaut**
-```
-A cute blocky astronaut miner in the style of a Roblox character: white and orange space suit,
-round helmet with reflective visor, small backpack, thick boots. T-pose for modeling.
-```
-
-**Handwerkzeuge** (`../spiel/07-werkzeuge.md`)
-```
-Three hand mining tools in a row: a basic pickaxe, a laser mining tool with a glowing blue tip,
-and a heavy plasma drill with an orange glowing core.
-```
-
-## 6. Weltraum & Stimmung
-
-**Hub / Planetenauswahl-Hintergrund**
-```
-A colorful cartoon space background with a deep purple and blue gradient, many small stars, soft nebula clouds,
-and a few distant planets. Wide landscape format, no objects in the center so UI can be placed on top.
+Object: A cute blocky astronaut miner in the style of a Roblox character: white and orange space suit with steel-grey details, round helmet with a reflective cyan visor, a small backpack, thick boots and gloves, chunky simple proportions.
 ```
 
 ---
+
+## Später (M2 und weiter)
+Diese Prompts sind noch nicht auf den neuen Stil angepasst. Bitte vor der Nutzung mit mir als komplette Einzel-Prompts wie oben schreiben lassen: Fabrik, Silo, Band-Sammler, Raketenstartplatz, Forschungslabor, Werkbank, Raumschiff, Planeten.
 
 ## Wenn die Ergebnisse nicht passen
-
 | Problem | Zusatz im Prompt |
 |---|---|
 | Zu realistisch | „flat shaded, toy-like, no realistic textures“ |
 | Zu detailreich | „very simple shapes, max 10 distinct parts“ |
+| Zu futuristisch | „simple chunky industrial machines, not sci-fi, no complex details“ |
 | Hintergrund stört | „isolated on plain light grey background“ |
 | Schief / abgeschnitten | „centered, whole object visible, orthographic view“ |
 | Ansichten stimmen nicht überein | „all 7 panels must show the identical object, same colors, same details“ |
@@ -217,9 +118,8 @@ and a few distant planets. Wide landscape format, no objects in the center so UI
 | Text im Bild | „no text, no letters, no numbers“ |
 
 ## Offene Fragen
-
-- [ ] Bunt-comichaft (wie in der Mindmap) oder lieber ruhiger? Das entscheiden wir mit den ersten Referenzbildern.
-- [ ] Welche Bild-KI nehmen wir als Standard (ChatGPT oder Gemini), damit der Stil einheitlich bleibt?
+- [ ] Gefällt der Stil nach den ersten Bildern (Bohrer, Lager-Kasten)?
+- [ ] Welche Bild-KI ist Standard (Gemini)?
 
 ## Verknüpft mit
-`../spiel/15-optik-und-audio.md`, `../daten/planeten.md`, `../daten/ressourcen.md`, `../daten/gebaeude.md`, `../assets/asset-liste.md`
+`../spiel/15-optik-und-audio.md`, `../daten/gebaeude.md`, `../daten/ressourcen.md`, `../assets/asset-liste.md`
