@@ -27,8 +27,8 @@ Ohne diese Antworten kann ich keinen Code und keine Zahlen festlegen. Ich schlag
 
 Das meiste steht schon in `roblox-studio-setup.md`. Hier nur die Reihenfolge und was ich dabei brauche.
 
-- [ ] **Ju/Jos:** Roblox Studio installiert und eingeloggt
-- [ ] **Ju/Jos:** Place „Galactic Miner Tycoon“ anlegen, Team Create an, den anderen einladen
+- [x] **Ju/Jos:** Roblox Studio installiert und eingeloggt
+- [x] **Ju/Jos:** Place „Galactic Miner Tycoon“ anlegen, Team Create an, den anderen einladen – *erledigt, Jos ist eingeladen und hat Zugriff*
 - [x] **Ju/Jos:** Place-ID und Universe-ID an Claude geben (Claude trägt sie in `../technik/zusammenarbeit-roblox-studio.md` ein)
 - [x] **Ju/Jos:** Rojo installieren und Test durchführen („Server started“ / „Client started“ in der Ausgabe) – *Rojo 7.7.1 + Studio-Plugin sind auf Jus PC installiert, Test bei Ju erfolgreich; Jos hat Rojo ebenfalls installiert*
 - [x] **Ju/Jos:** Blender installiert (für die 3D-Modelle, siehe Phase 4) – *Jos hat Blender; bei Ju ist es mit Claude verbunden*
