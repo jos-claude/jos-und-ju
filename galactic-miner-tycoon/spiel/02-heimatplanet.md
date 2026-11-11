@@ -1,29 +1,29 @@
 # 02 – Heimatplanet (Tycoon-Basis)
 
-- **Status:** Entwurf – M1-Vorschlag steht unten, wartet auf Bestätigung
+- **Status:** Richtung beschlossen (Entscheidung 009), Zahlen sind Vorschlag
 - **Zuletzt geändert:** 11.11.2026
 - **Mindmap-Ast:** Home Planet Tycoon / Base Building
 
 ## Worum geht es?
-Der Startplanet. Hier baut der Spieler seine Basis im klassischen Tycoon-Stil: Man geht zu Kaufflächen und erweitert die Basis Stück für Stück. Bezahlt wird mit Rohstoffen (Entscheidung 006).
+Der Startplanet. Der Spieler baut wie in Satisfactory eine immer größere Basis. Sie wächst Raum für Raum und Bohrer für Bohrer. Bezahlt wird mit Rohstoffen (Entscheidungen 006, 009).
 
-## Was wir schon wissen
-- Ausbau per Kauffläche in der Welt (Tycoon-Stil).
-- Bereiche laut Mindmap: Abbau (Bohrer), Förderbänder, Fabriken, Verarbeitung, Lager (Silos), später Forschungslabor und Raketenstart.
-- Jeder Spieler hat seine eigene Basis (Entscheidung 008). Der Heimatplanet ist ein eigener Place (Entscheidung 005).
+## Beschlossen
+- Jeder Spieler hat seine eigene Basis (008). Der Heimatplanet ist ein eigener Place (005).
+- Die Basis besteht aus **Räumen**. Neue Räume kosten Rohstoffe.
+- In den Räumen gibt es Upgrades: Raumschiff, Spielergeschwindigkeit, Stärke u. a.
+- Erzvorkommen liegen um die Basis. **Je seltener das Erz, desto weiter weg.**
 
-## Vorschlag für M1 (noch nicht bestätigt)
-- **Plot:** Jeder Spieler bekommt beim Betreten einen eigenen Bauplatz mit **festen Bau-Slots** (kein freies Platzieren).
-- **Slots in M1:** 6 Bohrer-Slots: 3 auf Eisenerz-Vorkommen, 3 auf Kupfererz-Vorkommen. Jeder Slot hat eine Kauffläche.
-- **Start:** Der erste Eisen-Bohrer steht schon und kostet nichts, damit der Spieler sofort Eisenerz bekommt.
-- **Reihenfolge:** Eisen-Bohrer 2 und 3 → Kupfer-Bohrer 1 bis 3 (erst freigeschaltet, wenn Eisen-Bohrer 2 steht).
-- **Gebäude-Level:** Bohrer werden aufgewertet (Level 1 bis 5), nicht neu gebaut.
-- Weitere Gebäude (Förderband, Fabrik, Silo) kommen in M2.
+## Vorschlag (Zahlen noch nicht bestätigt)
+- **Aufbau:** Raum 1 ist die Start-Halle mit der Kiste und einem Eisenvorkommen direkt davor. Die Erzfelder liegen draußen in Ringen um die Basis, nach Entfernung sortiert (siehe `../daten/ressourcen.md`).
+- **Feste Bohrer-Slots** auf jedem Erzfeld (kein freies Platzieren), z. B. 4 pro Feld.
+- **Räume:** Kosten steigen. Raum 2: 50 Eisen. Raum 3: 100 Eisen + 15 Kupfer. Weitere in `../daten/gebaeude.md`.
+- Welche Räume welches Upgrade enthalten, siehe `../daten/upgrades.md`.
 
 ## Offene Fragen
-- [ ] Feste Slots wie oben ok?
-- [ ] Bauplatz-Größe und Aussehen (klein, runde Plattform auf dem Planeten?)
-- [ ] Wie viele Slots am Ende des Spiels?
+- [ ] Wie sieht der Planet aus: Basis in der Mitte, Erzfelder drumherum?
+- [ ] Wie viele Räume am Ende?
+- [ ] Sind die Erzfelder gefährlich oder nur weit weg?
+- [ ] Gibt es Gebäude-Level (Bohrer aufwerten statt neu bauen)?
 
 ## Verknüpft mit
 `03`, `04`, `14-ui-und-bedienung.md`, `../technik/architektur.md` (PlotService, BuildService)

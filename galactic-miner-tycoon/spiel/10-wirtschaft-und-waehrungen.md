@@ -1,8 +1,8 @@
 # 10 – Wirtschaft & Währungen
 
-- **Status:** Entwurf – M1-Vorschlag steht unten, wartet auf Bestätigung
+- **Status:** Richtung beschlossen (Entscheidung 009), Zahlen sind Vorschlag
 - **Zuletzt geändert:** 11.11.2026
-- **Mindmap-Ast:** Credits, Gems (siehe Entscheidung 006: keine Credits)
+- **Mindmap-Ast:** Credits, Gems (Credits entfallen, siehe Entscheidung 006)
 
 ## Worum geht es?
 Womit der Spieler bezahlt und wie schnell Preise steigen.
@@ -11,15 +11,15 @@ Womit der Spieler bezahlt und wie schnell Preise steigen.
 - **Es gibt keine Credits.** Gebäude und Upgrades auf dem eigenen Planeten werden mit Rohstoffen bezahlt (Entscheidung 006).
 - Gems gibt es vorerst nicht. Monetarisierung bleibt Entwurf (`12-monetarisierung.md`).
 
-## Vorschlag für M1 (noch nicht bestätigt)
-- **Eisenerz** bezahlt neue Bohrer. **Kupfererz** bezahlt Bohrer-Upgrades. So braucht der Spieler beide Rohstoffe.
-- **Kein Verkaufen** in M1: Rohstoffe werden nur ausgegeben.
-- Preise steigen mit jedem Kauf: `Preis(n) = Basispreis × 1,15^n` (n = bisherige Käufe dieser Art, auf ganze Zahl gerundet).
-- Zahlen stehen in `../daten/gebaeude.md` und `../daten/upgrades.md`.
+- Räume, Bohrer, Förderbänder und Upgrades werden mit den Erzen bezahlt, die man schon hat. Wer neue Erze will, muss weiter hinaus und baut dafür Förderbänder.
+
+## Vorschlag (Zahlen noch nicht bestätigt)
+- **Kein Verkaufen** in M1: Erze werden nur ausgegeben.
+- Preise steigen mit jedem Kauf: `Preis(n) = Basispreis × 1,15^n`. Räume haben feste Kosten (siehe `../daten/gebaeude.md`).
+- Jeder Raum verlangt etwas vom aktuellen Erz und eine Kleinigkeit vom nächsten, damit man weiter hinaus muss.
 
 ## Offene Fragen
-- [ ] Rohstoffe der Planeten später auch als Kosten für Schiff und Forschung (M3/M4)?
-- [ ] Wird später doch etwas verkauft?
+- [ ] Soll man später doch Erze verkaufen können?
 - [ ] Wie kommt Monetarisierung ohne Gems aus?
 
 ## Verknüpft mit

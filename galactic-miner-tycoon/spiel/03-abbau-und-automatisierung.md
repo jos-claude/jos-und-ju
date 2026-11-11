@@ -1,27 +1,30 @@
 # 03 – Abbau & Automatisierung
 
-- **Status:** Entwurf – M1-Vorschlag steht unten, wartet auf Bestätigung
+- **Status:** Richtung beschlossen (Entscheidung 009), Zahlen sind Vorschlag
 - **Zuletzt geändert:** 11.11.2026
 - **Mindmap-Ast:** Automated Mining (Automated Drills, Conveyor Belts, Banner Drills)
 
 ## Worum geht es?
-Die Basis fördert Rohstoffe selbstständig. Bohrer graben, Förderbänder transportieren später zu Fabriken und Lagern.
+Der Spieler baut immer mehr Bohrer. Erst holt er das Erz von Hand, später bringen Förderbänder es automatisch.
 
-## Was wir schon wissen
-- Bohrer fördern automatisch, verbesserte Varianten kommen mit der Forschung.
-- Förderbänder (M2) sind nur Optik plus Rate-Berechnung im Hintergrund, keine echten Items (spart Performance).
+## Beschlossen (009)
+1. Ein **Bohrer** fördert selbst, sammelt das Erz aber in einem **eigenen Puffer**.
+2. Der Spieler **nimmt das Erz aus dem Bohrer** (Taste/Berührung), trägt es zur **Kiste**. Dort landet es im **Inventar**.
+3. **Förderbänder** fahren das Erz automatisch vom Bohrer zur Kiste. Sie kosten Materialien.
+4. Seltene Erze liegen weiter weg, also braucht man längere Förderbänder.
 
-## Vorschlag für M1 (noch nicht bestätigt)
-- Ein Bohrer liefert **Rohstoff pro Sekunde** direkt auf das Konto des Spielers. Es gibt kein Lager-Limit (Silos kommen in M2).
-- Der Server rechnet einmal pro Sekunde (nicht jeder Bohrer einzeln). Es sind keine echten Items nötig.
-- Raten: Eisen-Bohrer 1,0/s, Kupfer-Bohrer 0,5/s auf Level 1. Jedes Level erhöht die Rate um 50 % der Grundrate.
-- Maximal 6 Bohrer in M1 (siehe `02`).
-- Offline-Ertrag: **nein** in M1 (später klären).
+## Vorschlag (Zahlen noch nicht bestätigt)
+- Bohrer-Rate: Eisen 1,0/s. Der Puffer fasst 50 Einheiten. Ist er voll, hört der Bohrer auf.
+- Der Spieler trägt anfangs **20 Einheiten** auf einmal. Das Upgrade „Stärke“ erhöht das.
+- Ein Bohrer ist ein Bauwerk mit Slot. Weitere Bohrer kosten mehr (×1,15 je Kauf).
+- Förderbänder: Eine **Förderstrecke** verbindet ein Erzfeld mit der Kiste und kostet nach Entfernung Materialien. Sie ist nur Optik plus Rate-Berechnung im Hintergrund, keine echten Items (Performance).
+- Die Bänder bringen höchstens so viel, wie die Strecke schafft (Durchsatz, z. B. 5/s). Bessere Bänder später.
+- Offline-Ertrag: nein.
 
 ## Offene Fragen
-- [ ] Rate-Zahlen ok?
-- [ ] Offline-Ertrag später?
-- [ ] Müssen Förderbänder selbst verlegt werden? (M2)
+- [ ] Soll der Spieler Förderbänder selbst verlegen oder nur die Strecke kaufen?
+- [ ] Wie viel trägt der Spieler am Anfang?
+- [ ] Gibt es ein Inventar-Limit, oder ist die Kiste unbegrenzt?
 
 ## Verknüpft mit
 `04`, `08-forschung-und-techbaum.md`, `../daten/gebaeude.md`

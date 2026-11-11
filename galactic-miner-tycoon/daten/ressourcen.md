@@ -1,16 +1,24 @@
 # Ressourcen
 
-Status: **Platzhalter-Vorschlag** (Namen und Werte sind nicht abgestimmt).
+Status: **Vorschlag, nicht bestätigt**. Namen sind frei erfunden und änderbar.
 
-## Rohstoffe (Raw Resources)
+## Rohstoffe auf dem Heimatplaneten (nach Entfernung von der Basis)
+Je seltener, desto weiter weg (Entscheidung 009).
+
+| ID | Name | Entfernung (Studs) | Stufe |
+|---|---|---|---|
+| `iron_ore` | Eisenerz | 0–40 | 1 |
+| `copper_ore` | Kupfererz | ca. 80 | 2 |
+| `coal` | Kohle | ca. 150 | 3 |
+| `crystal` | Kristall | ca. 250 | 4 |
+| `titanium_ore` | Titanerz | ca. 400 | 5 |
+
+## Rohstoffe anderer Planeten
 | ID | Name | Herkunft | Stufe |
 |---|---|---|---|
-| `iron_ore` | Eisenerz | Heimatplanet | 1 |
-| `copper_ore` | Kupfererz | Heimatplanet | 1 |
-| `crystal` | Kristall | Heimatplanet (selten) | 2 |
-| `obsidian` | Obsidian | Lava-Planet | 3 |
-| `ice_crystal` | Eiskristall | Eis-Welt | 3 |
-| `bio_fiber` | Biofaser | Dschungel-Welt | 3 |
+| `obsidian` | Obsidian | Lava-Planet | 6 |
+| `ice_crystal` | Eiskristall | Eis-Welt | 6 |
+| `bio_fiber` | Biofaser | Dschungel-Welt | 6 |
 
 ## Verarbeitete Materialien (Advanced Materials)
 | ID | Name | Rezept (Vorschlag) |

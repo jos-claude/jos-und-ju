@@ -17,3 +17,4 @@ Regeln:
 | 006 | [Rohstoffe sind die Währung](006-ressourcen-als-waehrung.md) | Beschlossen | 11.11.2026 |
 | 007 | [Aufgabenverteilung Jos / Ju](007-aufgabenverteilung.md) | Beschlossen | 11.11.2026 |
 | 008 | [Bestätigte Startvorschläge](008-bestaetigte-startvorschlaege.md) | Beschlossen | 11.11.2026 |
+| 009 | [Heimatplanet im Satisfactory-Stil](009-satisfactory-stil.md) | Beschlossen | 11.11.2026 |
