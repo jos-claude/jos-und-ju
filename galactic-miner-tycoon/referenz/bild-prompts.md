@@ -7,11 +7,11 @@ Ziel: Mit diesen Prompts erzeugen wir Referenzbilder, die als Vorlage für die 3
 
 ## So benutzt du sie
 
-1. **Immer zuerst den Stil-Block (A) und dann den Prompt des Objekts** in dieselbe Nachricht kopieren.
+1. **Reihenfolge in einer Nachricht: Stil-Block (A) + Multi-Ansichten-Layout (B) + Prompt des Objekts.** Für alles, was ich in Blender nachbauen soll (Schiff, Gebäude, Items, Werkzeuge, Astronaut), ist B Pflicht. Nur Planeten-Szenen (C) und der Hintergrund kommen ohne B aus.
 2. **Pro Objekt ein eigenes Bild.** Gefällt es nicht, schreib einfach „mach es …“ (z. B. „eckiger“, „bunter“, „weniger Details“).
 3. **Im selben Chat bleiben**, damit der Stil einheitlich bleibt. Beim ersten Bild den Stil-Block nutzen, danach reicht „Gleicher Stil wie vorher“.
 4. **Gute Bilder speichern** unter `referenz/bilder/<kategorie>/<name>.png` (z. B. `schiff/rakete-01.png`) und mir den Pfad nennen.
-5. **Tipp für 3D:** Lieber wenig Details. Je einfacher die Form, desto leichter baue ich sie in Roblox nach. Die „Turnaround“-Variante (B) liefert Vorder-/Seiten-/Rückansicht auf einem Bild.
+5. **Tipp für 3D:** Lieber wenig Details. Je einfacher die Form, desto leichter baue ich sie in Roblox nach. Das Layout (B) liefert alle Seiten auf einem Bild, so kann ich Maße und Proportionen direkt ablesen. Prüfe das Ergebnis: Sehen alle Felder wirklich nach demselben Objekt aus? Wenn nicht, schreib „make all panels show exactly the same object“.
 
 ---
 
@@ -24,11 +24,25 @@ friendly and kid-appropriate, like a polished Roblox tycoon game. Single object 
 plain light grey background, centered, full object visible, no text, no logos, no watermark.
 ```
 
-## B – Ansichten-Zusatz (optional, für Modelle)
+## B – Multi-Ansichten-Layout (für jedes Modell, das wir in Blender bauen)
+
+Ein Bild = ein Objekt aus allen Seiten, im Raster mit dünnen weißen Trennlinien. Layout: oben große 3/4-Ansicht, Vorderansicht, Seitenansicht; unten Draufsicht, Detail-Nahaufnahme und zwei kleine Detail-Ausschnitte.
 
 ```
-Show the same object as a turnaround sheet: front view, side view, back view and a 3/4 perspective view,
-arranged in one row on a plain light grey background, same scale in all views.
+Layout: a single model sheet divided into a grid of 7 panels separated by thin white lines, all panels show
+the exact same object with identical design, proportions and colors, on a plain light grey background:
+Top row: (1) large isometric 3/4 perspective view from front-left above, (2) straight orthographic front view,
+(3) straight orthographic side view.
+Bottom row: (4) straight top-down view, (5) medium close-up 3/4 view of the most important part,
+(6) and (7) two small macro close-ups of the smaller details (moving parts, ornaments, small items on it).
+Orthographic views must be perfectly straight with no perspective distortion, so the shapes can be measured
+and rebuilt in Blender. Soft even lighting with gentle shadows, no text, no labels, no arrows, no people.
+```
+
+**Variante mit Rück- und Unteransicht** (für Objekte, die von hinten anders aussehen, z. B. Schiff, Fabrik):
+```
+Same layout as described, but replace panel (7) with a straight orthographic back view,
+and panel (6) with a bottom view.
 ```
 
 ## C – Szenen-Zusatz (für Planeten / Basis-Überblick)
@@ -198,6 +212,8 @@ and a few distant planets. Wide landscape format, no objects in the center so UI
 | Zu detailreich | „very simple shapes, max 10 distinct parts“ |
 | Hintergrund stört | „isolated on plain light grey background“ |
 | Schief / abgeschnitten | „centered, whole object visible, orthographic view“ |
+| Ansichten stimmen nicht überein | „all 7 panels must show the identical object, same colors, same details“ |
+| Ansichten nicht gerade | „orthographic, no perspective, exactly 90 degrees“ |
 | Text im Bild | „no text, no letters, no numbers“ |
 
 ## Offene Fragen
