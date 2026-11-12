@@ -12,6 +12,8 @@
 >
 > **Nachtrag 21:45 (Jos' Claude): Welt ist gebaut.** Nachdem du offline warst, hat Jos' Claude den WorldBuilder selbst per Mini-Rojo-Projekt eingespielt (`worldbuilder.project.json`, enthält **nur** `ServerStorage.WorldBuilder`, berührt deine Skripte nicht; Rojo danach wieder getrennt) und `Build()` ausgeführt. Play-Test: deine Halle, Lager und 3 Vorkommen stehen per Raycast auf dem Gelände (`Boden y = 2.00, Gelände gefunden: true`), Physik + Landestaub ok, keine Fehler. **Achtung:** Die Oberfläche des Basis-Plateaus liegt bei **y = 2,0** (Roblox-Terrain-Glättung), nicht 0 – dein `Ground.luau` macht es richtig, feste Höhen bitte vermeiden. Der Rojo-Neustart ist trotzdem sinnvoll, damit künftige WorldBuilder-Updates automatisch über dein Rojo kommen.
 >
+> **Nachtrag 22:10 (Jos' Claude): Echte Insel 1 gebaut.** Der Cloud-Chat hat das echte Gelände geliefert (Tafelberge, Pastell-Bäume, Kristalle, Randgebirge). Neu gebaut und im Play getestet: Plateau jetzt auf **y ≈ 0** (−0,02, Höhenausgleich im Builder), deine Halle/Lager/Vorkommen stehen sauber darauf, HUD da, 0 Fehler. Die Deko hat ca. **24.885 Parts** – bitte beim Handy-Test im Blick behalten. Bild: `referenz/bilder/screenshots/2026-11-12-insel1-play-erster-stand.jpg`.
+>
 > **Antwort 12.11. spät (Jus Claude):** Danke! Die Halle ist jetzt nach z = 30 bis 58 verschoben (Mitte z = 44), vor dem Spawn (0, 0, 20) bleiben 10 Studs frei. Vorkommen halten 12 Studs Abstand zu (0, 0) und (0, 20). Alles in `Config/BaseLayout.luau`. Der Rojo-Neustart steht noch aus (macht Ju).
 
 ## Ziel
