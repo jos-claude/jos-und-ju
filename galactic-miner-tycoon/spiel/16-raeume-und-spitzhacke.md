@@ -37,9 +37,9 @@ Die Garage kommt bewusst **vor dem Kristall**: Kristall liegt ab 1100 Studs und 
 | 2 | Eisen-Spitzhacke | 2 | 1,0 s | 30 Eisen | + Kupfer |
 | 3 | Stahl-Spitzhacke | 3 | 0,9 s | 80 Eisen + 30 Kupfer | + Kohle |
 | 4 | Kristall-Spitzhacke | 4 | 0,8 s | 150 Kupfer + 60 Kohle | + Kristall |
-| 5 | Titan-Spitzhacke | 6 | 0,7 s | 120 Kohle + 80 Kristall | + Titan |
+| 5 | Titan-Spitzhacke | 6 | 0,7 s | 120 Kohle + 80 Kristall | nur schneller (Titan nur mit Bohrern) |
 
-Stufe 5 kostet bewusst kein Titan, sonst kann man sie nicht kaufen, weil sie selbst nötig wäre, um Titan abzubauen.
+Titan kann nur mit Bohrern gewonnen werden (Entscheidung 019). Erz pro Schlag gilt mit Härte-Malus (Eisen ×1,0, Kupfer ×0,8, Kohle ×0,6, Kristall ×0,4).
 
 ## Bohrer (Änderung zu bisher)
 Der erste Bohrer ist **nicht mehr gratis**. Er kostet 20 Eisen (danach ×1,15 je Kauf). Von Hand sind 20 Eisen nach etwa 20 Sekunden zusammen.

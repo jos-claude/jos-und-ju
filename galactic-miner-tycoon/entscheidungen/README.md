@@ -28,3 +28,4 @@ Regeln:
 | 017 | [Rucksack in der Schmiede](017-rucksack-in-der-schmiede.md) | Beschlossen | 12.11.2026 |
 | 018 | [Trainingsraum und Lauf-Geschwindigkeit entfallen](018-kein-trainingsraum.md) | Beschlossen | 12.11.2026 |
 | 019 | [Leichte Schwerkraft und Planeten-Bewegung](019-leichte-schwerkraft.md) | Beschlossen (Grundsatz, Zahlen Vorschlag) | 12.11.2026 |
+| 019 | [Balancing Insel 1](019-balancing-insel-1.md) | Beschlossen | 12.11.2026 |
