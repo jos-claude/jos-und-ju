@@ -73,6 +73,16 @@ def export(world: World, out_dir: Path):
         shutil.rmtree(data_dir)
     data_dir.mkdir(parents=True)
 
+    # --- Pruefungen (der Builder schreibt Wasser nur ueber Land) ---
+    bad = (world.water > 0) & (world.h <= VOID)
+    if bad.any():
+        print(f"WARNUNG: {int(bad.sum())} Wasser-Spalten ohne Terrain werden entfernt")
+        world.water[bad] = 0
+    bad = (world.mat == 0) & (world.h > VOID)
+    if bad.any():
+        print(f"WARNUNG: {int(bad.sum())} Terrain-Spalten ohne Material (Index 0) -> Ground")
+        world.mat[bad] = 3  # Ground
+
     # --- Terrain-Kanaele ---
     h = world.h
     q = np.where(h <= VOID, 0, np.clip(np.round((h - HMIN) * HQ), 1, 65535)).astype(np.int64)

@@ -237,6 +237,10 @@ local function buildTerrain(meta: any)
 	local WATER = Enum.Material.Water
 	local STRATA_FLAG = 32
 
+	log("Loesche altes Terrain ...")
+	terrain:Clear()
+
+	-- Farben erst nach Clear() setzen
 	if meta.materialColors then
 		for name, color in meta.materialColors do
 			pcall(function()
@@ -252,8 +256,9 @@ local function buildTerrain(meta: any)
 		end
 	end
 
-	log("Loesche altes Terrain ...")
-	terrain:Clear()
+	-- Neue Voxel-API mit eigenem Wasser-Kanal (Wasser fuellt auch halbvolle Ufer-Voxel).
+	-- Faellt sie aus, nehmen wir WriteVoxels (Wasser dann nur in leeren Voxeln).
+	local useChannels = true
 
 	local CHUNK = 16
 	local chunksPerAxis = math.ceil(n / CHUNK)
@@ -293,14 +298,18 @@ local function buildTerrain(meta: any)
 				local ny = math.max(1, (y1 - y0) // cell)
 				local materials = table.create(sx)
 				local occupancy = table.create(sx)
+				local liquid = table.create(sx)
 				for ix = 1, sx do
 					local mx = table.create(ny)
 					local ox = table.create(ny)
+					local lx = table.create(ny)
 					materials[ix] = mx
 					occupancy[ix] = ox
+					liquid[ix] = lx
 					for iy = 1, ny do
 						mx[iy] = table.create(sz, AIR)
 						ox[iy] = table.create(sz, 0)
+						lx[iy] = table.create(sz, 0)
 					end
 				end
 				for iz = 1, sz do
@@ -336,19 +345,14 @@ local function buildTerrain(meta: any)
 									else
 										m = bedrock
 									end
+									if m == AIR then
+										m = bedrock -- Schutz: Material-Index 0 ohne Schicht-Flag
+									end
 									materials[ix][iy][iz] = m
 									occupancy[ix][iy][iz] = occ
-								elseif yb >= h and yb < waterLevel then
-									materials[ix][iy][iz] = WATER
-									occupancy[ix][iy][iz] = math.min(1, (waterLevel - yb) / cell)
 								end
-							end
-						elseif w > 0 then
-							for iy = 1, ny do
-								local yb = y0 + (iy - 1) * cell
-								if yb < waterLevel then
-									materials[ix][iy][iz] = WATER
-									occupancy[ix][iy][iz] = math.min(1, (waterLevel - yb) / cell)
+								if yb < waterLevel and yb + cell > h then
+									liquid[ix][iy][iz] = math.min(1, (waterLevel - yb) / cell)
 								end
 							end
 						end
@@ -358,7 +362,35 @@ local function buildTerrain(meta: any)
 					Vector3.new(origin + cx * cell, y0, origin + cz * cell),
 					Vector3.new(origin + (cx + sx) * cell, y0 + ny * cell, origin + (cz + sz) * cell)
 				)
-				terrain:WriteVoxels(region, cell, materials, occupancy)
+				local written = false
+				if useChannels then
+					written = pcall(function()
+						terrain:WriteVoxelChannels(region, cell, {
+							SolidMaterial = materials,
+							SolidOccupancy = occupancy,
+							LiquidOccupancy = liquid,
+						})
+					end)
+					if not written then
+						useChannels = false
+						log("WriteVoxelChannels nicht verfuegbar, nutze WriteVoxels.")
+					end
+				end
+				if not written then
+					-- Wasser nur in Voxeln ohne festes Material
+					for ix = 1, sx do
+						for iy = 1, ny do
+							local mRow, oRow, lRow = materials[ix][iy], occupancy[ix][iy], liquid[ix][iy]
+							for iz = 1, sz do
+								if oRow[iz] == 0 and lRow[iz] > 0 then
+									mRow[iz] = WATER
+									oRow[iz] = lRow[iz]
+								end
+							end
+						end
+					end
+					terrain:WriteVoxels(region, cell, materials, occupancy)
+				end
 			end
 			done += 1
 			if os.clock() - lastReport > 0.25 then
@@ -427,7 +459,7 @@ local function makePrototype(def: any, colors: any): BasePart
 		local light = Instance.new("PointLight")
 		light.Range = def.light.range
 		light.Brightness = def.light.brightness
-		light.Color = colors[def.light.role or def.role] or Color3.new(1, 1, 1)
+		light.Color = def.light.color or colors[def.light.role or def.role] or Color3.new(1, 1, 1)
 		light.Shadows = false
 		light.Parent = part
 	end
@@ -559,10 +591,12 @@ local function applyLighting(meta: any)
 		return
 	end
 	setProps(Lighting, cfg.Lighting or {})
-	-- Alte Effekte und Himmel sichern statt loeschen
+	-- Eigene Effekte eines frueheren Builds ersetzen, fremde Effekte und Himmel sichern statt loeschen
 	local backup = backupFolder()
 	for _, child in Lighting:GetChildren() do
-		if
+		if string.sub(child.Name, 1, 5) == "World" and child:GetAttribute("WorldBuilder") then
+			child:Destroy()
+		elseif
 			child:IsA("Sky")
 			or child:IsA("Atmosphere")
 			or child:IsA("BloomEffect")
@@ -586,6 +620,7 @@ local function applyLighting(meta: any)
 		if props then
 			local inst = Instance.new(className)
 			inst.Name = "World" .. key
+			inst:SetAttribute("WorldBuilder", true)
 			setProps(inst, props)
 			inst.Parent = Lighting
 		end
