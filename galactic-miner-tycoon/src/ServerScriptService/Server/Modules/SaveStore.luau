@@ -30,6 +30,46 @@ local SaveStore = {}
 -- Gemeinsamer Mock-Inhalt pro Store-Name (damit zwei Aufrufe mit gleichem Namen dieselben Daten sehen).
 local mockData: { [string]: { [string]: string } } = {}
 
+-- Prüft, ob ein Wert so in einen DataStore passt (nur Text, Zahl, Wahr/Falsch und Tabellen,
+-- die entweder Listen 1..n sind oder nur Text-Schlüssel haben). Gibt den Pfad des Fehlers zurück.
+local function findUnsavable(value: any, path: string): string?
+	local valueType = type(value)
+	if valueType == "string" or valueType == "boolean" then
+		return nil
+	elseif valueType == "number" then
+		if value ~= value or value == math.huge or value == -math.huge then
+			return `{path} (Zahl ungültig)`
+		end
+		return nil
+	elseif valueType == "table" then
+		local count = 0
+		local hasStringKey = false
+		local hasNumberKey = false
+		for key, child in value do
+			count += 1
+			if type(key) == "string" then
+				hasStringKey = true
+			elseif type(key) == "number" then
+				hasNumberKey = true
+			else
+				return `{path} (Schlüssel vom Typ {type(key)})`
+			end
+			local problem = findUnsavable(child, `{path}.{tostring(key)}`)
+			if problem then
+				return problem
+			end
+		end
+		if hasStringKey and hasNumberKey then
+			return `{path} (Liste und Text-Schlüssel gemischt)`
+		end
+		if not hasStringKey and count ~= #value then
+			return `{path} (Liste mit Lücken)`
+		end
+		return nil
+	end
+	return `{path} (Typ {typeof(value)})`
+end
+
 -- Mock: speichert als JSON-Text, damit nicht speicherbare Werte (Instanzen, Funktionen,
 -- gemischte Tabellen) schon im Studio auffallen und Lesen immer eine frische Kopie liefert.
 function SaveStore.newMock(name: string): Store
@@ -53,6 +93,10 @@ function SaveStore.newMock(name: string): Store
 	end
 
 	function store.set(_self: Store, key: string, value: any): (boolean, string?)
+		local problem = findUnsavable(value, key)
+		if problem then
+			return false, `Mock: nicht speicherbar: {problem}`
+		end
 		local ok, result = pcall(HttpService.JSONEncode, HttpService, value)
 		if not ok then
 			return false, `Mock: nicht speicherbar: {result}`
