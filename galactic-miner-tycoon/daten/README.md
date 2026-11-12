@@ -8,5 +8,6 @@ Alles, was Zahlen oder Listen sind, steht hier – **nicht** im Konzept und nich
 | `planeten.md` | Planeten, Gefahren, Ressourcen | `.../Config/Planets.luau` |
 | `gebaeude.md` | Bohrer, Fabriken, Silos … mit Preisen | _(noch nicht angelegt)_ |
 | `upgrades.md` | Schiff, Forschung, Werkzeuge | _(noch nicht angelegt)_ |
+| `bewegung.md` | Schwerkraft, Sprung, Laufgefühl | `.../Config/Movement.luau` |
 
 **Regel:** Ändert sich hier etwas, wird die passende Config-Datei im Code im selben Schritt angepasst (und umgekehrt).

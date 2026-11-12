@@ -20,5 +20,7 @@ Eine Datei pro Thema. Jede Datei hat oben einen Status (Entwurf / in Arbeit / ab
 | `13-multiplayer.md` | Mehrspieler, Koop | – |
 | `14-ui-und-bedienung.md` | Buttons, HUD, Menüs | – |
 | `15-optik-und-audio.md` | Look, Musik, Effekte | – |
+| `16-raeume-und-spitzhacke.md` | 7 Räume, Spitzhacke, Garage und Rover | – |
+| `17-bewegung-und-physik.md` | Schwerkraft, Sprung, Laufgefühl | – |
 
 Neue Datei? Nächste Nummer nehmen und hier eintragen.
