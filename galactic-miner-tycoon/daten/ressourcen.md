@@ -13,7 +13,7 @@ Planeten-Radius: **2000 Studs** (flache Plattform, Entscheidung 015). Vorkommen 
 | `crystal` | Kristall | 1100 | 2000 | 4 |
 | `titanium_ore` | Titanerz | 1600 | 2000 | 5 |
 
-## Wann erscheinen Vorkommen? (Vorschlag)
+## Wann erscheinen Vorkommen? (abgestimmt, Entscheidung 016)
 Der **Auslöser** ist der Fortschritt des Spielers, nicht die Uhrzeit allein.
 
 | Erz | Erste Vorkommen erscheinen, wenn … | Danach |
@@ -21,7 +21,7 @@ Der **Auslöser** ist der Fortschritt des Spielers, nicht die Uhrzeit allein.
 | Eisen | Spielstart: 3 Vorkommen | +1 alle 5 Minuten Spielzeit bis 10 |
 | Kupfer | Raum 2 freigeschaltet | 2 sofort, dann +1 alle 5 Minuten bis 8 |
 | Kohle | Raum 3 freigeschaltet | 2 sofort, dann +1 alle 5 Minuten bis 6 |
-| Kristall | Raum 4 freigeschaltet | 1 sofort, dann +1 alle 10 Minuten bis 5 |
+| Kristall | Raum 4 (Garage) freigeschaltet | 1 sofort, dann +1 alle 10 Minuten bis 5 |
 | Titan | Raum 5 freigeschaltet | 1 sofort, dann +1 alle 10 Minuten bis 4 |
 
 Ein neues Vorkommen erscheint zufällig im erlaubten Ring (zwischen Mindestradius und Kartenrand) und nicht auf einem anderen Vorkommen. Es wird im Spielstand gespeichert.

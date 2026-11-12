@@ -1,6 +1,6 @@
 # 16 – Räume, Spitzhacke und Garage (Vorschlag)
 
-- **Status:** Vorschlag (Claude, 12.11.2026). Noch nichts davon ist abgestimmt.
+- **Status:** abgestimmt (Ju, 12.11.2026) mit einer Änderung: Die Garage kommt früher (Raum 4), damit der Rover schon vor dem Kristall da ist. Zahlen sind änderbar.
 - **Ändert, wenn bestätigt:** `02-heimatplanet.md`, `../daten/gebaeude.md`, `../daten/upgrades.md`, `../daten/ressourcen.md`
 
 ## Idee der Nutzer
@@ -20,12 +20,12 @@ Die Raumnummern bestimmen, wann neue Erze auftauchen (siehe `../daten/ressourcen
 | 1 | Start-Halle | gratis | Lager mit Eisen-Kasten, Bohrer kaufen | Eisen |
 | 2 | Schmiede | 50 Eisen | Spitzhacke verbessern, **Teleportfeld zur Lobby** | Kupfer-Vorkommen |
 | 3 | Maschinenhalle | 100 Eisen + 15 Kupfer | Förderbänder kaufen, Bohrer aufwerten | Kohle-Vorkommen |
-| 4 | Trainingsraum | 150 Eisen + 60 Kupfer + 20 Kohle | Stärke (trägt mehr) und Geschwindigkeit | Kristall-Vorkommen |
-| 5 | Garage | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Rover kaufen und verbessern | Titan-Vorkommen |
+| 4 | Garage | 150 Eisen + 60 Kupfer + 20 Kohle | Rover kaufen und verbessern | Kristall-Vorkommen |
+| 5 | Trainingsraum | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Stärke und Geschwindigkeit | Titan-Vorkommen |
 | 6 | Forschungslabor | 400 Kupfer + 200 Kohle + 80 Kristall + 20 Titan | Techbaum: bessere Bohrer, Bänder, größere Lager | – |
 | 7 | Raketen-Hangar | 800 Kupfer + 400 Kohle + 200 Kristall + 100 Titan | Rakete bauen und betreten, danach nächste Insel | – |
 
-Die Garage kommt bewusst **genau dann, wenn Titan erscheint**: Titan liegt ab 1600 Studs, der Rover macht den Weg erträglich. Raum 7 ersetzt Werft und Startplatz (vorher 6 Räume). Die Raumschiff-Teile entstehen im Hangar, damit es nicht noch einen Raum mehr gibt.
+Die Garage kommt bewusst **vor dem Kristall**: Kristall liegt ab 1100 Studs und ist zu Fuß schon anstrengend (Änderung von Ju). Sie kostet deshalb kein Kristall. Titan liegt ab 1600 Studs und erscheint mit Raum 5. Raum 7 ersetzt Werft und Startplatz (vorher 6 Räume).
 
 ## Spitzhacke (Vorschlag)
 - **Abbau von Hand:** Man schlägt auf ein Erzvorkommen, das Erz geht direkt in den Tragevorrat (Start 20). Dann zum Lager laufen und in den Kasten legen (wie in 003).
@@ -66,11 +66,11 @@ Rover-Lackierungen wären später ein kosmetischer Kauf (`12-monetarisierung.md`
 5. Mit 50 Eisen kauft er **Raum 2 (Schmiede)**. Dort steht das Teleportfeld zur Lobby.
 Dauer etwa 2 bis 3 Minuten, passend zu Entscheidung 014.
 
-## Offene Fragen (mit Empfehlung)
-1. **7 statt 6 Räume?** Empfehlung: ja, 7.
-2. **Härte-System** (hartes Erz nur mit besserer Spitzhacke von Hand)? Empfehlung: ja.
-3. **Vorkommen unendlich** beim Handabbau? Empfehlung: ja.
-4. **Welcher Raum bekommt die Teleport-Funktion?** Empfehlung: die Schmiede (Raum 2), weil sie ohnehin als erste dazukommt.
+## Fragen (alle beantwortet)
+1. **7 Räume:** bestätigt.
+2. **Härte-System:** bestätigt.
+3. **Vorkommen unendlich beim Handabbau:** bestätigt.
+4. **Teleportfeld in der Schmiede (Raum 2):** bestätigt.
 
 ## Verknüpft mit
 `02`, `03`, `10`, `../entscheidungen/014-lobby-und-spielstaende.md`, `../daten/gebaeude.md`

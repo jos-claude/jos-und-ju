@@ -18,7 +18,7 @@ Beliebig viele, solange Vorkommen da sind und man bezahlen kann.
 
 | ID | Name | Kosten (Basis) | Wirkung | Voraussetzung |
 |---|---|---|---|---|
-| `drill_iron` | Eisen-Bohrer | 1. gratis, dann 20 Eisen | 1,0 Eisen/s, Puffer 50 | – |
+| `drill_iron` | Eisen-Bohrer | 20 Eisen (nicht mehr gratis, Entscheidung 016) | 1,0 Eisen/s, Puffer 50 | – |
 | `drill_copper` | Kupfer-Bohrer | 40 Eisen | 0,8 Kupfer/s | `bin_copper` |
 | `drill_coal` | Kohle-Bohrer | 40 Eisen + 20 Kupfer | 0,6 Kohle/s | `bin_coal` |
 | `drill_crystal` | Kristall-Bohrer | 60 Kupfer + 30 Kohle | 0,4 Kristall/s | `bin_crystal` |
@@ -31,21 +31,29 @@ Beliebig viele, solange Vorkommen da sind und man bezahlen kann.
 
 Beispiel: 80 Studs Band sind 20 Segmente = 40 Eisen.
 
-## Räume (feste Kosten)
-| Raum | Kosten | Enthält (Vorschlag) |
-|---|---|---|
-| 1 | gratis | Start-Halle, Lager |
-| 2 | 50 Eisen | Werkbank (Geschwindigkeit, Stärke) |
-| 3 | 100 Eisen + 15 Kupfer | Förderband-Werkstatt |
-| 4 | 150 Eisen + 60 Kupfer + 20 Kohle | Raumschiff-Werft |
-| 5 | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Forschungslabor |
-| 6 | 400 Kupfer + 200 Kohle + 80 Kristall + 20 Titan | Raketenstartplatz |
+## Räume (feste Kosten, Entscheidung 016)
+Kupfer-Vorkommen erscheinen mit Raum 2, Kohle mit 3, **Kristall mit 4 (Garage)**, Titan mit 5.
 
-## Rover und Garage (Idee von Ju, bestätigt 12.11.2026; Zahlen offen)
-| ID | Name | Kosten | Wirkung |
+| Raum | Name | Kosten | Was man dort tut |
 |---|---|---|---|
-| `garage` | Garage (Raum, noch festzulegen welcher) | _ | schaltet das Mondauto frei |
-| `rover` | Mondauto (Rover) | _ | fahrbar, ca. 60 Studs/s, damit man weite Erze schneller erreicht; Upgrades möglich |
+| 1 | Start-Halle | gratis | Lager, Bohrer kaufen |
+| 2 | Schmiede | 50 Eisen | Spitzhacke verbessern, Teleportfeld zur Lobby |
+| 3 | Maschinenhalle | 100 Eisen + 15 Kupfer | Förderbänder kaufen, Bohrer aufwerten |
+| 4 | **Garage** | 150 Eisen + 60 Kupfer + 20 Kohle | Rover kaufen und verbessern |
+| 5 | Trainingsraum | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Stärke und Geschwindigkeit |
+| 6 | Forschungslabor | 400 Kupfer + 200 Kohle + 80 Kristall + 20 Titan | Techbaum: bessere Bohrer, Bänder, größere Lager |
+| 7 | Raketen-Hangar | 800 Kupfer + 400 Kohle + 200 Kristall + 100 Titan | Rakete bauen und betreten |
+
+Die Garage kostet absichtlich **kein Kristall**, weil Kristall erst mit ihr erscheint.
+
+## Rover und Garage (Entscheidung 016)
+| ID | Name | Kosten (Basis) | Wirkung |
+|---|---|---|---|
+| `rover` | Mondauto (Rover) | 150 Eisen + 80 Kupfer + 30 Kohle | fahrbar, ca. 60 Studs/s |
+| `rover_motor` | Motor (4 Stufen) | 100 Kupfer + 40 Kohle | +15 Studs/s je Stufe |
+| `rover_cargo` | Laderaum (4 Stufen) | 120 Eisen + 60 Kupfer | trägt +50 Erz je Stufe, nimmt Erz aus Bohrern mit |
+| `rover_boost` | Turbo (3 Stufen) | 80 Kohle + 30 Kristall | kurzer Geschwindigkeitsschub mit Abkühlzeit |
+| `rover_scanner` | Erz-Scanner | 60 Kristall | Pfeil zum nächsten Vorkommen eines Erzes |
 
 ## Später
 | ID | Name | Kosten | Wirkung |

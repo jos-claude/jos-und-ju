@@ -9,8 +9,8 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 - [ ] Aufgabenverteilung Jos / Ju geklärt
 
 ## M1 – Heimatplanet-Prototyp (Tycoon-Kern)
-- [ ] Tutorial mit kurzer Cutscene (ca. 2 bis 3 Minuten): Bohrer setzen, Lager füllen, ersten Raum kaufen
-- [ ] Raum 2 mit Teleportfeld zur Lobby (Entscheidung 014)
+- [ ] Tutorial mit kurzer Cutscene (ca. 2 bis 3 Minuten): Eisen mit der Spitzhacke hacken, ersten Bohrer kaufen, Schmiede (Raum 2) kaufen
+- [ ] Raum 2 (Schmiede) mit Spitzhacken-Upgrades und Teleportfeld zur Lobby (Entscheidungen 014, 016)
 - [ ] Einfache Lobby (Raumschiff) mit Spielstand-Pad, 2 Plätze; ab dem zweiten Beitritt spawnt man dort
 - [ ] Heimatplanet-Welt in Studio (Boden, Himmel, Bauplatz)
 - [ ] Kauf-Buttons in der Welt funktionieren (Rohstoffe abziehen, Gebäude erscheint)
