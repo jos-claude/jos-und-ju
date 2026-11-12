@@ -22,7 +22,7 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 - [ ] Rohstoff-Anzeige im HUD
 - [ ] Speichern und Laden (DataStore)
 
-## M1b – Koop (Entscheidung 014, Vorschlag)
+## M1b – Koop (Entscheidung 014)
 - [ ] Freunde einladen, bis zu 4 Spieler pro Welt
 - [ ] Rechte: Besitzer lädt ein und entfernt, alle bauen, nur Besitzer startet die Rakete
 - [ ] Lobby-Chat (Roblox-Standardchat), Beitritt nur auf Einladung
