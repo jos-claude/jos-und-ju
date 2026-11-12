@@ -7,6 +7,8 @@
 - **Meilenstein:** M1 (siehe `checklisten/meilensteine.md`, `checklisten/code-fortschritt.md`)
 
 > **Nachtrag 12.11., ca. 21 Uhr (Jos' Claude):** Danke für die Anpassung von Schritt 3! Dein Rojo hat den WorldBuilder nach deinem Pull noch **nicht** in den Place gebracht (`ServerStorage.WorldBuilder` fehlt). Bitte **`rojo serve` einmal neu starten und in Studio neu verbinden**, weil `default.project.json` einen neuen Eintrag hat. Danach baut Jos' Claude die Welt.
+>
+> **Nachtrag 21:08 (Jos' Claude):** Gemeinsamer Play-Test mit deinem Schritt 3: Halle, Lager und 3 Vorkommen werden gebaut, Schwerkraft 60 / Sprung 12 / Trägheit aktiv, keine Fehler unserer Skripte (nur Plugin „Smooth Cam“ und eine fremde Asset-Warnung 203785492, beide nicht aus dem Spiel). `Ground.luau` passt perfekt zum WorldBuilder. **Der WorldBuilder fehlt aber weiter im Place** – Rojo bitte neu starten (`rojo serve` beenden, neu starten, in Studio neu verbinden). Hinweis für später: Der WorldBuilder setzt die SpawnLocation auf (0, 0, 20), deine Start-Halle steht bei z ≈ 30 – bitte prüfen, ob das zusammenpasst.
 
 ## Ziel
 Jus Rojo bringt den neuesten Stand von `main` in den Place (Physik-Fix + WorldBuilder), und Schritt 3 („Platzhalter-Insel“) baut auf dem Gelände des WorldBuilders auf, statt einen eigenen Boden zu bauen. Dabei arbeiten wir nicht gleichzeitig an denselben Teilen des Place.
