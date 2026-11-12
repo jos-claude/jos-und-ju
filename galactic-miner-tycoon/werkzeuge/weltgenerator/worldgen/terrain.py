@@ -110,7 +110,9 @@ def base_terrain(c: Ctx):
     amp = amp * ss(150, 215, c.r)                       # Plateau eben
     micro = nz.fbm("plateau", x, z, 40, 2) * 0.45 * (1.0 - ss(150, 215, c.r))
     micro = micro + (nz.fbm("microw", x, z, 85, 2) * 1.6 + nz.fbm("microw2", x, z, 34, 1) * 0.3) * ss(140, 190, c.r) * (1.0 - ss(380, 520, c.r))
-    c.H = h + n * amp + micro
+    macro = (nz.fbm("macrorel", x, z, 120, 2) * 1.6 + nz.fbm("macrorel2", x, z, 65, 1) * 0.5) * ss(240, 320, c.r) \
+        * (1.0 - 0.6 * ss(1550, 1700, c.r))        # Ring E: Boden dort schon fleckig (Slate/Rock), Bauflaechen schonen
+    c.H = h + n * amp + micro + macro
     c.base_smooth = h  # ohne Rauschen (fuer Washes)
 
 
@@ -210,9 +212,14 @@ def rim(c: Ctx):
     rc = np.clip(rc, 1955.0, 2015.0)
     # Massive mit Gipfeln und Saetteln unterschiedlicher Hoehe (Review: keine gleichmaessige Wand)
     massif = ss(-0.25, 0.3, nz.fbm("rimmacro", px, pz, 650, 2))
-    peaks = np.clip(nz.ridged("rimpk", px, pz, 230, 3, sharp=2.2), 0, 1)
-    teeth = nz.ridged("rimteeth", px, pz, 60, 2, sharp=2.4)
-    hc = 118.0 + 125.0 * massif + 120.0 * peaks ** 1.8 * (0.25 + 0.75 * massif) + 14.0 * teeth
+    # Review: ruhigere Grate (sharp 1,3, Zacken halbiert) und weiche Terrassen -> "Mega-Tafelberge" derselben Familie
+    peaks = np.clip(nz.ridged("rimpk", px, pz, 230, 3, sharp=1.3), 0, 1)
+    teeth = nz.ridged("rimteeth", px, pz, 60, 2, sharp=1.3)
+    hc = 118.0 + 125.0 * massif + 120.0 * peaks ** 1.8 * (0.25 + 0.75 * massif) + 7.0 * teeth
+    step = 26.0
+    k = np.floor(hc / step)
+    f = np.clip((hc - k * step) / step, 0, 1)
+    hc = k * step + step * ss(0.55, 0.95, f)          # flache Kronen-Stufen, weiche Kanten
     hc = np.clip(hc, 110.0, 330.0)
     # Balkon-Kerben
     notch = np.full(r.shape, 1e9)

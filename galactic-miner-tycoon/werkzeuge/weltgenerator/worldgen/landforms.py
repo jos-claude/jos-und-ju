@@ -206,12 +206,15 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
         th = np.arctan2(z - cz, x - cx)
         per = 2 * math.pi * R * (1 + aspect) / 2
         k = max(5, int(round(per / (rng.uniform(13, 19) if rough else rng.uniform(20, 35)))))
-        g = np.maximum(0.0, np.cos(k * th + rng.uniform(0, 6.3) + 0.8 * c.nz.fbm("gul", x, z, 80, 2))) ** (4 if rough else 8)
+        cosv = np.maximum(0.0, np.cos(k * th + rng.uniform(0, 6.3) + 0.8 * c.nz.fbm("gul", x, z, 80, 2)))
+        g = cosv ** (4 if rough else 8)
+        gw = cosv ** 2                       # breite, flache Schuttkegel unter den Rinnen
         rmin0 = R / math.sqrt(aspect)
         g = g * ss(0.3 * rmin0, 0.65 * rmin0, np.hypot(x - cx, z - cz))   # Rinnen nur am Rand, keine Loecher oben
         gd = rng.uniform(3.0, 4.5) if rough else rng.uniform(3.0, 6.0)
     else:
         g = np.zeros_like(s)
+        gw = g
         gd = 0.0
     h = np.full(s.shape, base)
     inset = 0.0
@@ -250,14 +253,20 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     qa = L1 / tal_l
     gfan = gfan_of(g)
     gs = 0.5 + 0.5 * c.nz.fbm("talcone", x, z, 80, 2)
-    tl = tal_l * (1.0 + 0.12 * gs + 0.3 * gfan)
-    Tg = T * (1.0 + 0.06 * gs + 0.12 * gfan)
-    q = np.clip((d + 0.06 * tl) / tl, 0, 1)
+    # Kegel unter den Rinnen breit und flach (sonst entstehen radiale Grate, die den flachen Fuss zerschneiden)
+    tl = tal_l * (1.0 + 0.06 * gs + 0.14 * gw)
+    Tg = T * (1.0 + 0.05 * gs + 0.06 * gw)
+    q_raw = (d + 0.06 * tl) / tl
+    q = np.clip(q_raw, 0, 1)
     tal = base + Tg * apron(q, qa)
-    tal = np.where(q < 1, tal, -1e9)
+    # Liegt das Gelaende hinter dem Fuss tiefer als base (Hanglage), laeuft der Fuss mit 3,5 Grad weiter, bis er das
+    # Gelaende trifft: keine Stufe am Haldenende (sonst gehen dort Bauflaechen verloren). Nicht in Washes/Wasser.
+    ext = np.clip(q_raw - 1.0, 0, None) * tl
+    soft = c.mask("wash")[sl] | ~np.isnan(c.wl[sl]) if hasattr(c, "wl") else c.mask("wash")[sl]
+    tal = np.where(q_raw < 1, tal, np.where((ext < 1.5 * tl + 20) & ~soft, base - ext * TAN(3.5), -1e9))
     new = np.maximum(Hl, np.maximum(mesa_h, tal))
     body = (mesa_h >= tal) & (mesa_h > Hl + 0.5)
-    tmask = (tal > mesa_h) & (tal > Hl + 0.25)
+    tmask = (tal > mesa_h) & (tal > Hl + 0.25) & (q_raw < 1)
     c.H[sl] = new
     c.mask("mesa")[sl] |= body
     c.mask("talus")[sl] |= tmask

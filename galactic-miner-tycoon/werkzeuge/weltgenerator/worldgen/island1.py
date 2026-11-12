@@ -84,6 +84,8 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
         "lighting": lighting.lighting_meta(),
         "sun": {"azimuth": SUN_AZ, "elevation": SUN_EL, "direction": lighting.sun_direction()},
         "spawn": [round(sx, 2), round(float(c.h_at(sx, sz)) + 0.5, 2), round(sz, 2)],
+        # Review 2b: animiertes Terrain-Gras auf Grass (ersetzt die Gras-Bueschel in Hainen); Farbe = Grass-Terrainfarbe
+        "terrain": {"Decoration": True, "GrassLength": 0.7},
     })
     if p is not None:
         placement.place_all(p)

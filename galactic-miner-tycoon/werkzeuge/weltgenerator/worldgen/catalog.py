@@ -50,26 +50,26 @@ def basis_y(d):
     return np.column_stack([xc, d, zc])
 
 
-def cyl(p0, p1, diam, role, mat="SmoothPlastic", **kw):
+def cyl(p0, p1, diam, role, mat="Plaster", **kw):
     p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
     v = p1 - p0
     L = float(np.linalg.norm(v))
     return PartDef("Cylinder", (L, diam, diam), tuple((p0 + p1) / 2), basis_x(v), role, mat, **kw)
 
 
-def ball(c, d, role, mat="SmoothPlastic", **kw):
+def ball(c, d, role, mat="Plaster", **kw):
     return PartDef("Ball", (d, d, d), tuple(np.asarray(c, float)), np.eye(3), role, mat, **kw)
 
 
-def ell(c, size, role, rot=None, mat="SmoothPlastic", **kw):
+def ell(c, size, role, rot=None, mat="Plastic", **kw):   # SpecialMesh: Material wird ohnehin nicht gezeigt
     return PartDef("Ellipsoid", tuple(size), tuple(np.asarray(c, float)), np.eye(3) if rot is None else rot, role, mat, **kw)
 
 
-def block(c, size, role, rot=None, mat="SmoothPlastic", **kw):
+def block(c, size, role, rot=None, mat="Plaster", **kw):
     return PartDef("Block", tuple(size), tuple(np.asarray(c, float)), np.eye(3) if rot is None else rot, role, mat, **kw)
 
 
-def wedge(c, size, role, rot=None, mat="SmoothPlastic", **kw):
+def wedge(c, size, role, rot=None, mat="Plaster", **kw):
     return PartDef("Wedge", tuple(size), tuple(np.asarray(c, float)), np.eye(3) if rot is None else rot, role, mat, **kw)
 
 
@@ -86,76 +86,103 @@ def tilt_dir(azr, tilt):
 
 
 # ------------------------------------------------------------------ Farben (Vorgabe 5.2)
-CROWNS = [C("#3FD0D0"), C("#A6E04A"), C("#6FE3B0"), C("#5EB8F2"), C("#FF9FB5"), C("#FFE36B")]
+# Review: gedaempfte, matte Farben (L 0,55-0,80, Saettigung <= 0,6); jede Pflanze mit dunklerer Unterseite
+CROWNS = [C("#52C6BE"), C("#B8DA6C"), C("#86D4B4"), C("#74B2DC"), C("#EFA4AE"), C("#EFD478")]
 CROWN_W = [35, 35, 15, 7, 5, 3]
-CROWNS_E = [C("#9AD5F0"), C("#B8A8F0"), C("#C7D3E8")]
-TRUNKS = [C("#C97A86"), C("#B8707A")]
-NOODLE = [C("#F4E27A"), C("#5FD3C8"), C("#8FE3C0"), C("#F7A8C8")]
+CROWNS_E = [C("#A8D2EA"), C("#BCAEE8"), C("#C4CCE0")]
+TRUNKS = [C("#7E5A68"), C("#6E5262")]
+NOODLE = [C("#E8D27E"), C("#6CC6BC"), C("#94D8BC"), C("#EBA6BE")]
 NOODLE_W = [34, 31, 27, 8]
-CRYSTAL = [(C("#7FF3E0"), C("#B0FFF2")), (C("#9BD8FF"), C("#C8ECFF")), (C("#D58BFF"), C("#ECC0FF")),
-           (C("#FF7FD0"), C("#FFB4E6")), (C("#A58CFF"), C("#CBBEFF"))]
+CRYSTAL = [(C("#8EE8D8"), C("#B4F2E6")), (C("#A8D8F2"), C("#C8E6F8")), (C("#CFA0F0"), C("#E2C4F6")),
+           (C("#F2A0D6"), C("#F8C4E6")), (C("#B2A0F0"), C("#CEC2F6"))]
 CRYSTAL_W = [30, 25, 20, 10, 15]
 LANTERN = [C("#FFC76B"), C("#FF8FB8"), C("#6DEBDD")]
-MUSHROOM = [C("#B58CF0"), C("#FF9CC2"), C("#FFB88A"), C("#7FD8CF")]
-ORGAN = [C("#F28BA0"), C("#F4D87A"), C("#7FE0B0")]
+MUSHROOM = [C("#A98CD8"), C("#EE9CB8"), C("#F2AE86"), C("#79C9C0")]
+ORGAN = [C("#E99AA2"), C("#E8CF86"), C("#8ED6B4")]
 MOSS = [C("#B0D98A"), C("#8FD6B5"), C("#B8AAD6")]
-CACTUS = [C("#9ED8BE"), C("#B4A6D8")]
+CACTUS = [C("#94CDB8"), C("#AC9CD2")]
 PEBBLE = {"Sandstone": C("#F4A9C4"), "Limestone": C("#F9E7A3"), "Slate": C("#A99BE0"), "Rock": C("#C48BBE"),
           "Mud": C("#D9795F"), "Salt": C("#FCEFEA")}
 PEBBLE_KEYS = list(PEBBLE)
-TUFT = [C("#A6DC6E"), C("#8CCF7C"), C("#C4DB72")]
+TUFT = [C("#A8C878"), C("#94BE86"), C("#BCCB7C")]
 FLOWER = [C("#FFE36B"), C("#FF9FB5"), C("#FFFFFF")]
 
 
-def _weighted(variants, weights):
-    return variants, weights
+def cooler(c, f=0.22):
+    """Dunklere, etwas kuehlere Unterseite (eingebauter Kontaktschatten)."""
+    r, g, b = darker(c, f)
+    return (int(r * 0.94), int(g * 0.97), min(255, int(b * 1.06)))
+
+
+# Gesteins-Kiesel: Material und Farbe des Bands darueber (12 % dunkler, 15 % entsaettigt)
+ROCKS = {"Sandstone": "#EEA0A2", "Limestone": "#F1CF94", "Slate": "#D2AACE", "Mud": "#EC8E74", "Rock": "#CDA49E"}
+
+
+def band_pebble_color(hexc):
+    r, g, b = C(hexc)
+    l = (r + g + b) / 3
+    r, g, b = (l + (r - l) * 0.85, l + (g - l) * 0.85, l + (b - l) * 0.85)
+    return (int(r * 0.88), int(g * 0.88), int(b * 0.88))
 
 
 # ------------------------------------------------------------------ Arten
+def crown(center, D, role, rng, full=True, mat="Sand"):
+    """Wolkenform: Hauptkugel + 2 Nebenkugeln (leicht unterhalb, ueberlappend) + dunklere Unterseiten-Kugel."""
+    center = np.asarray(center, float)
+    parts = [ball(center, D, role, mat)]
+    if full:
+        a0 = rng.uniform(0, 2 * math.pi)
+        for i in range(2):
+            a = a0 + i * rng.uniform(2.2, 3.4)
+            d = D * rng.uniform(0.55, 0.7)
+            off = (D + d) / 2 * rng.uniform(0.65, 0.75)
+            parts.append(ball(center + np.array([math.cos(a) * off, -D * rng.uniform(0.08, 0.18), math.sin(a) * off]), d, role, mat))
+    parts.append(ball(center - np.array([0, D * 0.25, 0]), D * 0.8, role + "_under", mat))
+    return parts
+
+
 def balloon_tree(rng, k):
-    """Ballon-Baum: 1-3 Staemme aus Segmenten (S-Kurve), Kugelkrone 0,42 x Hoehe, Knoten, Wurzel."""
+    """Ballon-Baum: duenne, dunkle Holzstaemme (gleicher Durchmesser je Stamm), Wurzeln, Wolken-Krone mit Unterseite."""
     H = 24.0
-    n_st = [1, 1, 2, 2, 2, 3, 1, 2][k % 8]
-    side = k % 3 == 0 and n_st < 3
+    n_st = [1, 1, 2, 1, 2, 1, 2, 3][k % 8]
     parts = []
-    d0 = rng.uniform(1.5, 2.1)
-    parts.append(ell((0, 0.25, 0), (2.6 * d0 * (1.2 if n_st > 1 else 1), 0.9 * d0, 2.6 * d0), "trunk", collide=False))
+    d0 = rng.uniform(0.95, 1.35)
     nseg = 4 if n_st < 3 else 3
     spread = rng.uniform(0, 2 * math.pi)
+    # Wurzeln: 3 kurze Zylinder, 40 Grad geneigt, halb im Boden
+    for i in range(3):
+        a = spread + i * 2.09 + rng.uniform(-0.3, 0.3)
+        dr = np.array([math.cos(a) * math.cos(math.radians(40)), -math.sin(math.radians(40)), math.sin(a) * math.cos(math.radians(40))])
+        L = rng.uniform(1.5, 2.5)
+        p0 = np.array([0.0, 0.5, 0.0])
+        parts.append(cyl(p0, p0 + dr * L, d0 * 0.6, "trunk", "Wood"))
     for si in range(n_st):
         az = spread + si * 2 * math.pi / n_st + rng.uniform(-0.4, 0.4)
-        tilt = math.radians(rng.uniform(4, 10) if n_st == 1 else rng.uniform(10, 20))
-        hs = H * (0.62 if si == 0 else rng.uniform(0.45, 0.58))
+        tilt = math.radians(rng.uniform(4, 10) if n_st == 1 else rng.uniform(12, 22))
+        hs = H * (0.62 if si == 0 else rng.uniform(0.45, 0.56))
         seg = hs / nseg
-        p = np.array([math.cos(az) * 0.4 * (si > 0), 0.0, math.sin(az) * 0.4 * (si > 0)])
+        p = np.array([math.cos(az) * 0.3 * (si > 0), -0.4, math.sin(az) * 0.3 * (si > 0)])
         d = tilt_dir(az, tilt)
         sgn = 1 if rng.uniform() < 0.5 else -1
+        dia = d0 * (1.0 if si == 0 else 0.8)
         for j in range(nseg):
-            ang = math.radians(rng.uniform(6, 14)) * sgn * (1 if j % 2 == 0 else -1)
-            axis = np.cross(d, UP) if abs(d @ UP) < 0.999 else np.array([1.0, 0, 0])
+            ang = math.radians(rng.uniform(5, 13)) * sgn * (1 if j % 2 == 0 else -1)
+            axis = np.cross(d, UP)
             if np.linalg.norm(axis) < 1e-6:
                 axis = np.array([math.cos(az + 1.57), 0, math.sin(az + 1.57)])
             d = rot_axis(axis, ang) @ d
             q = p + d * seg
-            dia = d0 * (1.0 - 0.35 * (j + 0.5) / nseg) * (1.0 if si == 0 else 0.8)
-            parts.append(cyl(p - d * 0.3, q, dia, "trunk", collide=(j == 0 and dia >= 1.6)))
+            parts.append(cyl(p, q + d * 0.15, dia, "trunk", "Wood", collide=(j == 0 and si == 0)))
+            if abs(math.degrees(ang)) > 10 and j < nseg - 1:
+                parts.append(ball(q, dia * 1.12, "trunk", "Wood"))       # Gelenk nur bei Knick > 10 Grad
             p = q
-            if side and si == 0 and j == 2:
-                # Zweitballon an einem kurzen Seitenast
-                sd = tilt_dir(az + math.pi * rng.uniform(0.6, 1.0), math.radians(40))
-                s1 = p + sd * seg * 0.9
-                parts.append(cyl(p, s1, dia * 0.7, "trunk"))
-                cr2 = H * 0.42 * rng.uniform(0.5, 0.65)
-                parts.append(ball(s1 + sd * cr2 * 0.42, cr2, "crown2"))
-        cr = H * (0.42 if si == 0 else rng.uniform(0.3, 0.38))
-        if n_st < 3:
-            parts.append(ball(p + d * 0.3, 1.25 * d0, "knot"))
-        parts.append(ball(p + d * cr * 0.44, cr, "crown" if si == 0 else "crown2"))
+        Dc = H * (0.42 if si == 0 else rng.uniform(0.3, 0.36))
+        parts += crown(p + d * Dc * 0.45, Dc, "crown" if si == 0 else "crown2", rng, full=(si == 0))
     variants = []
     for ci, cc in enumerate(CROWNS + CROWNS_E):
-        tr = TRUNKS[ci % 2] if ci < 6 else C("#9C8FB8")
-        c2 = CROWNS[(ci + 2) % 6] if ci < 6 and rng.uniform() < 0.3 else lighter(cc, 0.18)
-        variants.append({"trunk": tr, "knot": darker(tr, 0.1), "crown": cc, "crown2": c2})
+        tr = TRUNKS[ci % 2]
+        c2 = lighter(cc, 0.12) if ci >= 6 or rng.uniform() > 0.3 else CROWNS[(ci + 2) % 6]
+        variants.append({"trunk": tr, "crown": cc, "crown_under": cooler(cc), "crown2": c2, "crown2_under": cooler(c2)})
     return Template(f"BalloonTree_{k}", "Flora", parts, variants)
 
 
@@ -172,25 +199,32 @@ def noodle(rng, k):
         prof = [(0.0, 0.0), (0.1, 0.5), (0.34, 0.86), (0.52, 0.66)] if (i + k) % 2 == 0 else \
                [(0.0, 0.0), (0.16, 0.42), (0.42, 0.72), (0.5, 0.48)]
         pts = [o * a * hh + UP * b * hh for a, b in prof]
+        pts[0] = pts[0] - UP * 0.6                              # unterster Teil halb im Boden
         for j in range(3):
-            parts.append(cyl(pts[j], pts[j + 1], (1.4 - 0.18 * j) * (0.9 if i else 1.0), "main"))
+            parts.append(cyl(pts[j], pts[j + 1], (1.4 - 0.18 * j) * (0.9 if i else 1.0), "base" if j == 0 else "main", "Plaster"))
         if i == 0:
-            parts.append(ball(pts[3], 1.6, "tip"))
-    variants = [{"main": cc, "tip": lighter(cc, 0.35)} for cc in NOODLE]
+            parts.append(ball(pts[3], 1.6, "tip", "Plaster"))
+    variants = [{"main": cc, "base": cooler(cc, 0.18), "tip": lighter(cc, 0.2)} for cc in NOODLE]
     return Template(f"Noodle_{k}", "Flora", parts, variants)
 
 
-def _prism(base, d, b, L, role, mat="Neon", tr=0.15, collide=False, light=None):
-    """Kristall-Prisma: Block + Dachfirst-Spitze (45 Grad gedrehter Block)."""
+def _prism(base, d, b, L, role, mat="Glass", tr=0.3, collide=False, light=None, core=False):
+    """Kristall-Prisma: Glas-Block + Dachfirst-Spitze (45 Grad gedrehter Block), optional Neon-Kern."""
     R = basis_y(d)
     spin = rot_axis(d, 0.6)
     R = spin @ R
     c = np.asarray(base, float) + d * L / 2
-    body = block(c, (b, L, b), role, R, mat, transparency=tr, collide=collide, light=light, cast_shadow=False)
+    body = block(c, (b, L, b), role, R, mat, transparency=tr, collide=collide, light=light if not core else None,
+                 cast_shadow=False, reflectance=0.08 if mat == "Glass" else 0.0)
     tipR = R @ angles(math.pi / 4, 0, 0)
     tc = np.asarray(base, float) + d * L
-    tip = block(tc, (b, b * 0.72, b * 0.72), role, tipR, mat, transparency=tr, cast_shadow=False)
-    return [body, tip]
+    tip = block(tc, (b, b * 0.72, b * 0.72), role, tipR, mat, transparency=tr, cast_shadow=False,
+                reflectance=0.08 if mat == "Glass" else 0.0)
+    out = [body, tip]
+    if core:
+        out.append(block(np.asarray(base, float) + d * L * 0.45, (b * 0.45, L * 0.8, b * 0.45), "core", R, "Neon",
+                         transparency=0.25, cast_shadow=False, light=light))
+    return out
 
 
 def crystal(rng, k, size="small", lit=False):
@@ -214,10 +248,17 @@ def crystal(rng, k, size="small", lit=False):
         base = np.array([math.cos(az0 + i) * b * 0.5 * (i > 0), -0.12 * Li, math.sin(az0 + i) * b * 0.5 * (i > 0)])
         light = None
         if lit and i == 0:
-            light = {"range": 22 if size != "giant" else 55, "brightness": 1.2 if size != "giant" else 1.5, "role": "c1"}
-        parts += _prism(base, d, bi, Li, "c1" if i % 2 == 0 else "c2", tr=rng.uniform(0.1, 0.25),
-                        collide=(size != "small" and i == 0), light=light)
-    variants = [{"c1": a, "c2": bb} for a, bb in CRYSTAL]
+            light = {"range": 22 if size != "giant" else 55, "brightness": 1.2 if size != "giant" else 1.5, "role": "core"}
+        parts += _prism(base, d, bi, Li, "c1" if i % 2 == 0 else "c2", tr=0.3 if size == "small" else 0.35,
+                        collide=(size != "small" and i == 0), light=light, core=(size != "small" and i == 0))
+    # 1-2 Fussbrocken in Gesteinsfarbe: der Kristall waechst aus dem Fels
+    for j in range(1 + k % 2):
+        a = az0 + 2.5 + j * 2.0
+        rr = b * (1.1 + 0.4 * j)
+        fs = b * rng.uniform(1.2, 1.8)
+        parts.append(block((math.cos(a) * rr, fs * 0.2, math.sin(a) * rr), (fs, fs * 0.7, fs * 0.9), "foot",
+                           angles(rng.uniform(-0.4, 0.4), rng.uniform(0, 3), rng.uniform(-0.4, 0.4)), "Rock"))
+    variants = [{"c1": a, "c2": bb, "core": lighter(a, 0.15), "foot": C("#B8908A")} for a, bb in CRYSTAL]
     name = {"small": "CrystalS", "medium": "CrystalM", "giant": "CrystalG"}[size] + ("Lit" if lit else "") + f"_{k}"
     return Template(name, "Crystal", parts, variants)
 
@@ -231,7 +272,7 @@ def crystal_titan(rng, k):
         d = tilt_dir(az0 + i * 1.7, math.radians(5 if i == 0 else rng.uniform(15, 30)))
         bi, Li = (b, L) if i == 0 else (b * 0.7, L * rng.uniform(0.5, 0.75))
         for p in _prism(np.array([0, -0.1 * Li, 0]), d, bi, Li, "c1" if i % 2 == 0 else "c2", mat="Glass", tr=0.2, collide=i == 0):
-            p.reflectance = 0.25
+            p.reflectance = 0.15
             parts.append(p)
     variants = [{"c1": C("#C7D3E8"), "c2": C("#E4ECF8")}, {"c1": C("#BFE6F5"), "c2": C("#E2F5FC")}]
     return Template(f"CrystalTitan_{k}", "Crystal", parts, variants)
@@ -246,15 +287,15 @@ def lantern(rng, k, lit=False):
     p1 = d1 * l1
     p2 = p1 + d2 * l2
     D = rng.uniform(2.4, 3.4)
-    parts = [cyl((0, -0.2, 0), p1, 0.55, "stem"), cyl(p1, p2, 0.5, "stem")]
+    parts = [cyl((0, -0.3, 0), p1, 0.55, "stem", "Plaster"), cyl(p1, p2, 0.5, "stem", "Plaster")]
     for i in range(3):
         a = az + i * 2.094
         rot = rot_y(-a) @ angles(math.radians(-35), 0, 0)
         parts.append(wedge(p2 + np.array([math.cos(a) * D * 0.25, -D * 0.15, math.sin(a) * D * 0.25]),
-                           (0.4, 1.0, rng.uniform(1.6, 2.4)), "sepal", rot))
+                           (0.4, 1.0, rng.uniform(1.6, 2.4)), "sepal", rot, "Plaster"))
     light = {"range": 14, "brightness": 0.6, "role": "lamp"} if lit else None
-    parts.append(ball(p2 + d2 * D * 0.45, D, "lamp", "Neon", transparency=0.3, light=light, cast_shadow=False))
-    variants = [{"stem": C("#7FCF9A"), "sepal": lighter(cc, 0.2) if i != 2 else C("#A8E070"), "lamp": cc}
+    parts.append(ball(p2 + d2 * D * 0.45, D, "lamp", "Neon", transparency=0.35, light=light, cast_shadow=False))
+    variants = [{"stem": C("#86C49A"), "sepal": lighter(cc, 0.1) if i != 2 else C("#A8C878"), "lamp": cc}
                 for i, cc in enumerate(LANTERN)]
     return Template(f"Lantern{'Lit' if lit else ''}_{k}", "Flora", parts, variants)
 
@@ -265,15 +306,17 @@ def mushroom(rng, k):
     cd = rng.uniform(5, 8)
     lean = rng.uniform(0, 6.28)
     top = np.array([math.cos(lean) * 0.5, sh, math.sin(lean) * 0.5])
-    parts = [cyl((0, -0.3, 0), top, sd, "stem", collide=sd >= 2.0)]
-    capR = basis_y(top / np.linalg.norm(top) * 0.3 + UP * 0.7)
-    parts.append(ell(top + UP * cd * 0.12, (cd, cd * 0.48, cd), "cap", capR))
-    parts.append(cyl(top - UP * 0.05, top + UP * 0.25, cd * 0.85, "gill"))
+    parts = [cyl((0, -0.5, 0), top, sd, "stem", "Plaster", collide=sd >= 2.0)]
+    dc = cd * 0.8
+    cc_ = top + UP * dc * 0.2                                # Hut = Kugel, Mitte knapp ueber dem Stielende
+    parts.append(ball(cc_, dc, "cap", "Plaster"))
+    parts.append(cyl(top - UP * 0.05, top + UP * 0.3, dc * 0.92, "gill", "Plaster"))   # Lamellen dunkler (Schatten)
     for i in range(2 + k % 2):
         a = rng.uniform(0, 6.28)
-        rr = cd * rng.uniform(0.15, 0.32)
-        parts.append(ball(top + np.array([math.cos(a) * rr, cd * 0.32 - rr * 0.25, math.sin(a) * rr]), rng.uniform(0.6, 1.1), "spot"))
-    variants = [{"stem": C("#F6EEDC"), "cap": cc, "gill": lighter(cc, 0.45), "spot": C("#FFF3D6")} for cc in MUSHROOM]
+        el = math.radians(rng.uniform(30, 65))
+        parts.append(ball(cc_ + np.array([math.cos(a) * math.cos(el), math.sin(el), math.sin(a) * math.cos(el)]) * dc * 0.48,
+                          rng.uniform(0.6, 1.0), "spot", "Plaster"))
+    variants = [{"stem": C("#EDE2D2"), "cap": cc, "gill": cooler(cc, 0.3), "spot": C("#FFF1DC")} for cc in MUSHROOM]
     return Template(f"Mushroom_{k}", "Flora", parts, variants)
 
 
@@ -290,38 +333,26 @@ def organ_pipe(rng, k):
     for i in range(n):
         d = rng.uniform(1.6, 3.2) if i else 3.2
         x, z = pos[i]
-        parts.append(cyl((x, -0.3, z), (x, hs[i], z), d, "tube", collide=d >= 2.0))
+        parts.append(cyl((x, -0.5, z), (x, hs[i], z), d, "tube", "Plaster", collide=d >= 2.0))
         if i < 3:
-            parts.append(cyl((x, hs[i] - 0.2, z), (x, hs[i] + 0.2, z), d + 0.4, "rim"))
-    variants = [{"tube": cc, "rim": lighter(cc, 0.3)} for cc in ORGAN]
+            parts.append(cyl((x, hs[i] - 1.2, z), (x, hs[i] + 0.05, z), max(0.6, d - 0.6), "hole", "Plaster"))
+    variants = [{"tube": cc, "hole": darker(cc, 0.4)} for cc in ORGAN]
     return Template(f"OrganPipe_{k}", "Flora", parts, variants)
-
-
-def moss(rng, k):
-    D = 12.0
-    hh = 0.2 * D * rng.uniform(0.8, 1.0)                 # Hoehe <= 0,25 x Breite
-    rot = rot_y(rng.uniform(0, 3))
-    parts = [ell((0, hh * 0.2, 0), (D, hh, D * rng.uniform(0.7, 0.95)), "main", rot, cast_shadow=False)]   # 30 % im Boden
-    a = rng.uniform(0, 6.28)
-    parts.append(ell((math.cos(a) * D * 0.18, hh * 0.38, math.sin(a) * D * 0.18), (D * 0.42, hh * 0.6, D * 0.36), "main", rot,
-                     cast_shadow=False))
-    variants = [{"main": cc} for cc in MOSS]
-    return Template(f"Moss_{k}", "Flora", parts, variants)
 
 
 def steam_vent(rng, k):
     parts = []
     y = 0.0
     for i, d in enumerate((10, 7, 4)):
-        parts.append(cyl((0, y - (0.4 if i == 0 else 0), 0), (0, y + 1.5, 0), d, "sinter", "Limestone", collide=i == 0))
+        parts.append(cyl((0, y - (0.6 if i == 0 else 0), 0), (0, y + 1.5, 0), d, "sinter", "Limestone", collide=i == 0))
         y += 1.5
     steam = {"kind": "steam", "rate": 5, "lifetime": [4, 7], "size": [3, 12], "speed": [5, 9], "spread": 12,
              "color": "#F4EEF8", "transparency": [0.55, 1.0], "pulse": [25, 40]}
-    parts.append(cyl((0, y - 0.05, 0), (0, y + 0.25, 0), 3.0, "water", "Neon", transparency=0.2, particles=steam, cast_shadow=False))
+    parts.append(cyl((0, y - 0.05, 0), (0, y + 0.25, 0), 3.0, "water", "Glass", transparency=0.3, particles=steam, cast_shadow=False))
     for i in range(4):
         a = i * 1.57 + rng.uniform(-0.3, 0.3)
-        parts.append(ball((math.cos(a) * 5.4, 0.4, math.sin(a) * 5.4), rng.uniform(1.2, 2.0), "stone"))
-    variants = [{"sinter": C("#F4EBDD"), "water": C("#7FF3E0"), "stone": C("#FCEFEA")}]
+        parts.append(ball((math.cos(a) * 5.4, 0.2, math.sin(a) * 5.4), rng.uniform(1.4, 2.2), "stone", "Limestone"))
+    variants = [{"sinter": C("#EFE3D2"), "water": C("#7FE0D6"), "stone": C("#E6D8C4")}]
     t = Template(f"SteamVent_{k}", "Feature", parts, variants)
     return t
 
@@ -336,27 +367,27 @@ def reeds(rng, k):
         d2 = tilt_dir(0.0, math.radians(rng.uniform(16, 30)))
         p1 = base + d1 * L1
         p2 = p1 + d2 * L2
-        parts.append(block((base + p1) / 2, (0.32, L1, 0.32), "blade", basis_y(d1), cast_shadow=False))
-        parts.append(block((p1 + p2) / 2, (0.3, L2, 0.3), "tip", basis_y(d2), cast_shadow=False))
-    variants = [{"blade": C("#8FE3C0"), "tip": C("#F4E27A")}, {"blade": C("#7FD6A8"), "tip": C("#F7E89A")}]
+        parts.append(block((base + p1) / 2, (0.32, L1, 0.32), "blade", basis_y(d1), "Grass", cast_shadow=False))
+        parts.append(block((p1 + p2) / 2, (0.3, L2, 0.3), "tip", basis_y(d2), "Grass", cast_shadow=False))
+    variants = [{"blade": C("#8CCFB0"), "tip": C("#E8D68A")}, {"blade": C("#82C2A4"), "tip": C("#E2D294")}]
     return Template(f"Reeds_{k}", "Flora", parts, variants)
 
 
 def pearl_cactus(rng, k, pearls=False):
     D = rng.uniform(4, 5.5)
-    parts = [ball((0, D * 0.42, 0), D, "main", collide=False)]
+    parts = [ball((0, D * 0.36, 0), D, "main", "Sand", collide=False)]
     for i in range(3):
         a = rng.uniform(0, 6.28)
         d = D * rng.uniform(0.5, 0.7)
         y = rng.uniform(0.3, 0.9) * D
         r = (D + d) * 0.4
-        parts.append(ball((math.cos(a) * r, y, math.sin(a) * r), d, "main"))
+        parts.append(ball((math.cos(a) * r, y, math.sin(a) * r), d, "main" if i else "under", "Sand"))
     if pearls:
         for i in range(4):
             a = rng.uniform(0, 6.28)
             parts.append(ball((math.cos(a) * D * 0.45, D * rng.uniform(0.6, 0.95), math.sin(a) * D * 0.45), 0.45, "pearl", "Neon",
                               cast_shadow=False))
-    variants = [{"main": cc, "pearl": C("#FF9FD0")} for cc in CACTUS]
+    variants = [{"main": cc, "under": cooler(cc, 0.15), "pearl": C("#FF9FD0")} for cc in CACTUS]
     return Template(f"PearlCactus{'P' if pearls else ''}_{k}", "Flora", parts, variants)
 
 
@@ -371,54 +402,67 @@ def fossil(rng, k):
         r = 5.0 * (1 - t) + 1.5 * t
         pts.append(np.array([math.cos(ang) * r, math.sin(ang) * r, 0.0]))
     for i in range(n):
-        parts.append(cyl(pts[i], pts[i + 1], 0.9 - 0.08 * i, "main", cast_shadow=False))
-    return Template(f"Fossil_{k}", "Feature", parts, [{"main": C("#F1E4C8")}])
+        parts.append(cyl(pts[i], pts[i + 1], 0.9 - 0.08 * i, "main", "Limestone", cast_shadow=False))
+    return Template(f"Fossil_{k}", "Feature", parts, [{"main": C("#EAD9BC")}])
 
 
-def pebble(rng, k):
-    sh = k % 4
+def pebble(rng, k, mat):
+    """Kiesel im Material des Bands darueber: Kugel (35 % versenkt), Keil oder gedrehter Block."""
+    sh = k % 3
     if sh == 0:
-        parts = [ell((0, 0.45, 0), (2.4, 1.2, 1.8), "main", angles(0.15, 0.4, -0.1), "Slate", cast_shadow=False)]
+        parts = [ball((0, 0.3, 0), 2.0, "main", mat, cast_shadow=False)]
     elif sh == 1:
-        parts = [ell((0, 0.5, 0), (2.8, 1.5, 2.1), "main", rot_y(0.5), "Slate", cast_shadow=False)]
-    elif sh == 2:
-        parts = [wedge((0, 0.55, 0), (2.0, 1.4, 2.6), "main", rot_y(1.1), "Slate", cast_shadow=False)]
+        parts = [wedge((0, 0.45, 0), (2.0, 1.4, 2.6), "main", rot_y(1.1), mat, cast_shadow=False)]
     else:
-        parts = [block((0, 0.5, 0), (1.8, 1.3, 2.0), "main", angles(0.3, 0.7, 0.2), "Slate", cast_shadow=False)]
-    variants = [{"main": PEBBLE[key]} for key in PEBBLE_KEYS]
-    return Template(f"Pebble_{k}", "Rock", parts, variants)
+        parts = [block((0, 0.35, 0), (1.8, 1.3, 2.0), "main", angles(0.3, 0.7, 0.2), mat, cast_shadow=False)]
+    return Template(f"Pebble_{mat}_{k}", "Rock", parts, [{"main": band_pebble_color(ROCKS[mat])}])
+
+
+def boulder(rng, k):
+    """Mittelgrosser Brocken (2-8 Studs) aus Schutt: 2-3 gedrehte Bloecke/Keile (Low-Poly)."""
+    parts = []
+    for i in range(2 + k % 2):
+        sz = np.array([rng.uniform(2.2, 3.2), rng.uniform(1.4, 2.4), rng.uniform(2.0, 3.0)]) * (1.0 if i == 0 else 0.7)
+        off = np.array([rng.uniform(-0.8, 0.8), sz[1] * 0.3, rng.uniform(-0.8, 0.8)]) * (i > 0)
+        R = angles(rng.uniform(-0.35, 0.35), rng.uniform(0, 3.1), rng.uniform(-0.35, 0.35))
+        if i == 1:
+            parts.append(wedge(off + np.array([0, sz[1] * 0.35, 0]), sz, "main", R, "Rock", collide=False))
+        else:
+            parts.append(block(off + np.array([0, sz[1] * 0.3, 0]), sz, "main", R, "Rock", collide=i == 0))
+    return Template(f"Boulder_{k}", "Rock", parts, [{"main": C("#BE9690")}, {"main": C("#C99E94")}, {"main": C("#B58C92")}])
 
 
 def copper_rock(rng, k):
-    D = rng.uniform(7, 10)
-    parts = [ell((0, D * 0.35, 0), (D, D * 0.8, D * 0.9), "rock", rot_y(rng.uniform(0, 3)), "Slate", collide=True)]
+    """Kupfer-Brocken: 2-3 gedrehte Bloecke/Keile, Patina als flache Scheiben."""
+    D = rng.uniform(5, 7)
+    parts = [block((0, D * 0.35, 0), (D, D * 0.75, D * 0.85), "rock", angles(0.2, rng.uniform(0, 3), 0.15), "Sandstone", collide=True)]
     for i in range(2):
         a = rng.uniform(0, 6.28)
-        parts.append(wedge((math.cos(a) * D * 0.42, D * 0.2, math.sin(a) * D * 0.42), (D * 0.5, D * 0.45, D * 0.6), "rock",
-                           rot_y(-a), "Slate"))
-    for i in range(4):
+        parts.append(wedge((math.cos(a) * D * 0.5, D * 0.25, math.sin(a) * D * 0.5), (D * 0.6, D * 0.5, D * 0.7), "rock",
+                           rot_y(-a), "Sandstone"))
+    for i in range(3):
         a = rng.uniform(0, 6.28)
-        y = rng.uniform(0.3, 0.75) * D
-        rr = math.sqrt(max(0.0, (D * 0.5) ** 2 - (y - D * 0.35) ** 2)) * 0.95
-        parts.append(ball((math.cos(a) * rr, y, math.sin(a) * rr), rng.uniform(1.0, 1.8), "patina", cast_shadow=False))
-    return Template(f"CopperRock_{k}", "Rock", parts, [{"rock": C("#D98A62"), "patina": C("#3CC8A8")}])
+        y = rng.uniform(0.35, 0.7) * D
+        n = np.array([math.cos(a), 0.4, math.sin(a)])
+        parts.append(cyl(np.array([math.cos(a) * D * 0.44, y, math.sin(a) * D * 0.44]),
+                         np.array([math.cos(a) * D * 0.44, y, math.sin(a) * D * 0.44]) + n * 0.25, rng.uniform(1.2, 2.0),
+                         "patina", "Plaster", cast_shadow=False))
+    return Template(f"CopperRock_{k}", "Rock", parts, [{"rock": C("#C98A6E"), "patina": C("#52BCA2")}])
 
 
 def tuft(rng, k):
     if k < 3:
         parts = []
-        nb = 3 + k % 3
-        for i in range(nb):
-            a = i * 2 * math.pi / nb + rng.uniform(-0.4, 0.4)
-            L = rng.uniform(1.2, 2.1)
-            d = tilt_dir(a, math.radians(rng.uniform(8, 24)))
+        for i in range(3):
+            a = i * 2.09 + rng.uniform(-0.4, 0.4)
+            L = rng.uniform(1.3, 2.2)
+            d = tilt_dir(a, math.radians(rng.uniform(8, 22)))
             base = np.array([math.cos(a) * 0.2, -0.15, math.sin(a) * 0.2])
-            parts.append(block(base + d * L / 2, (0.4, L, 0.22), "main", basis_y(d) @ rot_y(rng.uniform(0, 3)) if False else basis_y(d),
-                               cast_shadow=False))
+            parts.append(wedge(base + d * L / 2, (0.16, L, 0.55), "main", basis_y(d) @ rot_y(a), "Grass", cast_shadow=False))
         variants = [{"main": cc} for cc in TUFT]
         return Template(f"GrassTuft_{k}", "Flora", parts, variants)
-    parts = [block((0, 0.6, 0), (0.18, 1.3, 0.18), "stem", cast_shadow=False),
-             ball((0, 1.35, 0), 0.7, "bloom", cast_shadow=False)]
+    parts = [block((0, 0.6, 0), (0.18, 1.3, 0.18), "stem", None, "Grass", cast_shadow=False),
+             ball((0, 1.35, 0), 0.7, "bloom", "Plaster", cast_shadow=False)]
     variants = [{"stem": C("#8FD07A"), "bloom": cc} for cc in FLOWER]
     return Template(f"Flower_{k}", "Flora", parts, variants)
 
@@ -453,7 +497,8 @@ def mist_emitter():
     """Unsichtbares Teil mit ruhigen Nebel-Partikeln (Nebelbecken Ring E)."""
     pt = {"kind": "mist", "rate": 1.5, "lifetime": [12, 18], "size": [20, 40], "speed": [0.5, 1.5], "spread": 180,
           "color": "#F4E8F4", "transparency": [0.85, 1.0]}
-    return Template("MistEmitter", "Mist", [block((0, 0, 0), (2, 2, 2), "main", transparency=1.0, cast_shadow=False, particles=pt)],
+    return Template("MistEmitter", "Mist", [block((0, 0, 0), (2, 2, 2), "main", None, "Plastic", transparency=1.0, cast_shadow=False,
+                                                  particles=pt)],
                     [{"main": C("#F4E8F4")}])
 
 
@@ -466,8 +511,8 @@ def light_beam():
 
 def edge_barrier():
     """Unsichtbare Wand am Rand (r ~2008, Hoehe 700). Kann der Builder schon: Transparenz 1 + collide."""
-    return Template("EdgeBarrier", "Barrier", [block((0, 330, 0), (200, 760, 4), "main", transparency=1.0, collide=True,
-                                                     cast_shadow=False)], [{"main": (255, 255, 255)}])
+    return Template("EdgeBarrier", "Barrier", [block((0, 330, 0), (200, 760, 4), "main", None, "Plastic", transparency=1.0,
+                                                     collide=True, cast_shadow=False)], [{"main": (255, 255, 255)}])
 
 
 def titan_vein_segment():
@@ -494,12 +539,12 @@ def build_catalog(rng):
         "LanternLit": [add(lantern(rng, k, True)) for k in range(2)],
         "Mushroom": [add(mushroom(rng, k)) for k in range(4)],
         "OrganPipe": [add(organ_pipe(rng, k)) for k in range(4)],
-        "Moss": [add(moss(rng, k)) for k in range(4)],
+        "Boulder": [add(boulder(rng, k)) for k in range(4)],
         "SteamVent": [add(steam_vent(rng, k)) for k in range(2)],
         "Reeds": [add(reeds(rng, k)) for k in range(4)],
         "PearlCactus": [add(pearl_cactus(rng, k)) for k in range(3)] + [add(pearl_cactus(rng, 3, True))],
         "Fossil": [add(fossil(rng, k)) for k in range(2)],
-        "Pebble": [add(pebble(rng, k)) for k in range(4)],
+        **{"Pebble_" + m: [add(pebble(rng, k, m)) for k in range(3)] for m in ROCKS},
         "CopperRock": [add(copper_rock(rng, k)) for k in range(3)],
         "Tuft": [add(tuft(rng, k)) for k in range(5)],
         "Cloud": [add(cloud())], "FogBall": [add(fog_ball())], "LightBeam": [add(light_beam())],

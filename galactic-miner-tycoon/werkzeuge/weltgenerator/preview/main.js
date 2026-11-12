@@ -18,6 +18,18 @@ const Q = new URLSearchParams(location.search);
 const WIDTH = +(Q.get('w') || innerWidth);
 const HEIGHT = +(Q.get('h') || innerHeight);
 const NEON_GAIN = 1.55;
+// Roblox-Materialien sind Textur x Farbe: die Textur dunkelt die eingestellte Farbe ab (Albedo-Faktor, linear).
+// Ground ist gemessen (Studio-Screenshot 2026-11-12: Farbe #F2A07C wird zu ~#BB6B4A), alle anderen sind geschaetzt.
+const ALBEDO = {
+  Ground: [0.56, 0.545, 0.49], Mud: 0.6, Sand: 0.8, Sandstone: 0.85, Limestone: 0.88, Slate: 0.7, Rock: 0.68, Salt: 0.92,
+  Concrete: 0.82, Basalt: 0.75, CrackedLava: 0.65, Grass: 0.66, LeafyGrass: 0.62, Snow: 0.95, Ice: 0.9, Glacier: 0.85,
+  Plaster: 0.92, Wood: 0.6, Plastic: 1, SmoothPlastic: 1, Neon: 1, Glass: 1,
+};
+const albedo = (m) => { const a = ALBEDO[m] ?? 0.85; return Array.isArray(a) ? a : [a, a, a]; };
+// Koernung der Roblox-Texturen (Helligkeits-Rauschen, nur in der Naehe sichtbar)
+const GRAIN = { Ground: 0.16, Mud: 0.16, Sand: 0.10, Sandstone: 0.14, Limestone: 0.12, Slate: 0.18, Rock: 0.2, Salt: 0.06,
+  Concrete: 0.1, Basalt: 0.2, CrackedLava: 0.1, Grass: 0.22, LeafyGrass: 0.22, Snow: 0.04, Ice: 0.05, Glacier: 0.06,
+  Plaster: 0.07, Wood: 0.18 };
 
 const deg = (d) => d * Math.PI / 180;
 const lin = (c) => new THREE.Color().setRGB(c[0] / 255, c[1] / 255, c[2] / 255, THREE.SRGBColorSpace);
@@ -44,7 +56,8 @@ async function main() {
 
   // ---------------------------------------------------------------- Sonne, Atmosphaere
   const sunAz = deg(meta.sun?.azimuth ?? 250), sunEl = deg(meta.sun?.elevation ?? 22);
-  const SUN = new THREE.Vector3(Math.sin(sunAz) * Math.cos(sunEl), Math.sin(sunEl), -Math.cos(sunAz) * Math.cos(sunEl));
+  const SUN = meta.sun?.direction ? new THREE.Vector3(...meta.sun.direction).normalize()
+    : new THREE.Vector3(Math.sin(sunAz) * Math.cos(sunEl), Math.sin(sunEl), -Math.cos(sunAz) * Math.cos(sunEl));
   const atmoColor = lin(AT.Color || [242, 184, 160]);
   const atmoDecay = lin(AT.Decay || [142, 111, 168]);
   const density = AT.Density ?? 0.28;
@@ -135,7 +148,8 @@ async function main() {
   scn.waterLevels.forEach((v, i) => { lvls[i + 1] = v; });
   // Materialfarben
   const DEFAULT_COL = { Pavement: [148, 148, 140], Asphalt: [80, 80, 82], Cobblestone: [140, 130, 120], Brick: [160, 90, 70], WoodPlanks: [160, 120, 80], Concrete: [169, 229, 210] };
-  const matCol = mats.map((m) => lin(meta.materialColors[m] || DEFAULT_COL[m] || [255, 0, 255]));
+  const matCol = mats.map((m) => { const c = lin(meta.materialColors[m] || DEFAULT_COL[m] || [255, 0, 255]); const a = albedo(m); return new THREE.Color(c.r * a[0], c.g * a[1], c.b * a[2]); });
+  const matGrain = mats.map((m) => GRAIN[m] ?? 0.12);
   const layers = meta.layers;
   const subsoil = mats.map((m) => midx[layers.subsoil[m] || layers.bedrock] ?? 0);
   // Punktlichter (aus Deko) -> Lichtflecken auf dem Terrain
@@ -165,12 +179,14 @@ async function main() {
     subsoil: { value: subsoil }, bedrock: { value: midx[layers.bedrock] },
     topDepth: { value: layers.topDepth }, subDepth: { value: layers.subDepth },
     strataBase: { value: meta.strata.base }, period: { value: period },
+    matGrain: { value: matGrain }, idMode: { value: 0 },
   };
   const COMMON = `
     uniform sampler2D tH; uniform sampler2D tInfo; uniform sampler2D tBand; uniform sampler2D tAir; uniform sampler2D tLights;
     uniform int nAir; uniform int nLights;
     uniform vec3 matCol[${mats.length}]; uniform int subsoil[${mats.length}]; uniform int bedrock;
     uniform float topDepth; uniform float subDepth; uniform float strataBase; uniform float period;
+    uniform float matGrain[${mats.length}]; uniform float idMode;
     varying vec3 vWPos; varying vec3 vWNrm;
     float hash3(vec3 p) { p = fract(p * 0.3183099 + vec3(0.1, 0.2, 0.3)); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
     float vnoise(vec3 x) {
@@ -227,7 +243,12 @@ async function main() {
       float n1 = vnoise(p * 0.33) - 0.5;
       float n2 = vnoise(p * 0.09 + 13.0) - 0.5;
       float n3 = hash3(floor(p / 4.0) + 0.5) - 0.5;
-      c *= 1.0 + amp * (n1 * 0.9 + n2 * 0.7) + 0.035 * n3;
+      c *= 1.0 + amp * (n1 * 0.9 + n2 * 0.7) + 0.012 * n3;
+      // feine Koernung wie die Roblox-Texturen (in der Ferne ausgeblendet, sonst flimmert es)
+      float gf = 1.0 - smoothstep(60.0, 340.0, length(p - cameraPosition));
+      float g1 = vnoise(p * 1.9 + 3.1) - 0.5;
+      float g2 = vnoise(p * 4.3 + 7.7) - 0.5;
+      c *= 1.0 + matGrain[m] * gf * (g1 * 0.9 + g2 * 0.6);
       if (m == ${midx.Sandstone}) c *= 1.0 + 0.05 * sin(p.y * 2.3 + n2 * 4.0);
       if (m == ${midx.CrackedLava}) {
         float cr = abs(vnoise(p * 0.45) - 0.5) + abs(vnoise(p * 0.9 + 7.0) - 0.5) * 0.5;
@@ -323,9 +344,11 @@ async function main() {
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', '#include <common>\n' + COMMON)
         .replace('vec4 diffuseColor = vec4( diffuse, opacity );', colorCode + '\n vec4 diffuseColor = vec4( tcol, opacity );')
-        .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n reflectedLight.directDiffuse += poolLight(vWPos, normalize(vWNrm)) * BRDF_Lambert(diffuseColor.rgb);');
+        .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n reflectedLight.directDiffuse += poolLight(vWPos, normalize(vWNrm)) * BRDF_Lambert(diffuseColor.rgb);')
+        .replace('#include <dithering_fragment>', '#include <dithering_fragment>\n if (idMode > 0.5) gl_FragColor = vec4(' + (kind === 'op' ? '250.0' : 'float(mm)') + ' / 255.0, 0.0, 0.0, 1.0);');
     };
     m.customProgramCacheKey = () => 'terrain-' + kind;
+    m.userData.terrain = true;
     if (kind === 'op') {
       const prev = m.onBeforeCompile;
       m.onBeforeCompile = (sh) => {
@@ -577,13 +600,17 @@ async function main() {
           const neon = p.material === 'Neon';
           const tr = Math.round((p.transparency || 0) * 20) / 20;
           const glass = p.material === 'Glass';
-          const key = `${p.shape}|${neon ? 'N' : glass ? 'G' : 'S'}|${tr}|${p.castShadow ? 1 : 0}`;
+          // Ellipsoid = SpecialMesh: Roblox zeigt dort KEINE Material-Textur (glatt wie Plastik, ohne Koernung)
+          const mesh = p.shape === 'Ellipsoid';
+          const cls = neon ? 'N' : glass ? 'G' : (mesh || p.material === 'SmoothPlastic' || p.material === 'Plastic') ? 'P' : 'M';
+          const key = `${p.shape}|${cls}|${tr}|${p.castShadow ? 1 : 0}`;
           const skyLike = t.category === 'Sky' || t.category === 'Mist';
           const keyS = key + (skyLike ? '|sky' : '');
-          if (!groups.has(keyS)) groups.set(keyS, { shape: p.shape, neon, glass, tr, cast: p.castShadow, m: [], c: [], sky: skyLike });
+          if (!groups.has(keyS)) groups.set(keyS, { shape: p.shape, neon, glass, cls, tr, cast: p.castShadow, m: [], c: [], g: [], sky: skyLike });
           const col = lin(colors[p.role] || [255, 0, 255]);
+          if (cls === 'M') { const a = albedo(p.material); col.setRGB(col.r * a[0], col.g * a[1], col.b * a[2]); }
           const gr = groups.get(keyS);
-          gr.m.push(world); gr.c.push(col);
+          gr.m.push(world); gr.c.push(col); gr.g.push(cls === 'M' ? (GRAIN[p.material] ?? 0.12) : 0);
           partCount.n++;
           if (p.light && lightList.length < 128) {
             const lp = new THREE.Vector3(p.pos[0] * s, p.pos[1] * s, p.pos[2] * s).applyMatrix4(mPlace);
@@ -597,9 +624,31 @@ async function main() {
     for (const g of groups.values()) {
       let mat;
       if (g.neon) mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: g.tr > 0, opacity: 1 - g.tr * (g.tr > 0.5 ? 1.0 : 0.85), depthWrite: g.tr < 0.5 });
-      else if (g.glass) mat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: Math.max(0.15, 1 - g.tr), roughness: 0.1, metalness: 0.1 });
-      else mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.42, metalness: 0.0, envMapIntensity: 0.5, transparent: g.tr > 0, opacity: 1 - g.tr, depthWrite: g.tr < 0.5 });
+      else if (g.glass) mat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: Math.max(0.15, 1 - g.tr), roughness: 0.12, metalness: 0.05, envMapIntensity: 0.35 });
+      else if (g.cls === 'P') mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.32, metalness: 0.0, envMapIntensity: 0.35, transparent: g.tr > 0, opacity: 1 - g.tr, depthWrite: g.tr < 0.5 });
+      else {
+        // matte Roblox-Materialien (Plaster, Sand, Wood, Grass, Gestein): kein Glanz, Koernung wie die Textur
+        mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, metalness: 0.0, envMapIntensity: 0.04, transparent: g.tr > 0, opacity: 1 - g.tr, depthWrite: g.tr < 0.5 });
+        mat.onBeforeCompile = (sh) => {
+          sh.vertexShader = sh.vertexShader
+            .replace('#include <common>', '#include <common>\nattribute float aGrain; varying float vGrain; varying vec3 vGP;')
+            .replace('#include <begin_vertex>', '#include <begin_vertex>\n vGrain = aGrain; vGP = (modelMatrix * instanceMatrix * vec4(position, 1.0)).xyz;');
+          sh.fragmentShader = sh.fragmentShader
+            .replace('#include <common>', `#include <common>
+              varying float vGrain; varying vec3 vGP;
+              float gh3(vec3 p) { p = fract(p * 0.3183099 + vec3(0.1, 0.2, 0.3)); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+              float gn3(vec3 x) { vec3 i = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f);
+                return mix(mix(mix(gh3(i), gh3(i + vec3(1,0,0)), f.x), mix(gh3(i + vec3(0,1,0)), gh3(i + vec3(1,1,0)), f.x), f.y),
+                           mix(mix(gh3(i + vec3(0,0,1)), gh3(i + vec3(1,0,1)), f.x), mix(gh3(i + vec3(0,1,1)), gh3(i + vec3(1,1,1)), f.x), f.y), f.z); }`)
+            .replace('#include <color_fragment>', `#include <color_fragment>
+              { float gf = 1.0 - smoothstep(40.0, 260.0, length(vGP - cameraPosition));
+                diffuseColor.rgb *= 1.0 + vGrain * gf * ((gn3(vGP * 2.6) - 0.5) * 1.0 + (gn3(vGP * 5.3 + 4.0) - 0.5) * 0.7); }`);
+        };
+        mat.customProgramCacheKey = () => 'deco-matte';
+      }
       const im = new THREE.InstancedMesh(GEO[g.shape], mat, g.m.length);
+      if (g.cls === 'M') im.geometry = im.geometry.clone();
+      if (g.cls === 'M') im.geometry.setAttribute('aGrain', new THREE.InstancedBufferAttribute(new Float32Array(g.g), 1));
       if (g.sky) im.userData.skyDeco = true;
       g.m.forEach((m, i) => im.setMatrixAt(i, m));
       g.c.forEach((c, i) => im.setColorAt(i, g.neon ? c.clone().multiplyScalar(NEON_GAIN) : c));
@@ -703,6 +752,50 @@ async function main() {
   };
   window.stats = { parts: partCount.n, lights: partCount.lights, ops: scn.terrainOps.length, air: airOps.length };
 
+  // ---------------------------------------------------------------- Graustufen-Kontrolle
+  // setGray(true): Farbkorrektur mit Saettigung -1 (Helligkeitsvergleich ohne Farbe).
+  // grayStats(): mittlere Helligkeit (0-1, wie im Bild) je Terrain-Material im zuletzt gerenderten Bild. Dafuer wird
+  // ein Material-ID-Bild gerendert (nur Terrain, ohne Deko/Wasser/Himmel).
+  const tintV = ccPass.uniforms.tint.value.clone();
+  window.setGray = (on) => {
+    ccPass.uniforms.sat.value = on ? -1.0 : (CC.Saturation ?? 0.18);
+    ccPass.uniforms.tint.value.copy(on ? new THREE.Vector3(1, 1, 1) : tintV);
+  };
+  window.grayStats = async () => {
+    const gl = renderer.getContext();
+    const W = WIDTH, H = HEIGHT;
+    const img = new Uint8Array(W * H * 4);
+    gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    const rt = new THREE.WebGLRenderTarget(W, H);
+    const hidden = [];
+    scene.traverse((o) => {
+      if (o.isMesh && !(o.material && o.material.userData && o.material.userData.terrain) && o.visible) { hidden.push(o); o.visible = false; }
+    });
+    const bg = scene.background;
+    scene.background = new THREE.Color(1, 1, 1);
+    TU.idMode.value = 1;
+    renderer.setRenderTarget(rt);
+    renderer.clear();
+    renderer.render(scene, camera);
+    const ids = new Uint8Array(W * H * 4);
+    renderer.readRenderTargetPixels(rt, 0, 0, W, H, ids);
+    renderer.setRenderTarget(null);
+    TU.idMode.value = 0;
+    hidden.forEach((o) => { o.visible = true; });
+    scene.background = bg;
+    rt.dispose();
+    const sum = {}, cnt = {};
+    for (let i = 0; i < W * H; i++) {
+      const id = ids[i * 4];
+      if (id >= 250) continue;
+      const l = (0.299 * img[i * 4] + 0.587 * img[i * 4 + 1] + 0.114 * img[i * 4 + 2]) / 255;
+      sum[id] = (sum[id] || 0) + l; cnt[id] = (cnt[id] || 0) + 1;
+    }
+    const out = {};
+    for (const id of Object.keys(cnt)) if (cnt[id] > 300) out[mats[id]] = { mean: +(sum[id] / cnt[id]).toFixed(3), pixels: cnt[id] };
+    return out;
+  };
+
   // ---------------------------------------------------------------- Karte: orthografisch, Sonnenlicht, ohne Dunst, mit Overlay
   window.shotMap = async (size) => {
     renderer.setSize(size, size);
@@ -768,7 +861,7 @@ async function main() {
     g.beginPath(); g.moveTo(44, 62); g.lineTo(34, 92); g.lineTo(54, 92); g.closePath(); g.fill();
     const sb = 500 / (2 * E) * size;
     g.fillRect(30, size - 40, sb, 6); g.font = '18px sans-serif'; g.fillText('500 Studs', 30, size - 50);
-    g.font = 'bold 22px sans-serif'; g.fillText('Insel 1 - Karte (Draufsicht, Sonne Az 250, El 22)', 90, 40);
+    g.font = 'bold 22px sans-serif'; g.fillText(`Insel 1 - Karte (Draufsicht, Sonne Az ${meta.sun?.azimuth ?? 250}, El ${meta.sun?.elevation ?? 30})`, 90, 40);
     await new Promise((r) => requestAnimationFrame(() => r()));
     return true;
   };
