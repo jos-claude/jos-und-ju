@@ -38,8 +38,10 @@ def analyse(w: World, c, deco_zone=None):
     r = c.r
     out = {"rings": {}, "build": build}
     for i, name in enumerate(RING_NAMES):
-        m = (r >= RING_EDGES[i]) & (r < RING_EDGES[i + 1]) & ~(void & (r < 1900))
-        m2 = (r >= RING_EDGES[i]) & (r < min(RING_EDGES[i + 1], 1880))
+        # Ring E wird bis r 1900 gewertet (Randgebirge = Grenze, Entscheidung Art Director)
+        r1 = 1900 if name == "E" else RING_EDGES[i + 1]
+        m = (r >= RING_EDGES[i]) & (r < r1)
+        m2 = (r >= RING_EDGES[i]) & (r < RING_EDGES[i + 1]) & ~void
         out["rings"][name] = (float(build[m].mean()), float(build[m2].mean()) if name == "E" else None)
     # Wasser
     vis = wdepth > 0
@@ -150,7 +152,7 @@ def _pflood(h):
 def report_lines(res):
     lines = ["Pruefwerte:"]
     for k, (v, v2) in res["rings"].items():
-        extra = f" (bis r 1880 ohne Randgebirge: {v2 * 100:.0f} %)" if v2 is not None else ""
+        extra = f" (bis r 1900; ganzer Ring bis 2000: {v2 * 100:.0f} %)" if v2 is not None else ""
         lines.append(f"  Bauzone Ring {k}: {v * 100:.0f} %{extra}  {'OK' if v >= 0.6 else 'UNTER 60 %'}")
     lines.append(f"  Flood-Fill: {res['reach_frac'] * 100:.0f} % der Flaeche bis r 1880 von der Basis erreichbar (Neigung <= 25)")
     lines.append(f"  Wasser: max. Tiefe {res['water_max']:.2f} (<= 4), offene Ufer-Kanten {res['water_leaks']}")

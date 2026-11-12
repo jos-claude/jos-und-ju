@@ -62,6 +62,11 @@ class Ctx:
         iz, ix = self.idx(x, z)
         return self.H[iz, ix]
 
+    def slope_now(self, sl):
+        h = self.H[sl]
+        gz, gx = np.gradient(h, CELL)
+        return np.degrees(np.arctan(np.hypot(gx, gz)))
+
     def u(self, a=0.0, b=1.0, size=None):
         return self.rng.uniform(a, b, size)
 

@@ -144,6 +144,8 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     sc = float(s_smooth(c, np.array(cx), np.array(cz)))
     if nsteps is None:
         nsteps = int(rng.integers(2, 5)) if stage == "mesa" else int(rng.integers(1, 3))
+    if stage == "butte":
+        gully = False
     bounds = band_boundaries(base + height * 0.6, base + height * 1.15, sc, min_band=4)
     top = min(bounds, key=lambda b: abs(b[0] - (base + height)))[0] if bounds else base + height
     # aufeinanderfolgende Bandgrenzen von unten nach oben; Stufen < 7 Studs zusammenlegen
@@ -191,13 +193,14 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     roof = rng.uniform(0.3, 0.9) if stage == "mesa" else 0.2
     h = h + roof * ss(inset, inset + 30, s)
     mesa_h = np.where(s > -1, h, -1e9)
-    # Schutthalde (Mud): flache, weiche Schuerze mit breiten Schuttkegeln
-    T = tal_l * TAN(30) * 0.85
-    gs = 0.5 + 0.5 * c.nz.fbm("talcone", x, z, 45, 2)
-    tl = tal_l * (1.0 + 0.25 * gs)
-    Tg = T * (1.0 + 0.2 * gs)
-    q = np.clip((d + 0.12 * tl) / tl, 0, 1)
-    tal = base + Tg * (1 - q) ** 1.6 + c.nz.fbm("talus", x, z, 20, 2) * 0.4
+    # Schutthalde (Mud): glatte Schuerze 28-35 Grad, deckt den Wandfuss (kein gezackter Bandsaum)
+    tal_l = max(tal_l, 9.0)
+    T = max(5.0, tal_l * TAN(32) * 0.78)
+    gs = 0.5 + 0.5 * c.nz.fbm("talcone", x, z, 80, 2)
+    tl = tal_l * (1.0 + 0.18 * gs)
+    Tg = T * (1.0 + 0.12 * gs)
+    q = np.clip((d + 0.25 * tl) / tl, 0, 1)
+    tal = base + Tg * (1 - q) ** 1.35
     tal = np.where(q < 1, tal, -1e9)
     new = np.maximum(Hl, np.maximum(mesa_h, tal))
     body = (mesa_h >= tal) & (mesa_h > Hl + 0.5)

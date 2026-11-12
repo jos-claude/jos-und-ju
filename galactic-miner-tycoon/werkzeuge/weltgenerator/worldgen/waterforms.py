@@ -53,8 +53,9 @@ def pond(c: Ctx, cx, cz, diam, depth, rot=None, floor_mat="Mud", bank_mat="Leafy
     wet = (inner > 0) & (hn < W - 0.05)
     c.wl[sl] = np.where(wet, W, c.wl[sl])
     set_mat(c, sl, (inner > bank * 0.4), floor_mat)
-    set_mat(c, sl, (inner <= bank * 0.4) & (inner > -6), bank_mat)
-    set_mat(c, sl, (inner <= -6) & (inner > -22) & (c.nz.fbm(name + "g", x, z, 14, 2) > -0.2), ring_mat)
+    wob = 9.0 * c.nz.fbm(name + "g", x, z, 30, 3)
+    set_mat(c, sl, (inner <= bank * 0.4) & (inner > -6 + wob * 0.5), bank_mat)
+    set_mat(c, sl, (inner <= -6 + wob * 0.5) & (inner > -24 + wob * 1.6), ring_mat)
     c.mask("pond")[sl] |= inner > -4
     c.obstacle[sl] |= inner > -2
     claim(c, sl, inner > -30)
@@ -216,7 +217,7 @@ def crater(c: Ctx, cx, cz, diam, water=False, name="crater"):
         wet = (rho < R) & (hn < W - 0.05)
         c.wl[sl] = np.where(wet, W, c.wl[sl])
         set_mat(c, sl, (rho < rf * 1.15), "Mud")
-        set_mat(c, sl, (rho >= rf * 1.15) & (rho < rf + 12), "LeafyGrass")
+        set_mat(c, sl, (rho >= rf * 1.15) & (rho < rf + 12 + 8 * c.nz.fbm(name + "lg", x, z, 25, 2)), "LeafyGrass")
         c.feat["water"].append({"x": cx, "z": cz, "R": rf, "W": W, "kind": "crater"})
     c.H[sl] = hn
     c.mask("crater")[sl] |= rho < R * 1.2

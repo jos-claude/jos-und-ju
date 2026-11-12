@@ -150,9 +150,11 @@ def carve_washes(c: Ctx, regen=True):
         prof = profile(c.rw[iz, ix], c.wNE[iz, ix])
         prof = gaussian_filter1d(prof, 11.0, mode="nearest")
         depth = 3.0 + 0.9 * c.nz.fbm(f"washdep{k}", rs, np.full_like(rs, 7.0 * k), 300, 2) * 2
-        depth = np.clip(depth, 2.0, 4.0) * ss(170, 290, rs) * (1.0 - ss(1830, 1890, rs))
+        depth = np.clip(depth, 2.0, 4.0) * ss(195, 300, rs) * (1.0 - ss(1830, 1890, rs))
         floor = prof - depth
-        hw = 50.0 + 30.0 * ss(250, 1100, rs)
+        # Breite 50-90 Studs (halbe Breite 25-45), wechselnd
+        hw = (27.0 + 12.0 * ss(250, 1100, rs)) * (1.0 + 0.32 * c.nz.fbm(f"washw{k}", rs, np.full_like(rs, 3.0 * k), 260, 2) * 2.0)
+        hw = np.clip(hw, 24.0, 46.0) * (0.55 + 0.45 * ss(190, 300, rs))
         # Zelle -> seitlicher Abstand zur Linie
         a_here = azl[ri]
         lat = r * np.sin(np.radians(ang_diff(az, a_here)))
@@ -161,13 +163,27 @@ def carve_washes(c: Ctx, regen=True):
         hwc = hw[ri]
         fl = floor[ri]
         dep = depth[ri]
-        bank = 14.0
+        bank = 12.0
         cut = fl + dep * ss(hwc - bank, hwc, d) + np.maximum(0.0, d - hwc) * math.tan(math.radians(33))
+        # Geflochtene Nebenarme: flache Rinnen neben dem Hauptbett, die sich wieder vereinen
+        for j in range(2):
+            r0 = 320 + 600 * j + c.u(0, 250)
+            L = c.u(220, 380)
+            side = 1 if c.u() < 0.5 else -1
+            off = side * (hw[ri] + c.u(18, 30)) * np.sin(np.pi * np.clip((r - r0) / L, 0, 1)) ** 0.8
+            da = np.abs(lat - off)
+            arm = (r > r0) & (r < r0 + L)
+            armcut = fl + 1.2 + dep * 0.6 * ss(5, 11, da) + np.maximum(0.0, da - 11) * math.tan(math.radians(25))
+            cut = np.where(arm, np.minimum(cut, armcut), cut)
+            c.mask("wash_arm")[:] |= ok & arm & (da < 10) & (dep > 0.5)
         sel = ok & (d < hwc + 160)
         H[sel] = np.minimum(H[sel], cut[sel])
         inner = ok & (d < hwc) & (dep > 0.5)
         wash_m |= inner
         floor_m |= ok & (d < hwc - bank) & (dep > 0.5)
+        # Kiesinseln im Bett (Ground, laenglich, leicht erhaben)
+        bars = ok & (d < hwc - bank * 0.6) & (dep > 0.5) & (c.nz.fbm(f"bars{k}", lat / 9.0, r / 70.0, 1.0, 2) > 0.33)
+        c.mask("wash_bar")[:] |= bars
         closer = ok & (d - hwc < best)
         best[closer] = (d - hwc)[closer]
         wid[closer] = k
@@ -196,8 +212,8 @@ def rim(c: Ctx):
     massif = ss(-0.25, 0.3, nz.fbm("rimmacro", px, pz, 650, 2))
     peaks = np.clip(nz.ridged("rimpk", px, pz, 230, 3, sharp=2.2), 0, 1)
     teeth = nz.ridged("rimteeth", px, pz, 60, 2, sharp=2.4)
-    hc = 150.0 + 120.0 * massif + 70.0 * peaks ** 1.6 * (0.4 + 0.6 * massif) + 12.0 * teeth
-    hc = np.clip(hc, 140.0, 318.0)
+    hc = 118.0 + 125.0 * massif + 120.0 * peaks ** 1.8 * (0.25 + 0.75 * massif) + 14.0 * teeth
+    hc = np.clip(hc, 110.0, 330.0)
     # Balkon-Kerben
     notch = np.full(r.shape, 1e9)
     for b in BALCONY_AZ:

@@ -40,7 +40,7 @@ LAYERS = {
 
 MATERIAL_COLORS = {
     "Ground": "#F2A07C", "Sand": "#F6CF96", "Mud": "#D9795F", "Sandstone": "#F4A9C4", "Limestone": "#F9E7A3",
-    "Slate": "#A99BE0", "Rock": "#C48BBE", "Salt": "#FCEFEA", "Concrete": "#A9E5D2", "Basalt": "#3B3245",
+    "Slate": "#B3A9DE", "Rock": "#C48BBE", "Salt": "#FCEFEA", "Concrete": "#A9E5D2", "Basalt": "#3B3245",
     "CrackedLava": "#FFB07A", "Grass": "#9BE06B", "LeafyGrass": "#4FC9B0", "Snow": "#F2F6FF", "Ice": "#BFE6F5",
     "Glacier": "#A9D8E8",
 }
@@ -117,10 +117,15 @@ def assign(c: Ctx):
     top[ringE] = MAT["Slate"]
     top[_clean(rockE, 6, 8, 600)] = MAT["Rock"]
     if "snow" in c.masks:
-        top[_clean(c.masks["snow"] & ringE, 4, 6, 200)] = MAT["Snow"]
+        top[_clean(c.masks["snow"] & ringE, 4, 6, 120)] = MAT["Snow"]
+    # Schneefelder am Fuss des Randgebirges (Lee, flach)
+    snowfoot = ringE & (c.r > 1800) & (sl < 12) & (nz.fbm("snowfoot", x, z, 140, 3) > 0.05)
+    top[_clean(snowfoot, 4, 6, 200)] = MAT["Snow"]
     # Sand: Washes (Band mit weichem, geschwungenem Rand), Faecher, Canyonboeden
-    wm = c.wash_dist < -2.0 + 3.0 * nz.fbm("washedge", x, z, 90, 2)
+    wm = (c.wash_dist < -2.0 + 3.0 * nz.fbm("washedge", x, z, 90, 2)) | c.masks.get("wash_arm", np.zeros_like(c.void))
     top[_clean(wm, 3, 5, 120)] = SAND
+    if "wash_bar" in c.masks:
+        top[_clean(c.masks["wash_bar"], 1, 2, 12)] = G
     if "fan" in c.masks:
         top[_clean(c.masks["fan"], 4, 5, 150)] = SAND
     # Mud: Schutthalden

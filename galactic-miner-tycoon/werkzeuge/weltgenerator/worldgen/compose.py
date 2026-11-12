@@ -243,9 +243,9 @@ def hoodoo_garden(c: Ctx):
 # ------------------------------------------------------------------ Tafelberg-Gruppen je Ring
 RING_SPEC = {
     # n Berge, r-Bereich, Leit-Durchmesser, Hoehe ueber Umland
-    "A": dict(n=6, r=(205, 300), lead=(50, 90), h=(22, 52)),
-    "B": dict(n=24, r=(300, 590), lead=(70, 170), h=(40, 105)),
-    "C": dict(n=12, r=(640, 1070), lead=(70, 150), h=(30, 85)),
+    "A": dict(n=4, r=(215, 300), lead=(70, 105), h=(26, 52)),
+    "B": dict(n=10, r=(310, 590), lead=(90, 170), h=(45, 105)),
+    "C": dict(n=10, r=(640, 1070), lead=(90, 160), h=(30, 85)),
     "D": dict(n=14, r=(1150, 1480), lead=(70, 160), h=(50, 120)),
     "E": dict(n=6, r=(1620, 1840), lead=(60, 120), h=(40, 95)),
 }
@@ -273,14 +273,14 @@ def mesa_groups(c: Ctx, ring, sector=None):
         lf.mesa(c, gx, gz, lead_d, hgt, stage="mesa", top_patch=_patch(c, ring))
         placed += 1
         # Begleiter (Rhythmus 1-2-1): Buttes, manchmal eine Spitze
-        ncomp = int(rng.integers(1, 4))
+        ncomp = int(rng.integers(1, 3))
         for k in range(ncomp):
             if placed >= spec["n"]:
                 break
             for _ in range(20):
                 ang = rng.uniform(0, 2 * math.pi)
-                spire_ = rng.uniform() < 0.28
-                d = rng.uniform(26, 60) if not spire_ else rng.uniform(10, 18)
+                spire_ = rng.uniform() < 0.25
+                d = rng.uniform(42, 75) if not spire_ else rng.uniform(12, 20)
                 dist = lead_d / 2 + d / 2 + rng.uniform(36, 95)
                 bx, bz = gx + dist * math.cos(ang), gz + dist * math.sin(ang)
                 br = math.hypot(bx, bz)
@@ -409,17 +409,17 @@ def tunnels(c: Ctx, n=4):
 # ------------------------------------------------------------------ Massive mit Canyons
 def massifs(c: Ctx):
     rng = c.rng
-    specs = [(76.0, 465.0, 300.0, 48.0), (130.0, 1250.0, 360.0, 74.0), (293.0, 1430.0, 320.0, 64.0)]
+    specs = [(78.0, 760.0, 270.0, 48.0), (130.0, 1250.0, 330.0, 74.0), (293.0, 1420.0, 300.0, 64.0)]
     canyons = 0
     for k, (a, r, d, h) in enumerate(specs):
         a = nudge(c, a + rng.uniform(-4, 4), r, d / 2 + 30, 10)
         if sight_block(a, r):
             a += 8
         x, z = pol(a, r)
-        for _ in range(60):
-            if lf.is_free(c, x, z, d * 0.62, wash_margin=20):
+        for _ in range(200):
+            if lf.is_free(c, x, z, d * 0.5, wash_margin=15):
                 break
-            a2, r2 = a + rng.uniform(-14, 14), r + rng.uniform(-90, 90)
+            a2, r2 = a + rng.uniform(-25, 25), r + rng.uniform(-110, 110)
             x, z = pol(a2, r2)
         else:
             continue
@@ -635,9 +635,12 @@ def oases_c(c: Ctx):
         c.feat["oasis_c"].append({"x": x, "z": z, "R": R})
         wf.pond(c, x + rng.uniform(-10, 10), z + rng.uniform(-10, 10), R * 0.45, 2.0, name="oasis%d" % len(c.feat["oasis_c"]),
                 floor_mat="Mud", bank_mat="LeafyGrass", ring_mat="Grass")
-        sl, circ = _circle(c, x, z, R)
-        lf.set_mat(c, sl, circ & (c.nz.fbm("oas", *c.local(sl), 20, 2) > -0.3), "Grass")
-        lf.claim(c, sl, circ)
+        sl, circ = _circle(c, x, z, R * 1.3)
+        lx, lz = c.local(sl)
+        q = np.hypot(lx - x, lz - z) / R * (1 + 0.45 * c.nz.fbm("oas%d" % len(c.feat["oasis_c"]), lx, lz, 45, 3))
+        lf.set_mat(c, sl, (q < 0.85) & (c.slope_now(sl) < 14), "Grass")
+        lf.set_mat(c, sl, (q < 0.45) & (c.slope_now(sl) < 14), "LeafyGrass")
+        lf.claim(c, sl, q < 1.0)
         c.feat["spring"].append({"x": x, "z": z, "kind": "oasis"})
 
 
@@ -666,6 +669,38 @@ def ring_c_mesas(c: Ctx):
         d1 = min(abs(ang_diff(a, 130)), abs(ang_diff(a, 295)))
         return d1 < 28 or (c.wNE[c.idx(*pol(a, r))] < 0.5 and r < 760)
     return mesa_groups(c, "C", sector)
+
+
+def ring_e_features(c: Ctx):
+    """Ring E: Felsrippen (niedrige Schichtfelsen-Waende), einzelne Felsnadeln."""
+    rng = c.rng
+    ribs = 0
+    for _ in range(500):
+        if ribs >= 12:
+            break
+        a, r = rng.uniform(0, 360), rng.uniform(1620, 1850)
+        x, z = pol(a, r)
+        if not lf.is_free(c, x, z, 70, wash_margin=25):
+            continue
+        L = rng.uniform(70, 150)
+        ta = a + 90 + rng.uniform(-30, 30)
+        p0 = pol(a, r)
+        dx, dz = math.sin(math.radians(ta)) * L / 2, -math.cos(math.radians(ta)) * L / 2
+        lf.fin(c, (x - dx, z - dz), (x + dx, z + dz), rng.uniform(10, 16), rng.uniform(8, 20), windows=0,
+               name="rib%d" % ribs, mask_name="fin")
+        ribs += 1
+    sp = 0
+    for _ in range(500):
+        if sp >= 5:
+            break
+        a, r = rng.uniform(0, 360), rng.uniform(1640, 1840)
+        x, z = pol(a, r)
+        d = rng.uniform(12, 20)
+        if not lf.is_free(c, x, z, d + 30, wash_margin=30) or sight_block(a, r):
+            continue
+        lf.spire(c, x, z, d, rng.uniform(3, 5), rng.uniform(45, 90))
+        sp += 1
+    return ribs, sp
 
 
 def lava_flows(c: Ctx):
@@ -718,7 +753,8 @@ def build_landforms(c: Ctx):
     for ring in ("A", "B", "D", "E"):
         counts["mesas_" + ring] = mesa_groups(c, ring)
     counts["mesas_C"] = ring_c_mesas(c)
-    counts["spires"] = spires(c, 16)
+    counts["spires"] = spires(c, 6)
+    counts["ribs_E"], counts["spires_E"] = ring_e_features(c)
     lava_flows(c)
     fields.dunes(c)
     counts["fans"] = fans(c)
