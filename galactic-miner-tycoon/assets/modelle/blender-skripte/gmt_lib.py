@@ -22,8 +22,7 @@ from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from gmt_materials import (MATERIALS, TEXTURED_TYPES, TILE_STUDS, TRANSPARENCY,  # noqa: E402
-                           TYPE_DEFAULTS, tex_names)
+from gmt_materials import MATERIALS, TILE_STUDS, TRANSPARENCY, TYPE_DEFAULTS  # noqa: E402
 
 
 def srgb_to_linear(c):
@@ -35,24 +34,8 @@ def hex_to_linear(h):
     return tuple(srgb_to_linear(int(h[i:i + 2], 16) / 255.0) for i in (0, 2, 4))
 
 
-def tex_dir():
-    here = os.path.dirname(os.path.abspath(__file__))
-    return os.environ.get("GMT_TEX_DIR", os.path.join(os.path.dirname(here), "texturen"))
-
-
-def _image(path, colorspace):
-    name = os.path.basename(path)
-    img = bpy.data.images.get(name)
-    if img is None:
-        img = bpy.data.images.load(path)
-        img.name = name
-    img.colorspace_settings.name = colorspace
-    return img
-
-
 def get_mat(name):
-    """Material Mat_<name>. Texturierte Typen bekommen Farb-, Rauheits-,
-    Metall- und Normal-Textur (UV-Kanal aus Model.build)."""
+    """Material Mat_<name> mit flacher Farbe (Comic-Look)."""
     full = "Mat_" + name
     mat = bpy.data.materials.get(full)
     if mat:
@@ -73,36 +56,13 @@ def get_mat(name):
     mat["gmt_type"] = typ
     if typ == "neon":
         bsdf.inputs["Emission Color"].default_value = col
-        bsdf.inputs["Emission Strength"].default_value = 1.6
+        bsdf.inputs["Emission Strength"].default_value = 1.2
     if name in TRANSPARENCY:
         bsdf.inputs["Alpha"].default_value = TRANSPARENCY[name]
         try:
             mat.surface_render_method = "BLENDED"
         except Exception:
             pass
-    files = tex_names(name) if typ in TEXTURED_TYPES else {}
-    d = tex_dir()
-    if files and all(os.path.exists(os.path.join(d, f)) for f in files.values()):
-        uv = nt.nodes.new("ShaderNodeUVMap")
-        uv.uv_map = "UVMap"
-        x = -700
-        def tex(key, cs, y):
-            n = nt.nodes.new("ShaderNodeTexImage")
-            n.image = _image(os.path.join(d, files[key]), cs)
-            n.location = (x, y)
-            nt.links.new(uv.outputs["UV"], n.inputs["Vector"])
-            return n
-        c = tex("color", "sRGB", 300)
-        nt.links.new(c.outputs["Color"], bsdf.inputs["Base Color"])
-        r = tex("rough", "Non-Color", 0)
-        nt.links.new(r.outputs["Color"], bsdf.inputs["Roughness"])
-        m = tex("metal", "Non-Color", -300)
-        nt.links.new(m.outputs["Color"], bsdf.inputs["Metallic"])
-        nrm = tex("normal", "Non-Color", -600)
-        nm = nt.nodes.new("ShaderNodeNormalMap")
-        nm.inputs["Strength"].default_value = 0.8
-        nt.links.new(nrm.outputs["Color"], nm.inputs["Color"])
-        nt.links.new(nm.outputs["Normal"], bsdf.inputs["Normal"])
     return mat
 
 
@@ -600,42 +560,21 @@ def setup_render(res=(1000, 700), samples=32):
     sc.render.resolution_x, sc.render.resolution_y = res
     sc.render.film_transparent = False
     sc.render.image_settings.file_format = "PNG"
+    sc.view_settings.view_transform = "Standard"
     try:
-        sc.view_settings.view_transform = "AgX"
-        for look in ("AgX - Punchy", "Punchy", "AgX - Medium High Contrast"):
-            try:
-                sc.view_settings.look = look
-                break
-            except Exception:
-                continue
+        sc.view_settings.look = "Medium High Contrast"
     except Exception:
-        sc.view_settings.view_transform = "Standard"
-    sc.view_settings.exposure = 0.35
-    # Himmel als Verlauf (dunkler Boden, heller Himmel) -> Metall spiegelt etwas
+        pass
     world = bpy.data.worlds.get("World") or bpy.data.worlds.new("World")
     sc.world = world
     world.use_nodes = True
     nt = world.node_tree
     bg = nt.nodes.get("Background")
-    tc = nt.nodes.new("ShaderNodeTexCoord")
-    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
-    ramp = nt.nodes.new("ShaderNodeValToRGB")
-    mr = nt.nodes.new("ShaderNodeMapRange")
-    mr.inputs["From Min"].default_value = -1.0
-    mr.inputs["From Max"].default_value = 1.0
-    nt.links.new(tc.outputs["Generated"], sep.inputs["Vector"])
-    nt.links.new(sep.outputs["Z"], mr.inputs["Value"])
-    nt.links.new(mr.outputs["Result"], ramp.inputs["Fac"])
-    els = ramp.color_ramp.elements
-    els[0].position, els[0].color = 0.35, (0.06, 0.06, 0.07, 1)
-    els[1].position, els[1].color = 0.62, (0.6, 0.63, 0.67, 1)
-    e = els.new(0.5)
-    e.color = (0.32, 0.31, 0.3, 1)
-    nt.links.new(ramp.outputs["Color"], bg.inputs["Color"])
-    bg.inputs["Strength"].default_value = 0.7
+    bg.inputs["Color"].default_value = (0.62, 0.62, 0.64, 1)
+    bg.inputs["Strength"].default_value = 0.55
     if "Sun_Key" not in bpy.data.objects:
-        for name, rot, energy, col in (("Sun_Key", (48, 8, -38), 3.6, (1.0, 0.96, 0.9)),
-                                       ("Sun_Rim", (65, -10, 140), 1.6, (0.8, 0.9, 1.0))):
+        for name, rot, energy, col in (("Sun_Key", (48, 8, -38), 2.6, (1.0, 0.97, 0.92)),
+                                       ("Sun_Rim", (65, -10, 140), 0.8, (0.85, 0.9, 1.0))):
             ld = bpy.data.lights.new(name, "SUN")
             ld.energy = energy
             ld.color = col
@@ -653,16 +592,6 @@ def setup_render(res=(1000, 700), samples=32):
         except Exception:
             pass
         sc.collection.objects.link(g)
-    # Hintergrund fuer Kamera-Strahlen hellgrau wie die Referenzblaetter
-    lp = nt.nodes.new("ShaderNodeLightPath")
-    mix = nt.nodes.new("ShaderNodeMixShader")
-    bg2 = nt.nodes.new("ShaderNodeBackground")
-    bg2.inputs["Color"].default_value = (0.66, 0.66, 0.68, 1)
-    out = nt.nodes.get("World Output")
-    nt.links.new(lp.outputs["Is Camera Ray"], mix.inputs["Fac"])
-    nt.links.new(bg.outputs["Background"], mix.inputs[1])
-    nt.links.new(bg2.outputs["Background"], mix.inputs[2])
-    nt.links.new(mix.outputs["Shader"], out.inputs["Surface"])
 
 
 def bounds(objs):

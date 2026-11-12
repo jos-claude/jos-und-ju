@@ -2,9 +2,8 @@
 -- Galactic Miner Tycoon – Modelle nach dem Import in Roblox Studio einrichten.
 --
 -- Benutzung (Roblox Studio):
---   1. Die .glb-Dateien aus assets/modelle/ mit "Import 3D" importieren
---      (Datei > Import 3D). GLB bringt die Texturen (Lack, Stahl, Riffelblech …)
---      als SurfaceAppearance mit. Die .fbx-Dateien gehen auch, dann ohne Texturen.
+--   1. Die .fbx- (oder .glb-)Dateien aus assets/modelle/ mit "Import 3D" importieren
+--      (Datei > Import 3D).
 --   2. Die importierten Modelle im Explorer markieren (oder nichts markieren,
 --      dann wird ganz Workspace durchsucht).
 --   3. Dieses Skript komplett in die Command Bar (Ansicht > Command Bar) kopieren
@@ -13,9 +12,8 @@
 -- Was es macht:
 --   - Sortiert importierte Teile nach dem ersten Namensteil in Modelle
 --     ("ConveyorStraight_Orange" -> Modell "ConveyorStraight").
---   - Teile MIT Textur (SurfaceAppearance) behalten ihre Textur.
---   - Teile OHNE Textur bekommen Farbe + passendes Roblox-Material
---     (Stahl = Metal, Riffelblech = DiamondPlate, Band = Rubber …).
+--   - Färbt jede MeshPart nach dem letzten Namensteil (Orange, SteelGrey, Cyan …)
+--     in kräftigen Comic-Farben, Material SmoothPlastic.
 --   - Leuchten werden Neon, Glas wird Glass mit Transparenz.
 --   - Verankert alles, kleine Deko-Teile ohne Kollision.
 --   - Bringt jedes Modell auf seine Größe in Studs (falls der Import anders skaliert hat).
@@ -27,28 +25,28 @@ type Look = { color: string, material: Enum.Material, transparency: number, coll
 
 -- Gleiche Farben wie blender-skripte/gmt_materials.py
 local LOOKS: { [string]: Look } = {
-	Orange = { color = "#D9862A", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	OrangeLight = { color = "#E8A445", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	Amber = { color = "#DC9B32", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	Yellow = { color = "#F2C80F", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
-	Black = { color = "#1B1B1D", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
-	White = { color = "#DAD5CD", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
-	Cream = { color = "#D3C7AD", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
-	GaugeOrange = { color = "#EB6A11", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
-	Slate = { color = "#425367", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	DarkGrey = { color = "#363B42", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	SteelGrey = { color = "#6F7A83", material = Enum.Material.Metal, transparency = 0, collide = true },
-	SteelDark = { color = "#464D54", material = Enum.Material.Metal, transparency = 0, collide = true },
-	SteelLight = { color = "#999EA1", material = Enum.Material.Metal, transparency = 0, collide = false },
-	Gunmetal = { color = "#5B524D", material = Enum.Material.Metal, transparency = 0, collide = true },
-	TreadPlate = { color = "#A0A3A2", material = Enum.Material.DiamondPlate, transparency = 0, collide = true },
-	Belt = { color = "#2F3237", material = Enum.Material.Rubber, transparency = 0, collide = true },
-	OreRock = { color = "#7C6C63", material = Enum.Material.Slate, transparency = 0, collide = true },
-	OreRockDark = { color = "#4A423D", material = Enum.Material.Slate, transparency = 0, collide = true },
+	Orange = { color = "#F08A1C", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	OrangeLight = { color = "#FFAE3D", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	Amber = { color = "#F2A626", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	Yellow = { color = "#FFD200", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	Black = { color = "#141416", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	White = { color = "#EEEBE5", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	Cream = { color = "#E6DCC2", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	GaugeOrange = { color = "#FF6A00", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	Slate = { color = "#36475C", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	DarkGrey = { color = "#2A2E34", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	SteelGrey = { color = "#7A848E", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	SteelDark = { color = "#3F454C", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	SteelLight = { color = "#C3C8CD", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	Gunmetal = { color = "#4A423D", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	TreadPlate = { color = "#A9ADB0", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	Belt = { color = "#23262B", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	OreRock = { color = "#8A766A", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	OreRockDark = { color = "#3E3631", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
 	-- ohne Textur, immer so einstellen:
-	Cyan = { color = "#45EEDC", material = Enum.Material.Neon, transparency = 0, collide = false, plain = true },
-	Glass = { color = "#B4C0C6", material = Enum.Material.Glass, transparency = 0.35, collide = true, plain = true },
-	GlassDark = { color = "#556169", material = Enum.Material.Glass, transparency = 0.5, collide = true, plain = true },
+	Cyan = { color = "#3FF5E3", material = Enum.Material.Neon, transparency = 0, collide = false, plain = true },
+	Glass = { color = "#BFD3DC", material = Enum.Material.Glass, transparency = 0.1, collide = true, plain = true },
+	GlassDark = { color = "#4E5D66", material = Enum.Material.Glass, transparency = 0.5, collide = true, plain = true },
 }
 
 -- Größte Ausdehnung jedes Modells in Studs (aus den Blender-Exporten).
@@ -62,8 +60,8 @@ local SIZES: { [string]: number } = {
 	OreChunkB = 0.72,
 	OreChunkC = 1.07,
 	OreBin = 9.35,
-	BaseHall = 17.4,
-	BaseRoom = 11.35,
+	BaseHall = 17.7,
+	BaseRoom = 10.45,
 }
 
 local function split(name: string): (string, string?)
