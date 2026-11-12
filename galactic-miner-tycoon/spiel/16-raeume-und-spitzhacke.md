@@ -21,7 +21,7 @@ Die Raumnummern bestimmen, wann neue Erze auftauchen (siehe `../daten/ressourcen
 | 2 | Schmiede | 50 Eisen | Spitzhacke und **Rucksack** verbessern, **Teleportfeld zur Lobby** | Kupfer-Vorkommen |
 | 3 | Maschinenhalle | 100 Eisen + 15 Kupfer | Förderbänder kaufen, Bohrer aufwerten | Kohle-Vorkommen |
 | 4 | Garage | 150 Eisen + 60 Kupfer + 20 Kohle | Rover kaufen und verbessern | Kristall-Vorkommen |
-| 5 | Forschungslabor | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Techbaum: bessere Bohrer, Bänder, größere Lager | – |
+| 5 | Forschungslabor | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Techbaum: bessere Bohrer, Bänder, größere Lager | Titan-Vorkommen |
 | 6 | Raketen-Hangar | 600 Kupfer + 300 Kohle + 150 Kristall + 50 Titan | Rakete bauen und betreten, danach nächste Insel | – |
 
 Die Garage kommt bewusst **vor dem Kristall**: Kristall liegt ab 1100 Studs und ist zu Fuß schon anstrengend (Änderung von Ju). Sie kostet deshalb kein Kristall. Titan liegt ab 1600 Studs und erscheint mit Raum 5. Raum 7 ersetzt Werft und Startplatz (vorher 6 Räume).
