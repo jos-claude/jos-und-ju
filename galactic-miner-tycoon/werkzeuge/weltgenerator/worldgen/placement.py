@@ -268,7 +268,9 @@ def tuft_clump(p, x0, z0, n, spread=4.0):
 
 
 def tufts(p, isl, n, rmax=1.25):
-    """Gras-Bueschel in Klumpen (5-14), keine gleichmaessige Streuung."""
+    """Gras-Bueschel in Klumpen (5-14), keine gleichmaessige Streuung. Weit draussen (Ring C-E) nur die Haelfte."""
+    if isl.get("ring", "A") in "CDE":
+        n = n // 2
     k = 0
     xs, zs = p.candidates(isl, max(4, n // 6), bias=0.9, rmax=rmax)
     for x, z in zip(xs, zs):
@@ -578,6 +580,7 @@ def place_all(p: Placer):
     base_ring(p)
     scattered(p)
     edge_extras(p)
+    ground_mist(p)
 
 
 def base_ring(p: Placer):
@@ -672,10 +675,12 @@ def scattered(p: Placer):
     pk = {"Sandstone": 0, "Limestone": 1, "Slate": 2, "Rock": 3, "Mud": 4, "Salt": 5, "Concrete": 5}
     from .world import TERRAIN_MATERIALS
     for k in sel:
-        if n >= 1500:
+        if n >= 1000:
             break
         x = -2304 + 2 + 4 * ix[k] + rng.uniform(-2, 2)
         z = -2304 + 2 + 4 * iz[k] + rng.uniform(-2, 2)
+        if math.hypot(x, z) > 600 and rng.uniform() > 0.35:      # weit draussen sparen (Teile-Budget, Handys)
+            continue
         if not p.ok_ground(x, z, 36, allow_rock=True) or not p.free(x, z, 1.2):
             continue
         y = p.ground(x, z)
@@ -694,8 +699,10 @@ def scattered(p: Placer):
     sel = rng.choice(len(iz), size=min(len(iz), 3000), replace=False)
     n = 0
     for k in sel:
-        if n >= 450:
+        if n >= 300:
             break
+        if iz[k] < 0 or math.hypot(-2304 + 2 + 4 * ix[k], -2304 + 2 + 4 * iz[k]) > 1100:
+            continue
         if rng.uniform() > 0.5 + 0.5 * math.sin(ix[k] * 0.05) * math.cos(iz[k] * 0.04):
             continue
         x = -2304 + 2 + 4 * ix[k]
@@ -867,6 +874,59 @@ def _vein(p, seg_len):
         _VEIN_CACHE[key] = t
         p.w.add_template(t)
     return _VEIN_CACHE[key]
+
+
+def ground_mist(p: Placer, target=95):
+    """Bodennebel als Akzent: Mulden, Teiche, Salzpfannen, Terrassen, Oasen, Nebelbecken, Fuss des Randgebirges.
+    Nicht auf dem Plateau (r < 150) und nicht in den Washes."""
+    c = p.c
+    rng = p.rng
+    spots = []
+    for w in c.feat["water"]:
+        spots += [(w["x"], w["z"], max(w["R"], 25), 2)]
+    for f in c.feat.get("playa", []):
+        spots += [(f["x"], f["z"], f["R"] * 0.8, 4)]
+    for t in c.feat.get("terrace", []):
+        spots += [(t["x"], t["z"], max(t["w"], t["l"]) * 0.45, 4)]
+    for o in c.feat.get("oasis_c", []):
+        spots += [(o["x"], o["z"], o["R"], 2)]
+    for f in c.feat.get("fogbasin", []):
+        spots += [(f["x"], f["z"], f["R"] * 0.7, 6)]
+    for g in c.feat.get("geode", []):
+        spots += [(g["x"], g["z"], g["R"], 1)]
+    n = 0
+    for (sx, sz, R, k) in spots:
+        for _ in range(k):
+            for _try in range(12):
+                a, rr = rng.uniform(0, 6.28), R * math.sqrt(rng.uniform(0, 1))
+                x, z = sx + math.cos(a) * rr, sz + math.sin(a) * rr
+                iz, ix = c.idx(x, z)
+                if math.hypot(x, z) < 160 or c.void[iz, ix] or c.wash_dist[iz, ix] < 0 or c.slope[iz, ix] > 18:
+                    continue
+                y = p.ground(x, z) + rng.uniform(2, 6)
+                if not np.isnan(c.wl[iz, ix]):
+                    y = max(y, float(c.wl[iz, ix]) + 2.0)
+                p.put("Mist", x, z, rng.uniform(0.5, 1.8), int(rng.integers(0, 2)), y=y, lean=False, mark=False)
+                n += 1
+                break
+    # Fuss des Randgebirges (Mulden am Hang)
+    for _ in range(3000):
+        if n >= target:
+            break
+        a = rng.uniform(0, 360)
+        x, z = pol(a, rng.uniform(1820, 1900))
+        iz, ix = c.idx(x, z)
+        if c.void[iz, ix] or c.slope[iz, ix] > 14 or c.wash_dist[iz, ix] < 0 or c.F[iz, ix] < 0.12:
+            continue
+        p.put("Mist", x, z, rng.uniform(0.9, 2.0), int(rng.integers(0, 2)), y=p.ground(x, z) + rng.uniform(3, 8), lean=False,
+              mark=False)
+        n += 1
+    # ruhige Nebel-Partikel in den Nebelbecken
+    for f in c.feat.get("fogbasin", []):
+        for k in range(2):
+            x, z = f["x"] + rng.uniform(-0.3, 0.3) * f["R"], f["z"] + rng.uniform(-0.3, 0.3) * f["R"]
+            p.put("MistEmitter", x, z, 1.0, 0, y=p.ground(x, z) + 4, lean=False, mark=False)
+    return n
 
 
 def edge_extras(p: Placer):

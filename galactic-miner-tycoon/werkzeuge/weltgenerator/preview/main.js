@@ -49,7 +49,8 @@ async function main() {
   const atmoDecay = lin(AT.Decay || [142, 111, 168]);
   const density = AT.Density ?? 0.28;
   // Zielkurve der Vorgabe: 15 % bei 500, 55 % bei 1500, 70 % bei 2000 Studs (fuer Density 0.28)
-  const fogL = 1754 * Math.pow(0.28 / Math.max(density, 0.01), 0.7);
+  // Density 0.28 / Haze 1.6 -> Kurve der Vorgabe; mehr Density/Haze -> kuerzere Sichtweite (0.32 / 2.0: ~20 % bei 500)
+  const fogL = 1754 * Math.pow(0.28 / Math.max(density, 0.01), 1.1) * Math.pow(1.6 / Math.max(AT.Haze ?? 1.6, 0.1), 0.3);
   const ATMO = `
     const vec3 SUN_DIR = ${'vec3(' + SUN.x.toFixed(5) + ',' + SUN.y.toFixed(5) + ',' + SUN.z.toFixed(5) + ')'};
     const vec3 ATMO_COL = ${v3(atmoColor)};
@@ -577,8 +578,9 @@ async function main() {
           const tr = Math.round((p.transparency || 0) * 20) / 20;
           const glass = p.material === 'Glass';
           const key = `${p.shape}|${neon ? 'N' : glass ? 'G' : 'S'}|${tr}|${p.castShadow ? 1 : 0}`;
-          const keyS = key + (t.category === 'Sky' ? '|sky' : '');
-          if (!groups.has(keyS)) groups.set(keyS, { shape: p.shape, neon, glass, tr, cast: p.castShadow, m: [], c: [], sky: t.category === 'Sky' });
+          const skyLike = t.category === 'Sky' || t.category === 'Mist';
+          const keyS = key + (skyLike ? '|sky' : '');
+          if (!groups.has(keyS)) groups.set(keyS, { shape: p.shape, neon, glass, tr, cast: p.castShadow, m: [], c: [], sky: skyLike });
           const col = lin(colors[p.role] || [255, 0, 255]);
           const gr = groups.get(keyS);
           gr.m.push(world); gr.c.push(col);
@@ -601,7 +603,7 @@ async function main() {
       if (g.sky) im.userData.skyDeco = true;
       g.m.forEach((m, i) => im.setMatrixAt(i, m));
       g.c.forEach((c, i) => im.setColorAt(i, g.neon ? c.clone().multiplyScalar(NEON_GAIN) : c));
-      im.castShadow = g.cast && g.tr < 0.5; im.receiveShadow = !g.neon;
+      im.castShadow = g.cast && g.tr < 0.5; im.receiveShadow = !g.neon && !g.sky;
       if (g.tr > 0) im.renderOrder = 3;
       scene.add(im);
     }

@@ -100,6 +100,9 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
                 continue
             w.report.append(f"  {g:14s} {p.count[g]:5d} / {p.parts[g]:6d} / {p.lights[g]:3d}")
         c.deco_islands = p.islands
+        total = sum(len(w.templates[q[0]].parts) for q in w.placements)
+        if total > 25000:
+            print(f"  WARNUNG: {total} Teile (Budget 25 000)")
         log("Deko gesetzt")
     w.preview = {"cameras": cameras.make(c), "map": cameras.map_data(c)}
     w.build_zones = build_zone_raster(c, res["build"])

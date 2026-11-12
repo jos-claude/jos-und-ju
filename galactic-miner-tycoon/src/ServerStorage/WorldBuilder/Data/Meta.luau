@@ -156,12 +156,12 @@ return {
 			Technology = Enum.Technology.ShadowMap,
 		},
 		Atmosphere = {
-			Density = 0.28,
+			Density = 0.32,
 			Offset = 0.25,
-			Color = Color3.fromRGB(242, 184, 160),
+			Color = Color3.fromRGB(238, 184, 190),
 			Decay = Color3.fromRGB(142, 111, 168),
 			Glare = 0.35,
-			Haze = 1.6,
+			Haze = 2,
 		},
 		Bloom = {
 			Intensity = 0.45,

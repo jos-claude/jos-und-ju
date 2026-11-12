@@ -434,6 +434,29 @@ def fog_ball():
                     [{"main": C("#EFE8FA")}])
 
 
+def mist(rng, k):
+    """Bodennebel-Schwade: 2-3 flache Ellipsoide uebereinander, leicht versetzt (Hoehe <= 0,15 x Breite)."""
+    W = 60.0
+    parts = []
+    n = 2 + k % 2
+    for i in range(n):
+        w = W * (1.0 - 0.2 * i) * rng.uniform(0.85, 1.0)
+        d = w * rng.uniform(0.55, 0.8)
+        h = w * rng.uniform(0.09, 0.14)
+        off = np.array([rng.uniform(-0.15, 0.15) * W, i * h * 0.55, rng.uniform(-0.15, 0.15) * W])
+        parts.append(ell(off, (w, h, d), "main", rot_y(rng.uniform(0, 3.1)), transparency=round(rng.uniform(0.88, 0.94), 2),
+                         cast_shadow=False))
+    return Template(f"Mist_{k}", "Mist", parts, [{"main": C("#F4E8F4")}, {"main": C("#EDE4F7")}])
+
+
+def mist_emitter():
+    """Unsichtbares Teil mit ruhigen Nebel-Partikeln (Nebelbecken Ring E)."""
+    pt = {"kind": "mist", "rate": 1.5, "lifetime": [12, 18], "size": [20, 40], "speed": [0.5, 1.5], "spread": 180,
+          "color": "#F4E8F4", "transparency": [0.85, 1.0]}
+    return Template("MistEmitter", "Mist", [block((0, 0, 0), (2, 2, 2), "main", transparency=1.0, cast_shadow=False, particles=pt)],
+                    [{"main": C("#F4E8F4")}])
+
+
 def light_beam():
     """Lichtstrahl (Neon, Transparenz 0,85, Laenge 600) senkrecht nach oben."""
     parts = [cyl((0, 0, 0), (0, 600, 0), d, "main", "Neon", transparency=t, cast_shadow=False)
@@ -481,5 +504,6 @@ def build_catalog(rng):
         "Tuft": [add(tuft(rng, k)) for k in range(5)],
         "Cloud": [add(cloud())], "FogBall": [add(fog_ball())], "LightBeam": [add(light_beam())],
         "EdgeBarrier": [add(edge_barrier())], "TitanVein": [add(titan_vein_segment())],
+        "Mist": [add(mist(rng, k)) for k in range(4)], "MistEmitter": [add(mist_emitter())],
     }
     return t, groups

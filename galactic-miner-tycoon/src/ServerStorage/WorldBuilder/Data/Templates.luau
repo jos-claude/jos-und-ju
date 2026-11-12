@@ -6038,6 +6038,177 @@ return {
 			},
 		},
 	},
+	Mist_0 = {
+		category = "Mist",
+		parts = {
+			{
+				shape = "Ellipsoid",
+				size = {55.191, 6.38, 43.441},
+				cf = {-5.293, 0, 8.542, 0.9759, 0, 0.2183, 0, 1, 0, -0.2183, 0, 0.9759},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 0.91,
+				castShadow = false,
+			},
+			{
+				shape = "Ellipsoid",
+				size = {42.296, 3.953, 26.887},
+				cf = {-1.214, 2.174, -3.365, -0.2116, 0, 0.9774, 0, 1, 0, -0.9774, 0, -0.2116},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 0.9,
+				castShadow = false,
+			},
+		},
+		variants = {
+			{
+				main = Color3.fromRGB(244, 232, 244),
+			},
+			{
+				main = Color3.fromRGB(237, 228, 247),
+			},
+		},
+	},
+	Mist_1 = {
+		category = "Mist",
+		parts = {
+			{
+				shape = "Ellipsoid",
+				size = {57.84, 7.656, 32.109},
+				cf = {5.787, 0, -3.411, 0.7506, 0, 0.6607, 0, 1, 0, -0.6607, 0, 0.7506},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 0.88,
+				castShadow = false,
+			},
+			{
+				shape = "Ellipsoid",
+				size = {45.815, 4.628, 29.409},
+				cf = {3.746, 2.545, -6.329, -0.5942, 0, 0.8043, 0, 1, 0, -0.8043, 0, -0.5942},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 0.89,
+				castShadow = false,
+			},
+			{
+				shape = "Ellipsoid",
+				size = {32.052, 4.337, 19.827},
+				cf = {-8.186, 4.77, -8.906, 0.132, 0, 0.9913, 0, 1, 0, -0.9913, 0, 0.132},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 0.93,
+				castShadow = false,
+			},
+		},
+		variants = {
+			{
+				main = Color3.fromRGB(244, 232, 244),
+			},
+			{
+				main = Color3.fromRGB(237, 228, 247),
+			},
+		},
+	},
+	Mist_2 = {
+		category = "Mist",
+		parts = {
+			{
+				shape = "Ellipsoid",
+				size = {57.392, 6.064, 36.364},
+				cf = {-8.834, 0, 0.581, -0.8957, 0, 0.4446, 0, 1, 0, -0.4446, 0, -0.8957},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 0.89,
+				castShadow = false,
+			},
+			{
+				shape = "Ellipsoid",
+				size = {46.065, 5.894, 27.343},
+				cf = {5.095, 3.242, 4.32, -0.1679, 0, 0.9858, 0, 1, 0, -0.9858, 0, -0.1679},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 0.89,
+				castShadow = false,
+			},
+		},
+		variants = {
+			{
+				main = Color3.fromRGB(244, 232, 244),
+			},
+			{
+				main = Color3.fromRGB(237, 228, 247),
+			},
+		},
+	},
+	Mist_3 = {
+		category = "Mist",
+		parts = {
+			{
+				shape = "Ellipsoid",
+				size = {53.876, 6.132, 42.473},
+				cf = {6.595, 0, -5.399, -0.4397, 0, 0.8981, 0, 1, 0, -0.8981, 0, -0.4397},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 0.89,
+				castShadow = false,
+			},
+			{
+				shape = "Ellipsoid",
+				size = {46.779, 6.519, 36.165},
+				cf = {-0.62, 3.585, -5.966, 0.7741, 0, 0.6331, 0, 1, 0, -0.6331, 0, 0.7741},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 0.94,
+				castShadow = false,
+			},
+			{
+				shape = "Ellipsoid",
+				size = {32.278, 3.588, 18.674},
+				cf = {-8.662, 3.946, -7.964, 0.4527, 0, 0.8917, 0, 1, 0, -0.8917, 0, 0.4527},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 0.88,
+				castShadow = false,
+			},
+		},
+		variants = {
+			{
+				main = Color3.fromRGB(244, 232, 244),
+			},
+			{
+				main = Color3.fromRGB(237, 228, 247),
+			},
+		},
+	},
+	MistEmitter = {
+		category = "Mist",
+		parts = {
+			{
+				shape = "Block",
+				size = {2, 2, 2},
+				cf = {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1},
+				role = "main",
+				material = "SmoothPlastic",
+				transparency = 1,
+				castShadow = false,
+				particles = {
+					kind = "mist",
+					rate = 1.5,
+					lifetime = {12, 18},
+					size = {20, 40},
+					speed = {0.5, 1.5},
+					spread = 180,
+					color = "#F4E8F4",
+					transparency = {0.85, 1},
+				},
+			},
+		},
+		variants = {
+			{
+				main = Color3.fromRGB(244, 232, 244),
+			},
+		},
+	},
 	TitanVein_0 = {
 		category = "Landmark",
 		parts = {

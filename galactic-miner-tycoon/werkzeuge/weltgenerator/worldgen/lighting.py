@@ -32,7 +32,9 @@ def lighting_meta():
             "Technology": Enum("Technology", "ShadowMap"),
         },
         "Atmosphere": {
-            "Density": 0.28, "Offset": 0.25, "Color": RGB("#F2B8A0"), "Decay": RGB("#8E6FA8"), "Glare": 0.35, "Haze": 1.6,
+            # Minimaler Grund-Dunst (Wunsch Jos): etwas dichter, mehr Haze, Farbe pfirsich-lavendel.
+            # Ziel: ~6 % bei 200 Studs, ~20 % bei 500, Zenit/Saturn klar.
+            "Density": 0.32, "Offset": 0.25, "Color": RGB("#EEB8BE"), "Decay": RGB("#8E6FA8"), "Glare": 0.35, "Haze": 2.0,
         },
         "Bloom": {"Intensity": 0.45, "Size": 24, "Threshold": 1.4},
         "ColorCorrection": {"Brightness": 0.02, "Contrast": 0.12, "Saturation": 0.18, "TintColor": RGB("#FFF1E6")},

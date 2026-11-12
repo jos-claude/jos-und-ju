@@ -151,6 +151,12 @@ def make(c):
         cpos = _ahead(oa["x"], oa["z"], 230, 150)
         cams["ring_c_oasis"] = _cam((cpos[0], H(*cpos) + 34, cpos[1]), (oa["x"], H(oa["x"], oa["z"]) + 4, oa["z"]), fov=70,
                                     shadow=(oa["x"], oa["z"], 320))
+    fb = c.feat.get("fogbasin", [])
+    if fb:
+        f = fb[0]
+        cpos = _ahead(f["x"], f["z"], 70, f["R"] + 110)
+        cams["ring_e_fog"] = _cam((cpos[0], H(*cpos) + 16, cpos[1]), (f["x"], H(f["x"], f["z"]) + 4, f["z"]), fov=70,
+                                  shadow=(f["x"], f["z"], 350))
     l9 = lm.get("L9")
     if l9:
         cpos = _ahead(l9["x"], l9["z"], 200, 420)
