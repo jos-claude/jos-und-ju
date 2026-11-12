@@ -125,3 +125,31 @@ Diese Prompts sind noch nicht auf den neuen Stil angepasst. Bitte vor der Nutzun
 | Erz-Brocken (Items) | `bilder/erze/erz-brocken-01.jpg` |
 
 Ein Astronaut ist nicht nötig: Der Spieler behält seinen normalen Roblox-Skin.
+
+---
+
+## Heimatplanet: Varianten mit mehr Weltraum-Look (12.11.2026)
+Ju und Jos finden, dass Prompt 7 zu sehr nach Erde und Insel aussieht. Hier drei Varianten als **runder Planet im Weltraum** mit bunter, fremder Natur. Jeder Block ist komplett, einzeln kopierbar. Gleicher Stil wie bisher, nur die Welt ist anders. Bitte alle drei erzeugen lassen und die beste auswählen.
+
+### 7a. Pilz-Planet (Violett und Türkis)
+```
+Art style: stylized low-poly 3D game scene inspired by the chunky industrial look of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Flat faceted surfaces, soft clean lighting, toy-like and friendly for kids, not realistic, no text, no logos, no people.
+
+Scene: a small round low-poly alien planet floating in outer space, seen from slightly above so the curved horizon of the sphere is visible, a deep blue-purple starry sky with soft nebula clouds and two small colorful moons in the background. The ground is violet and magenta with turquoise patches. Strange alien plants everywhere: giant glowing mushrooms in pink and cyan, tall bulb-shaped plants with glowing tips, spiral turquoise grass, floating glowing spores. No trees, nothing looks like Earth. Completely harmless, no danger. On the surface in the middle: a small modular orange-and-grey space base with a wide door and a row of glass-fronted ore storage bins next to it. Around the base, ore deposits are scattered at different distances (grey-brown iron close by, orange copper with green patina further out, black coal with glowing orange cracks even further, pink crystals far away), each clearly readable against the colorful ground. A few yellow-orange mining drills stand on the nearer deposits with short conveyor belts leading to the storage bins. Clean readable layout, no UI.
+```
+
+### 7b. Kristall-Wüsten-Planet (Korall und Türkis)
+```
+Art style: stylized low-poly 3D game scene inspired by the chunky industrial look of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Flat faceted surfaces, soft clean lighting, toy-like and friendly for kids, not realistic, no text, no logos, no people.
+
+Scene: a small round low-poly alien planet floating in outer space, seen from slightly above so the curved horizon of the sphere is visible, a dark teal starry sky with a huge ringed gas planet and a small moon in the background. The ground is warm peach and coral sand with striped layered rock mesas in pink, yellow and lilac. Strange alien plants: balloon-shaped round plants in turquoise and lime, soft glowing crystal spires in turquoise and lilac, curly noodle-like plants, no trees and nothing that looks like Earth. Completely harmless, no danger, no spikes. On the surface in the middle: a small modular orange-and-grey space base with a wide door and a row of glass-fronted ore storage bins next to it. Around the base, ore deposits are scattered at different distances (grey-brown iron close by, copper with strong green-teal patina further out, black coal with glowing orange cracks even further, pink crystals far away), each clearly readable against the sandy ground. A few yellow-orange mining drills stand on the nearer deposits with short conveyor belts leading to the storage bins. Clean readable layout, no UI.
+```
+
+### 7c. Blauer Spiral-Dschungel-Planet
+```
+Art style: stylized low-poly 3D game scene inspired by the chunky industrial look of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Flat faceted surfaces, soft clean lighting, toy-like and friendly for kids, not realistic, no text, no logos, no people.
+
+Scene: a small round low-poly alien planet floating in outer space, seen from slightly above so the curved horizon of the sphere is visible, a deep indigo starry sky with a bright pink nebula and a small golden moon in the background. The ground is deep blue and teal with glowing cyan veins. Strange alien plants: tall spiral-shaped trees with pink and yellow tops, giant curled leaves in orange and magenta, jellyfish-like floating plants hovering slightly above the ground, tiny glowing light bulbs on stalks, no normal trees and nothing that looks like Earth. Completely harmless, no danger. On the surface in the middle: a small modular orange-and-grey space base with a wide door and a row of glass-fronted ore storage bins next to it. Around the base, ore deposits are scattered at different distances (grey-brown iron close by, orange copper with green patina further out, black coal with glowing orange cracks even further, pink crystals far away), each clearly readable against the colorful ground. A few yellow-orange mining drills stand on the nearer deposits with short conveyor belts leading to the storage bins. Clean readable layout, no UI.
+```
+
+Nach der Auswahl: Das Bild als `bilder/welt/heimatplanet-02.jpg` speichern, dann passe ich Stil und Farbpalette von Insel 1 (`../spiel/15-optik-und-audio.md`) an.
