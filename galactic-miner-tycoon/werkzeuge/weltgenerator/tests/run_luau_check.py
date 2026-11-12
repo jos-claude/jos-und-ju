@@ -10,6 +10,8 @@ Exit-Code 0 = alles bestanden.
 """
 from __future__ import annotations
 
+import math
+
 import argparse
 import base64
 import importlib.util
@@ -309,8 +311,19 @@ def compare_props(area, build, world):
     check(area, "Warnung nur fuer unbekannte Vorlage", warns == [f"[WorldBuilder] Unbekannte Vorlage: {u}" for u in unknown], str(warns[:4]))
     problems = {"Struktur": [], "Teil-Eigenschaften": [], "CFrame/Groesse": [], "Licht": [], "Mesh": [], "Pivot": []}
     nparts = nmodels = 0
-    for cat, exp_models in cats.items():
-        got_models = got_cats.get(cat, [])
+    for cat, exp_flat in cats.items():
+        # Builder legt Modelle in Chunk-Modelle (200 x 200 Studs) je Kategorie, Chunks in Reihenfolge des ersten Auftretens
+        groups = {}
+        for em in exp_flat:
+            key = (math.floor(em["pivot"][0] / 200), math.floor(em["pivot"][2] / 200))
+            groups.setdefault(key, []).append(em)
+        exp_models = [em for g in groups.values() for em in g]
+        exp_chunks = [f"Chunk_{k[0]}_{k[1]}" for k in groups]
+        got_chunks = got_cats.get(cat, [])
+        if [c["name"] for c in got_chunks] != exp_chunks or any(c["class"] != "Model" for c in got_chunks):
+            problems["Struktur"].append(f"{cat}: Chunks {[c['name'] for c in got_chunks][:4]} statt {exp_chunks[:4]}")
+            continue
+        got_models = [m for c in got_chunks for m in c["kids"]]
         if len(got_models) != len(exp_models):
             problems["Struktur"].append(f"{cat}: {len(got_models)} Modelle statt {len(exp_models)}")
             continue
