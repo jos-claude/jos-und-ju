@@ -26,13 +26,26 @@ Status: **Spieler- und Bohrer-Upgrades abgestimmt für M1 (11.11.2026, Ju); Schi
 `Preis(n) = Basispreis × 1,15^n`
 
 
-## Spieler-Upgrades im Trainingsraum (Raum 5, Entscheidung 016)
-Ab Raum 2. Bezahlt mit Erzen. Preis `Basis × 1,15^Stufe`.
+## Rucksack (Schmiede, Raum 2, Entscheidung 017)
+Ohne Rucksack trägt man **10** Erz in den Händen. Den Rucksack baut man in der Schmiede und verbessert ihn dort. Der Preis ist fest je Stufe.
+
+| Stufe | Name | Tragevorrat | Kosten |
+|---|---|---|---|
+| 0 | Hände | 10 | – (Start) |
+| 1 | Stoff-Rucksack | 25 | 30 Eisen |
+| 2 | Metall-Rucksack | 40 | 60 Eisen |
+| 3 | Verstärkter Rucksack | 60 | 100 Eisen + 20 Kupfer |
+| 4 | Profi-Rucksack | 90 | 60 Kupfer + 20 Kohle |
+| 5 | Titan-Rucksack | 130 | 150 Kupfer + 60 Kohle + 20 Kristall |
+
+ID im Code: `backpack`. Der Rover-Laderaum (Garage) kommt zusätzlich dazu.
+
+## Geschwindigkeit (Trainingsraum, Raum 5)
+Bezahlt mit Erzen.
 
 | ID | Name | Wirkung | Stufen | Kosten (Basis) |
 |---|---|---|---|---|
-| `carry_strength` | Stärke | trägt mehr (20 → +10 je Stufe) | 5 | 30 Eisen + 5 Kupfer |
-| `walk_speed` | Geschwindigkeit | läuft schneller (+2 je Stufe) | 5 | 30 Eisen + 5 Kupfer |
+| `walk_speed` | Geschwindigkeit | läuft schneller (+2 Studs/s je Stufe) | 5 | 30 Eisen + 5 Kupfer, Preis ×1,15 je Stufe |
 
 ## Bohrer-Upgrades (abgestimmt für M1; Entscheidung 012)
 Gilt je Bohrer, Level 1 bis 5. Jedes Level: +50 % der Grundrate und größerer Puffer.

@@ -37,10 +37,10 @@ Kupfer-Vorkommen erscheinen mit Raum 2, Kohle mit 3, **Kristall mit 4 (Garage)**
 | Raum | Name | Kosten | Was man dort tut |
 |---|---|---|---|
 | 1 | Start-Halle | gratis | Lager, Bohrer kaufen |
-| 2 | Schmiede | 50 Eisen | Spitzhacke verbessern, Teleportfeld zur Lobby |
+| 2 | Schmiede | 50 Eisen | Spitzhacke und Rucksack verbessern, Teleportfeld zur Lobby |
 | 3 | Maschinenhalle | 100 Eisen + 15 Kupfer | Förderbänder kaufen, Bohrer aufwerten |
 | 4 | **Garage** | 150 Eisen + 60 Kupfer + 20 Kohle | Rover kaufen und verbessern |
-| 5 | Trainingsraum | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Stärke und Geschwindigkeit |
+| 5 | Trainingsraum | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Geschwindigkeit (weitere Spielerwerte später) |
 | 6 | Forschungslabor | 400 Kupfer + 200 Kohle + 80 Kristall + 20 Titan | Techbaum: bessere Bohrer, Bänder, größere Lager |
 | 7 | Raketen-Hangar | 800 Kupfer + 400 Kohle + 200 Kristall + 100 Titan | Rakete bauen und betreten |
 

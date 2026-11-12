@@ -17,7 +17,7 @@ Der Spieler setzt immer mehr Bohrer auf Erzvorkommen und verbindet sie mit Förd
 
 ## Festlegung für M1 (Zahlen änderbar)
 - Bohrer-Rate: Eisen 1,0/s. Puffer 50 Einheiten, dann stoppt er.
-- Der Spieler trägt anfangs 20 Einheiten. Das Upgrade „Stärke“ erhöht das.
+- Ohne Rucksack trägt der Spieler 10 Einheiten. Der Rucksack aus der Schmiede erhöht das (Entscheidung 017).
 - Förderband in Segmenten (Raster), ein Segment kostet Material. Das Band ist Logik im Hintergrund plus Optik, keine echten Items (Performance). Durchsatz z. B. 5/s.
 - Ein Band führt nur zu dem Kasten, der zum Erz des Bohrers passt.
 - **Offline-Ertrag: ja** (Entscheidung 011). Begrenzt durch die Kasten-Kapazität: Sind die Kästen voll, passiert nichts mehr. Vorschlag: Beim Einloggen wird aus der Zeit seit dem letzten Speichern berechnet, was Bohrer mit Band geliefert hätten (höchstens bis die Kästen voll sind). Bohrer ohne Band füllen nur ihren Puffer (50).

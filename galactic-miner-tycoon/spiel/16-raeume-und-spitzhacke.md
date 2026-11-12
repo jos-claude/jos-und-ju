@@ -18,17 +18,17 @@ Die Raumnummern bestimmen, wann neue Erze auftauchen (siehe `../daten/ressourcen
 | Raum | Name | Kosten | Was man dort tut | Neu freigeschaltet |
 |---|---|---|---|---|
 | 1 | Start-Halle | gratis | Lager mit Eisen-Kasten, Bohrer kaufen | Eisen |
-| 2 | Schmiede | 50 Eisen | Spitzhacke verbessern, **Teleportfeld zur Lobby** | Kupfer-Vorkommen |
+| 2 | Schmiede | 50 Eisen | Spitzhacke und **Rucksack** verbessern, **Teleportfeld zur Lobby** | Kupfer-Vorkommen |
 | 3 | Maschinenhalle | 100 Eisen + 15 Kupfer | Förderbänder kaufen, Bohrer aufwerten | Kohle-Vorkommen |
 | 4 | Garage | 150 Eisen + 60 Kupfer + 20 Kohle | Rover kaufen und verbessern | Kristall-Vorkommen |
-| 5 | Trainingsraum | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Stärke und Geschwindigkeit | Titan-Vorkommen |
+| 5 | Trainingsraum | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Geschwindigkeit | Titan-Vorkommen |
 | 6 | Forschungslabor | 400 Kupfer + 200 Kohle + 80 Kristall + 20 Titan | Techbaum: bessere Bohrer, Bänder, größere Lager | – |
 | 7 | Raketen-Hangar | 800 Kupfer + 400 Kohle + 200 Kristall + 100 Titan | Rakete bauen und betreten, danach nächste Insel | – |
 
 Die Garage kommt bewusst **vor dem Kristall**: Kristall liegt ab 1100 Studs und ist zu Fuß schon anstrengend (Änderung von Ju). Sie kostet deshalb kein Kristall. Titan liegt ab 1600 Studs und erscheint mit Raum 5. Raum 7 ersetzt Werft und Startplatz (vorher 6 Räume).
 
 ## Spitzhacke (Vorschlag)
-- **Abbau von Hand:** Man schlägt auf ein Erzvorkommen, das Erz geht direkt in den Tragevorrat (Start 20). Dann zum Lager laufen und in den Kasten legen (wie in 003).
+- **Abbau von Hand:** Man schlägt auf ein Erzvorkommen, das Erz geht direkt in den Tragevorrat (ohne Rucksack 10, mit Rucksack mehr, siehe `../daten/upgrades.md`). Dann zum Lager laufen und in den Kasten legen (wie in 003).
 - **Vorkommen werden durch Handabbau nicht leer** (Vorschlag).
 - **Härte:** Hartes Erz braucht eine bessere Spitzhacke, um es von Hand abzubauen. Bohrer haben diese Grenze nicht, sie brauchen nur den Kasten des Erzes. So lohnt sich der Schmiede-Raum auch später.
 

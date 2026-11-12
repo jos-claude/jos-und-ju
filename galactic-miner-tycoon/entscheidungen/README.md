@@ -25,3 +25,4 @@ Regeln:
 | 014 | [Lobby-Raumschiff und Spielstände (Welten) mit Koop](014-lobby-und-spielstaende.md) | Beschlossen (Punkt 1 offen) | 12.11.2026 |
 | 015 | [Look von Insel 1 (orangefarbener Planet mit Saturn)](015-heimatplanet-orange-mit-saturn.md) | Beschlossen | 12.11.2026 |
 | 016 | [7 Räume, Spitzhacke und Garage](016-raeume-spitzhacke-garage.md) | Beschlossen | 12.11.2026 |
+| 017 | [Rucksack in der Schmiede](017-rucksack-in-der-schmiede.md) | Beschlossen | 12.11.2026 |

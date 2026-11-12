@@ -26,13 +26,13 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 - [ ] Freunde einladen, bis zu 4 Spieler pro Welt
 - [ ] Rechte: Besitzer lädt ein und entfernt, alle bauen, nur Besitzer startet die Rakete
 - [ ] Lobby-Chat (Roblox-Standardchat), Beitritt nur auf Einladung
-- [ ] Stats (Stärke, Geschwindigkeit) pro Welt gespeichert
+- [ ] Stats (Rucksack, Geschwindigkeit) pro Welt gespeichert
 
 ## M2 – Automatisierung & Verarbeitung
 - [ ] Förderbänder verlegen (Bohrer zu Kasten): Routenvorschlag annehmen oder selbst legen, kosten Erze
 - [ ] Fabrik wandelt Rohstoff in Material um
 - [ ] Silos mit Kapazität
-- [ ] Spieler-Upgrades (Stärke, Geschwindigkeit) und Bohrer-Level
+- [ ] Spieler-Upgrades (Rucksack, Geschwindigkeit) und Bohrer-Level
 
 ## M3 – Rakete & Insel 2 (Entscheidung 013)
 - [ ] Rakete wird aus vielen Erzen gebaut (Raum 6, Raketenstartplatz)

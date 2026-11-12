@@ -10,7 +10,7 @@ Der Startplanet. Der Spieler baut wie in Satisfactory eine immer größere Basis
 ## Beschlossen
 - Jeder Spieler hat seine eigene Basis (008). Der Heimatplanet ist ein eigener Place (005).
 - **Auf dem Heimatplaneten gibt es keine Gefahren** (010).
-- Die Basis besteht aus **Räumen**, die Erze kosten. In den Räumen gibt es Upgrades (Raumschiff, Geschwindigkeit, Stärke u. a.).
+- Die Basis besteht aus **Räumen**, die Erze kosten. In den Räumen gibt es Upgrades (Raumschiff, Geschwindigkeit, Rucksack u. a.).
 - Zur Basis gehört ein **Lager** mit einem Kasten pro Erz (Glaswand, Füllstand sichtbar). Die Kästen sind das Inventar (010).
 - **Erzvorkommen** liegen verteilt auf der Karte. Man platziert Bohrer darauf (010).
 
