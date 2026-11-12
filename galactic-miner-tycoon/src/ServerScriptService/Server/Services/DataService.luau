@@ -10,6 +10,8 @@
 --   DataService.GetStats(player)  → MemberStats? (Spitzhacke, Rucksack, Getragenes)
 --   DataService.OnPlayerReady(fn) → fn(player, world) sobald die Welt geladen ist
 --   DataService.SaveWorld(worldId)
+--   DataService.GetPlayTimeSeconds(world) → Spielzeit inkl. laufender Sitzung
+--   DataService.GetPlayersInWorld(worldId) → { Player }
 --
 -- Attribute am Player (zum Prüfen und für den Client): WorldId, DataReady, SaveStoreKind.
 
@@ -66,6 +68,23 @@ end
 function DataService.GetStats(player: Player): MemberStats?
 	local world = DataService.GetWorld(player)
 	return if world then world.memberStats[tostring(player.UserId)] else nil
+end
+
+-- Gesamte Spielzeit der Welt in Sekunden, inklusive der laufenden Sitzung (für "+1 Vorkommen alle 5 Minuten").
+function DataService.GetPlayTimeSeconds(world: World): number
+	local mark = playTimeMarks[world.worldId]
+	return world.playTimeSeconds + (if mark then os.clock() - mark else 0)
+end
+
+-- Alle Spieler, die gerade in dieser Welt sind.
+function DataService.GetPlayersInWorld(worldId: string): { Player }
+	local result = {}
+	for player, id in worldIdByPlayer do
+		if id == worldId then
+			table.insert(result, player)
+		end
+	end
+	return result
 end
 
 function DataService.OnPlayerReady(callback: (Player, World) -> ())
