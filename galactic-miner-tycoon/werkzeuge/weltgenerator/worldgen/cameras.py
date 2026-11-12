@@ -18,12 +18,42 @@ def _ahead(x, z, az, dist):
     return x + math.sin(a) * dist, z - math.cos(a) * dist
 
 
+def map_data(c):
+    """Daten fuer die Karten-Ueberlagerung: Ringe, Washes, Landmarken."""
+    names = {"L0": "L0 Abendbank", "L1a": "L1 Saturn-Tor", "L1b": "", "L2": "L2 Zwillingstuerme", "L3": "L3 Nadelgarten",
+             "L4": "L4 Bogen", "L5": "L5 Rauchfang", "L6": "L6 Regenbogen-Kamm", "L7": "L7 Silberstufen",
+             "L8": "L8 Kristallkathedrale", "L9": "L9 Titan-Spiegelturm"}
+    lms = []
+    for f in c.feat["landmark"]:
+        lab = names.get(f["key"], f["key"])
+        if lab:
+            lms.append({"key": f["key"], "label": lab, "x": round(f["x"], 1), "z": round(f["z"], 1)})
+    for i, b in enumerate(c.feat["balcony"]):
+        lms.append({"key": "L10", "label": "L10 Balkon %d" % (i + 1), "x": round(b["x"], 1), "z": round(b["z"], 1)})
+    for key in ("T2", "T3"):
+        for t in c.feat["terrace"]:
+            if t["name"] == key:
+                lms.append({"key": key, "label": key + " Terrassen", "x": round(t["x"], 1), "z": round(t["z"], 1)})
+    washes = []
+    for rs, az in c.wash_lines:
+        pts = []
+        for r, a in zip(rs[40::10], az[40::10]):
+            if r > 1880:
+                break
+            x, z = pol(float(a), float(r))
+            pts += [round(x, 1), round(z, 1)]
+        washes.append(pts)
+    sx, _, sz = c.L.spawn
+    return {"rings": [250, 600, 1100, 1600, 2000], "washes": washes, "landmarks": lms, "spawn": [round(sx, 1), round(sz, 1)]}
+
+
 def make(c):
     """c: Ctx nach dem Bau. Gibt {name: camera} zurueck."""
     H = lambda x, z: float(c.h_at(x, z))  # noqa: E731
     lm = {f["key"]: f for f in c.feat["landmark"]}
     cams = {}
     sx, _, sz = c.L.spawn
+    sx, sz = pol(40, 78)          # Vorschau: etwas vor dem Basis-Platzhalter
     eye = H(sx, sz) + 5.0
     # (a) Held: hinter der Basis, schraeg von oben, Richtung Az 40 (Saturn im Bild)
     hx, hz = pol(220, 270)
@@ -76,8 +106,32 @@ def make(c):
     bx, bz = _ahead(b["x"], b["z"], b["az"] + 180, 14)
     t = _ahead(b["x"], b["z"], b["az"] + 30, 1200)
     cams["balcony_245"] = _cam((bx, b["y"] + 6, bz), (t[0], b["y"] - 40, t[1]), fov=75, shadow=(b["x"], b["z"], 500))
-    # (d) Draufsicht
-    cams["top"] = _cam((0, 5200, 1), (0, 0, 0), fov=48, shadow=(0, 0, 2350), near=50)
+    # Nahansicht eines Tafelbergs (ca. 80 Studs, Augenhoehe, Sonnenseite)
+    best = None
+    for m in c.feat["mesa"]:
+        rr = math.hypot(m["x"], m["z"])
+        if m["stage"] != "mesa" or m.get("R0", 0) < 38 or not (280 < rr < 1500):
+            continue
+        for da in (-30, -15, 0, 15, 30):
+            a = 250 + da
+            dist = m["R"] * 0.9 + 80
+            px, pz = _ahead(m["x"], m["z"], a, dist)
+            g = H(px, pz)
+            if abs(g - m["base"]) > 6:
+                continue
+            ok = True
+            for k in range(1, 12):
+                qx, qz = _ahead(px, pz, a + 180, (dist - m["R"]) * k / 12 * 0.8)
+                if H(qx, qz) > g + 6:
+                    ok = False
+                    break
+            score = m.get("R0", 0) + len(m["levels"]) * 6 - abs(da) * 0.2
+            if ok and (best is None or score > best[0]):
+                best = (score, px, pz, g, m)
+    if best:
+        _, px, pz, g, m = best
+        cams["mesa_close"] = _cam((px, g + 5.0, pz), (m["x"], g + (m["top"] - m["base"]) * 0.45, m["z"]), fov=70,
+                                  shadow=(m["x"], m["z"], 300))
     l9 = lm.get("L9")
     if l9:
         cpos = _ahead(l9["x"], l9["z"], 200, 420)

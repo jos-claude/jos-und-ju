@@ -145,6 +145,7 @@ def build_world() -> World:
 
     # --- Meta ---
     w.meta.update({
+        "surfaceOffset": 0.0,  # Referenz rechnet ohne Roblox-Oberflaechenversatz
         "name": "Testwelt", "seed": 42, "layers": LAYERS, "strata": STRATA,
         "materialColors": {"Grass": RGB("#44AA33"), "Sand": RGB(200, 180, 120), "Rock": RGB("#777788")},
         "water": {"WaterColor": RGB("#3399CC"), "WaterTransparency": 0.9, "WaterWaveSize": 0.1, "WaterReflectance": 0.5, "WaterWaveSpeed": 8, "Decoration": False},

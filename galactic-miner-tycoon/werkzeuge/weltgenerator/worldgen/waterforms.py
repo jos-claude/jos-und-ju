@@ -53,8 +53,9 @@ def pond(c: Ctx, cx, cz, diam, depth, rot=None, floor_mat="Mud", bank_mat="Leafy
     wet = (inner > 0) & (hn < W - 0.05)
     c.wl[sl] = np.where(wet, W, c.wl[sl])
     set_mat(c, sl, (inner > bank * 0.4), floor_mat)
-    set_mat(c, sl, (inner <= bank * 0.4) & (inner > -6), bank_mat)
-    set_mat(c, sl, (inner <= -6) & (inner > -22) & (c.nz.fbm(name + "g", x, z, 14, 2) > -0.2), ring_mat)
+    wob = 9.0 * c.nz.fbm(name + "g", x, z, 30, 3)
+    set_mat(c, sl, (inner <= bank * 0.4) & (inner > -6 + wob * 0.5), bank_mat)
+    set_mat(c, sl, (inner <= -6 + wob * 0.5) & (inner > -24 + wob * 1.6), ring_mat)
     c.mask("pond")[sl] |= inner > -4
     c.obstacle[sl] |= inner > -2
     claim(c, sl, inner > -30)
@@ -156,7 +157,7 @@ def playa(c: Ctx, cx, cz, diam, name="playa"):
     rim = np.clip(-rr / 70.0, 0, 1)
     hn = np.where(rr <= 0, dry * (1 - ss(0, 1, rim)) + np.maximum(Hl, dry) * ss(0, 1, rim), hn)
     hn = np.where(rr <= 0, np.minimum(hn, Hl), hn)
-    hn = np.where(rr <= 0, np.maximum(hn, dry), hn)
+    hn = np.where((rr <= 0) & (rr > -70), np.maximum(hn, dry), hn)
     spots = (c.nz.fbm(name + "s", x, z, 45, 3) > 0.12) & (rr > 12)
     hn = np.where(spots, F, hn)
     # Spot-Ufer weich: Nachbarn der Spots leicht absenken
@@ -216,7 +217,7 @@ def crater(c: Ctx, cx, cz, diam, water=False, name="crater"):
         wet = (rho < R) & (hn < W - 0.05)
         c.wl[sl] = np.where(wet, W, c.wl[sl])
         set_mat(c, sl, (rho < rf * 1.15), "Mud")
-        set_mat(c, sl, (rho >= rf * 1.15) & (rho < rf + 12), "LeafyGrass")
+        set_mat(c, sl, (rho >= rf * 1.15) & (rho < rf + 12 + 8 * c.nz.fbm(name + "lg", x, z, 25, 2)), "LeafyGrass")
         c.feat["water"].append({"x": cx, "z": cz, "R": rf, "W": W, "kind": "crater"})
     c.H[sl] = hn
     c.mask("crater")[sl] |= rho < R * 1.2
@@ -247,6 +248,8 @@ def fan(c: Ctx, ax, az_, dir_deg, radius, open_deg=90.0, name="fan"):
         dd = np.abs(np.radians((ang - ca + 180) % 360 - 180) * rho + wig)
         ch = np.maximum(ch, ss(5.0, 0.0, dd) * ss(10, 30, rho))
     surf = surf - 1.6 * ch
+    keep = c.mask("volcano")[sl] | c.mask("lava")[sl] | c.mask("mesa")[sl] | c.mask("ridge")[sl]
+    shape = np.where(keep, 0.0, shape)
     add = (surf - Hl) * shape
     hn = Hl + np.maximum(add, 0)
     c.H[sl] = hn

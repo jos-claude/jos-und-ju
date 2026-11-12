@@ -115,73 +115,92 @@ def make_poly(c: Ctx, cx, cz, R, aspect, rot, nv=None):
 
 
 # ------------------------------------------------------------------ Tafelberg / Butte
+def flat_s(c: Ctx, sl, sel, sval):
+    """Konstanter Schichtversatz in einem Bereich (waagerechte Baender)."""
+    c.S_local[sl] = np.where(sel, sval, c.S_local[sl])
+    c.S_local_w[sl] = np.where(sel, 1.0, c.S_local_w[sl])
+
+
 def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nsteps=None, talus=1.0,
-         top_patch=None, base=None, record=True, gully=True):
-    """Geschichteter Tafelberg. Stufen liegen auf Bandgrenzen (Oberseiten zeigen das Band)."""
+         top_patch=None, base=None, record=True, gully=True, nv=None):
+    """Geschichteter Tafelberg wie im Referenzbild: gestapelte Stufen mit flachen Baenken und fast senkrechten
+    Waenden, jede Stufenkante ein abgerundetes Polygon. Stufen liegen auf Bandgrenzen (je Stufe 1-2 Streifen)."""
     rng = c.rng
     R = diam / 2.0
-    aspect = aspect if aspect is not None else (rng.uniform(1.0, 1.6) if stage == "mesa" else rng.uniform(1.0, 1.3))
+    aspect = aspect if aspect is not None else (rng.uniform(1.0, 1.55) if stage == "mesa" else rng.uniform(1.0, 1.25))
     rot = rot if rot is not None else rng.uniform(0, math.pi)
-    tal_l = talus * height * (rng.uniform(0.30, 0.42) if stage == "mesa" else rng.uniform(0.32, 0.45))
-    pad = R * math.sqrt(aspect) + tal_l * 1.7 + 16
+    tal_l = talus * height * (rng.uniform(0.17, 0.25) if stage == "mesa" else rng.uniform(0.2, 0.3))
+    pad = R * math.sqrt(aspect) + tal_l * 1.6 + 16
     sl = c.win(cx, cz, pad)
     x, z = c.local(sl)
-    rr = min(R * 0.18, 10.0)
-    vx, vz = make_poly(c, cx, cz, max(R - rr, R * 0.5), aspect, rot)
+    rr = min(R * 0.22, 12.0)
+    vx, vz = make_poly(c, cx, cz, max(R - rr, R * 0.5), aspect, rot, nv=nv)
     d = poly_sdf(x, z, vx, vz) - rr
-    d = d + c.nz.fbm("mesaedge", x, z, 38, 3) * 3.2
+    d = d + c.nz.fbm("mesaedge", x, z, 70, 2) * 1.3
     Hl = c.H[sl]
     if base is None:
         foot = d < 0
         base = float(np.percentile(Hl[foot], 35)) if foot.any() else float(c.h_at(cx, cz))
     sc = float(s_smooth(c, np.array(cx), np.array(cz)))
-    # Stufen auf Bandgrenzen
     if nsteps is None:
-        nsteps = int(rng.integers(3, 7)) if stage == "mesa" else int(rng.integers(2, 4))
-    bounds = band_boundaries(base + height * 0.55, base + height * 1.12, sc, min_band=6)
+        nsteps = int(rng.integers(2, 5)) if stage == "mesa" else int(rng.integers(1, 3))
+    if stage == "butte":
+        gully = False
+    bounds = band_boundaries(base + height * 0.6, base + height * 1.15, sc, min_band=4)
     top = min(bounds, key=lambda b: abs(b[0] - (base + height)))[0] if bounds else base + height
-    lows = [b[0] for b in band_boundaries(base + 0.18 * height, top - 6, sc, min_band=4)]
-    chosen = []
-    for y in sorted(lows, key=lambda v: rng.uniform()):
-        if all(abs(y - q) >= 7 for q in chosen) and abs(top - y) >= 7:
-            chosen.append(y)
-        if len(chosen) >= nsteps - 1:
-            break
-    levels = sorted(chosen) + [top]
-    # Einrueckung je Stufe
+    # aufeinanderfolgende Bandgrenzen von unten nach oben; Stufen < 7 Studs zusammenlegen
+    lows = [b[0] for b in band_boundaries(base + 0.14 * height, top - 6.5, sc, min_band=4)]
+    levels = []
+    last = base
+    for y in lows:
+        if y - last >= 7.0 and top - y >= 7.0:
+            levels.append(y)
+            last = y
+    while len(levels) > nsteps - 1:          # gleichmaessig ausduennen
+        gaps = [levels[i + 1] - levels[i - 1] if 0 < i < len(levels) - 1 else 1e9 for i in range(len(levels))]
+        levels.pop(int(np.argmin(gaps)) if len(levels) > 2 else 0)
+    levels = levels + [top]
     s = -d
-    if gully:
+    big = stage == "mesa" and R > 42 and gully
+    if big:
         th = np.arctan2(z - cz, x - cx)
         per = 2 * math.pi * R * (1 + aspect) / 2
-        k = max(5, int(round(per / rng.uniform(19, 28))))
-        g = np.maximum(0.0, np.cos(k * th + rng.uniform(0, 6.3) + 1.2 * c.nz.fbm("gul", x, z, 60, 2))) ** 6
-        gd = rng.uniform(3.0, 7.0)
+        k = max(5, int(round(per / rng.uniform(22, 30))))
+        g = np.maximum(0.0, np.cos(k * th + rng.uniform(0, 6.3) + 0.8 * c.nz.fbm("gul", x, z, 80, 2))) ** 8
+        gd = rng.uniform(2.0, 3.5)
     else:
         g = np.zeros_like(s)
         gd = 0.0
     h = np.full(s.shape, base)
     inset = 0.0
     prev = base
-    dS = s_smooth(c, x, z) - sc        # Oberseiten folgen der Schichtneigung
+    insvar = 1.0 + 0.15 * c.nz.fbm("insv", x, z, 90, 2)
+    rmin = R / math.sqrt(aspect)
+    wws = [max(1.6, (lv - p) * TAN(6) + 0.8) for lv, p in zip(levels, [base] + levels[:-1])]
+    inss = [rng.uniform(9, 16) if stage == "mesa" else rng.uniform(2, 5) for _ in levels[:-1]]
+    budget = (0.62 if stage == "mesa" else 0.42) * rmin - sum(wws)
+    if inss and sum(inss) > budget:                # Oberseite bleibt breit (keine Spitze)
+        f = max(budget, 0.0) / sum(inss)
+        inss = [v * f for v in inss]
     for i, lv in enumerate(levels):
         dh = lv - prev
-        ww = max(2.2, dh * TAN(10) + 1.5)
-        s_eff = s - g * gd * (1.0 + 0.9 * i / max(1, len(levels) - 1))
-        ramp = np.clip((s_eff - inset) / ww, 0, 1)
+        ww = wws[i]
+        s_eff = s - g * gd * (1.0 + 0.6 * i / max(1, len(levels) - 1))
+        ramp = np.clip((s_eff - inset * insvar) / ww, 0, 1)
         h = h + dh * ramp
         prev = lv
-        ins = rng.uniform(4, 14) if stage == "mesa" else rng.uniform(1.5, 5)
-        ins *= 1.0 + 0.35 * c.nz.fbm("ins%d" % i, x, z, 45, 2)
-        inset = inset + ww + (ins if i < len(levels) - 1 else 0)
-    roof = rng.uniform(0.5, 2.0) if stage == "mesa" else 0.4
-    h = h + roof * ss(inset, inset + 30, s) - dS * (s > 0)
+        inset = inset + ww + (inss[i] if i < len(levels) - 1 else 0)
+    roof = rng.uniform(0.3, 0.9) if stage == "mesa" else 0.2
+    h = h + roof * ss(inset, inset + 30, s)
     mesa_h = np.where(s > -1, h, -1e9)
-    # Schutthalde (Mud) mit Schuttkegeln unter den Rinnen
-    T = tal_l * TAN(31) * 0.85
-    tl = tal_l * (1.0 + 0.6 * g)
-    Tg = T * (1.0 + 0.5 * g)
-    q = np.clip((d + 0.15 * tl) / tl, 0, 1)
-    tal = base + Tg * (1 - q) ** 1.55 + c.nz.fbm("talus", x, z, 14, 2) * 0.6
+    # Schutthalde (Mud): glatte Schuerze 28-35 Grad, deckt den Wandfuss (kein gezackter Bandsaum)
+    tal_l = max(tal_l, 9.0)
+    T = max(5.0, tal_l * TAN(32) * 0.78)
+    gs = 0.5 + 0.5 * c.nz.fbm("talcone", x, z, 80, 2)
+    tl = tal_l * (1.0 + 0.18 * gs)
+    Tg = T * (1.0 + 0.12 * gs)
+    q = np.clip((d + 0.25 * tl) / tl, 0, 1)
+    tal = base + Tg * (1 - q) ** 1.35
     tal = np.where(q < 1, tal, -1e9)
     new = np.maximum(Hl, np.maximum(mesa_h, tal))
     body = (mesa_h >= tal) & (mesa_h > Hl + 0.5)
@@ -190,16 +209,17 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     c.mask("mesa")[sl] |= body
     c.mask("talus")[sl] |= tmask
     clear_soft(c, sl, body | tmask)
-    foot = (d < tl * 0.9)
     c.obstacle[sl] |= body | tmask
-    claim(c, sl, d < tl + 18)
-    # Oberseite: Staub- oder Grasflecken
+    claim(c, sl, d < tal_l + 18)
     if top_patch:
-        topsel = body & (s > inset - 2) & (c.nz.fbm("toppatch", x, z, 22, 3) > -0.05)
+        topsel = body & (s > inset - 2) & (c.nz.fbm("toppatch", x, z, 40, 2) > -0.1)
         set_strata_top(c, sl, topsel, top_patch)
+    # Schichten innerhalb der Mesa waagerecht (konstanter Versatz): keine 4-Stud-Treppen in den Baendern
+    flat_s(c, sl, d < tal_l + 6, sc)
     if record:
         c.feat["mesa"].append({"x": cx, "z": cz, "R": R * math.sqrt(aspect), "Rmin": R / math.sqrt(aspect), "base": base,
-                               "top": top, "talus": tal_l, "stage": stage, "levels": levels, "rot": rot})
+                               "top": top, "talus": tal_l, "stage": stage, "levels": levels, "rot": rot,
+                               "top_inset": inset, "aspect": aspect, "R0": R})
     return top
 
 
@@ -231,6 +251,7 @@ def spire(c: Ctx, cx, cz, base_d, tip_d, height, base=None):
     clear_soft(c, sl, body | tm)
     c.obstacle[sl] |= body | tm
     claim(c, sl, rho < tal_r + 14)
+    flat_s(c, sl, rho < tal_r, float(s_smooth(c, np.array(cx), np.array(cz))))
     c.feat["spire"].append({"x": cx, "z": cz, "R": rb, "base": base, "top": base + height})
     return base + height
 
@@ -262,10 +283,12 @@ class Curve:
         return s.reshape(x.shape), u.reshape(x.shape), i.reshape(x.shape)
 
 
-def ridge(c: Ctx, p0, p1, bend, peaks, base=None, front=1, dip_deg=34.0, face_deg=62.0, back_deg=36.0,
+def ridge(c: Ctx, p0, p1, bend, peaks, base=None, front=1, dip_deg=13.0, face_deg=66.0, back_deg=34.0,
           width_cap=None, gaps=(), name="ridge"):
-    """Asymmetrischer Danxia-Kamm ("Haifischflosse"). peaks: [(t, Hoehe ueber Basis, Breite in t)].
-    front=+1: Stirnseite auf der linken Seite der Laufrichtung p0->p1. gaps: [(t, Breite in Studs, Boden ueber Basis)]."""
+    """Danxia-Kamm als scharfgratige Haifischflosse: steile Stirnseite mit Rinnen alle 18-30 Studs und Rippen,
+    Rueckseite ~34 Grad mit verzweigten Rinnen, gezackter Grat, Schutthalde vor der Stirn.
+    peaks: [(t, Hoehe ueber Basis, Breite in t)]; gaps: [(t, Breite in Studs, Boden ueber Basis)]."""
+    dip_deg = min(dip_deg, 15.0)
     cv = Curve(p0, p1, bend)
     L = cv.length
     hmax = max(p[1] for p in peaks)
@@ -280,33 +303,34 @@ def ridge(c: Ctx, p0, p1, bend, peaks, base=None, front=1, dip_deg=34.0, face_de
     Hl = c.H[sl]
     if base is None:
         base = float(np.percentile(c.H[c.win(mid[0], mid[1], 60)], 30))
-    # Kammhoehe entlang t
     crest = np.zeros_like(t)
     for (tp, hp, wp) in peaks:
-        crest = np.maximum(crest, hp * np.exp(-((t - tp) / wp) ** 2) ** 0.8)
-    crest = crest * ss(-0.06, 0.08, t) * ss(1.06, 0.92, t)
-    zack = c.nz.ridged(name + "zack", s / 1.0, np.zeros_like(s) + 7.0, 42, 2, sharp=2.0)
-    crest = crest + (zack - 0.45) * 22.0 * np.clip(crest / 60, 0, 1)
+        crest = np.maximum(crest, hp * np.clip(1 - (np.abs(t - tp) / wp) ** 1.6, 0, 1) ** 0.45)
+    crest = crest * ss(-0.04, 0.07, t) * ss(1.04, 0.93, t)
+    zack = c.nz.ridged(name + "zack", s, np.zeros_like(s) + 7.0, 38, 2, sharp=2.4)
+    fine = c.nz.ridged(name + "zack2", s, np.zeros_like(s) + 3.0, 13, 1, sharp=2.0)
+    cf = np.clip(crest / 50, 0, 1)
+    crest = crest + ((zack - 0.45) * 16.0 + (fine - 0.5) * 4.0) * cf
     for (tg, wg, hg) in gaps:
         gw = wg / L
-        crest = np.minimum(crest, hg + np.maximum(0, np.abs(t - tg) - gw / 2) * L * TAN(38))
-    # Furchen auf der Stirnseite (alle 18-30 Studs), Rinnen auf der Rueckseite
-    fur = np.maximum(0, np.cos(2 * math.pi * s / 24.0 + 1.3 * c.nz.fbm(name + "fur", x, z, 50, 2))) ** 5
+        crest = np.minimum(crest, hg + np.maximum(0, np.abs(t - tg) - gw / 2) * L * TAN(40))
     au = np.abs(u)
-    front_h = crest - (au + fur * 6.0 * ss(0, 30, au)) * TAN(face_deg)
-    bg = c.nz.ridged(name + "bg", x, z, 46, 3, sharp=1.8)
-    back_h = crest - u * TAN(back_deg) - bg * 9.0 * ss(0, 40, u)
+    # Stirnseite: Rippen und Rinnen (Periode 18-30), Rinnen oben breiter
+    per = 18.0 + 12.0 * (0.5 + 0.5 * c.nz.fbm(name + "per", x, z, 200, 1))
+    ph = 2 * math.pi * s / per + 1.1 * c.nz.fbm(name + "fur", x, z, 70, 2)
+    gully = (0.5 + 0.5 * np.cos(ph)) ** 3
+    front_h = crest - (au + gully * 7.0 * ss(0, 18, au)) * TAN(face_deg)
+    bg = c.nz.ridged(name + "bg", x, z, 42, 3, sharp=1.8)
+    back_h = crest - u * TAN(back_deg) - bg * 10.0 * ss(0, 30, u)
     hr = np.where(u < 0, front_h, back_h)
-    # Schutthalde vor der Stirnseite
+    # Schutthalde vor der Stirnseite (Mud)
     foot_u = crest / TAN(face_deg)
-    T = 0.22 * crest
-    Ltal = T / TAN(30) + 4
-    q = np.clip((au - foot_u + 0.35 * Ltal) / Ltal, 0, 1)
+    T = 0.17 * crest
+    Ltal = T / TAN(31) + 4
+    q = np.clip((au - foot_u + 0.3 * Ltal) / Ltal, 0, 1)
     tal = np.where((u < 0) & (q < 1), T * (1 - q) ** 1.5, -1e9)
     hrel = np.maximum(hr, tal)
     hrel = np.where(hrel > -0.5, hrel, -1e9)
-    if width_cap is not None:
-        hrel = np.minimum(hrel, crest * np.clip(1 - (au - width_cap) / 40, 0, 1) + 0 * au)
     hnew = base + hrel
     new = np.maximum(Hl, hnew)
     body = (hr >= tal) & (hnew > Hl + 0.5)
@@ -317,10 +341,10 @@ def ridge(c: Ctx, p0, p1, bend, peaks, base=None, front=1, dip_deg=34.0, face_de
     clear_soft(c, sl, body | tm)
     c.obstacle[sl] |= body | tm
     claim(c, sl, (hnew > Hl - 1.0) & (hrel > -6))
-    # lokal geneigte Schichten: Fall zur Rueckseite
+    # lokal geneigte Schichten (max. 15 Grad), Fall zur Rueckseite
     sc = float(s_smooth(c, np.array(mid[0]), np.array(mid[1])))
     w = ss(-6, 10, hrel) * ss(1.25, 0.95, np.abs(t - 0.5) * 2)
-    loc = sc + TAN(dip_deg) * u
+    loc = sc + TAN(dip_deg) * (s - L / 2) * (1 if front > 0 else -1)
     c.S_local[sl] = np.where(w > c.S_local_w[sl], loc, c.S_local[sl])
     c.S_local_w[sl] = np.maximum(c.S_local_w[sl], w)
     c.feat["ridge"].append({"curve": cv, "base": base, "front": front, "name": name, "peaks": peaks})
@@ -364,6 +388,7 @@ def fin(c: Ctx, p0, p1, thick, height, base=None, windows=1, win_size=(8.0, 12.0
     clear_soft(c, sl, body | tm)
     c.obstacle[sl] |= body | tm
     claim(c, sl, np.abs(u) < thick * 2 + 12)
+    flat_s(c, sl, np.abs(u) < thick * 2 + 8, float(s_smooth(c, np.array(mid[0]), np.array(mid[1]))))
     yaw = math.atan2(nx, nz_)  # lokales +Z zeigt quer zur Wand
     R = rot_y(yaw)
     out = []
@@ -405,57 +430,56 @@ HOODOO_NECK = ["Sandstone", "Slate", "Sandstone", "Rock"]
 
 
 def hoodoo(c: Ctx, x0, z0, total, base=None):
-    """Fuss aus Hoehenkarte (Baender), Hals/Wulst/Hut als Zylinder-Zusatzformen (Ueberhang)."""
+    """Schlanker Hoodoo: Fuss aus Hoehenkarte (Baender), Koerper als Zylinder-Stapel mit Hals/Wulst,
+    Segmentfarben = Schichtband der absoluten Hoehe (Baender laufen ueber alle Hoodoos durch),
+    Hut aus hartem Kalkstein, nur wenig breiter als der Hals."""
+    from .materials import BAND_LUT, STRATA_PERIOD
+    from .layout import STRATA_BASE
+    from .world import TERRAIN_MATERIALS
     rng = c.rng
-    rf = rng.uniform(7, 10)
-    hf = rng.uniform(8, 14) * min(1.0, total / 40 + 0.4)
-    sl = c.win(x0, z0, rf * 2.2)
+    rf = rng.uniform(5.5, 7.5)
+    hf = rng.uniform(5, 9) * min(1.0, total / 40 + 0.5)
+    sl = c.win(x0, z0, rf * 2.4)
     x, z = c.local(sl)
-    rho = np.hypot(x - x0, z - z0) * (1 + 0.12 * c.nz.fbm("hdf", x, z, 6, 1))
+    rho = np.hypot(x - x0, z - z0) * (1 + 0.1 * c.nz.fbm("hdf", x, z, 8, 1))
     Hl = c.H[sl]
     if base is None:
         base = float(Hl[rho < rf].min()) if (rho < rf).any() else float(c.h_at(x0, z0))
-    q = np.clip(rho / (rf * 1.5), 0, 1)
-    prof = np.where(rho < rf * 0.55, 1.0, (1 - np.clip((rho - rf * 0.55) / (rf * 0.95), 0, 1)) ** 1.6)
-    hfoot = base + hf * prof
-    tal = np.where(q < 1, base + rf * 0.35 * (1 - q) ** 1.4, -1e9)
-    hfoot = np.where(rho < rf * 1.5, hfoot, -1e9)
+    q = np.clip(rho / (rf * 1.6), 0, 1)
+    prof = np.where(rho < rf * 0.5, 1.0, (1 - np.clip((rho - rf * 0.5) / (rf * 0.9), 0, 1)) ** 1.5)
+    hfoot = np.where(rho < rf * 1.4, base + hf * prof, -1e9)
+    tal = np.where(q < 1, base + rf * 0.3 * (1 - q) ** 1.5, -1e9)
     hn = np.maximum(hfoot, tal)
     c.H[sl] = np.maximum(Hl, hn)
     c.mask("hoodoo_foot")[sl] |= (hfoot >= tal) & (hfoot > Hl + 0.5)
     c.mask("talus")[sl] |= (tal > hfoot) & (tal > Hl + 0.3)
     c.obstacle[sl] |= rho < rf * 1.3
-    y = base + hf - 1.5
+    s_here = int(round(float(s_smooth(c, np.array(x0), np.array(z0))))) % STRATA_PERIOD
+    hat_h = rng.uniform(2.6, 4.0)
+    y0 = base + hf - 1.0
+    y1 = base + total - hat_h
+    r0 = rng.uniform(3.0, 4.3)
+    nb = rng.choice([1.0, 1.5, 2.0])
+    ph = rng.uniform(0, 2 * math.pi)
+    seg_h = rng.uniform(4.5, 6.0)
+    nseg = max(2, int(round((y1 - y0) / seg_h)))
+    hseg = (y1 - y0) / nseg
     lean = rng.uniform(0, 2 * math.pi)
-    lx, lz = math.cos(lean) * 0.04, math.sin(lean) * 0.04
-    segs = []
-    rest = total - hf
-    neck_r = rng.uniform(2.7, 4.5)
-    bulge_r = rng.uniform(4.6, 6.4)
-    hat_r = rng.uniform(5.2, 8.0)
-    hat_h = rng.uniform(3.0, 5.0)
-    two = rest > 34 and rng.uniform() < 0.6
-    if two:
-        parts = [("neck", rest * 0.30, neck_r), ("bulge", rest * 0.22, bulge_r), ("neck", rest * 0.30, neck_r * 0.85)]
-    else:
-        parts = [("neck", rest * 0.45, neck_r), ("bulge", rest * 0.30, bulge_r), ("neck", rest * 0.12, neck_r * 0.9)]
-    mats = [HOODOO_NECK[int(rng.integers(0, len(HOODOO_NECK)))], "Rock", "Sandstone"]
-    k = 0
+    lx, lz = math.cos(lean) * 0.035, math.sin(lean) * 0.035
     cx, cz = x0, z0
-    for kind, hgt, r in parts:
-        hgt = max(hgt, 3.0)
-        cy = y + hgt / 2
-        cx += lx * hgt
-        cz += lz * hgt
-        mat = mats[k % len(mats)] if kind == "neck" else ("Slate" if rng.uniform() < 0.5 else "Rock")
-        op_cyl(c, cx, cy, cz, hgt + 1.0, r, mat)
-        if kind == "bulge":
-            op_ball(c, cx, cy + hgt * 0.15, cz, r * 1.02, mat)
-        y += hgt
-        k += 1
-    # Hut: harte Kalkstein-Kappe (Ueberhang)
-    op_cyl(c, cx, y + hat_h / 2 - 0.5, cz, hat_h, hat_r, "Limestone")
-    op_ball(c, cx, y + hat_h - 0.8, cz, hat_r * 0.72, "Limestone")
-    top = y + hat_h
+    rad = r0
+    for i in range(nseg):
+        tt = (i + 0.5) / nseg
+        rad = r0 * (0.88 + 0.16 * math.sin(2 * math.pi * nb * tt + ph)) * (1.0 - 0.14 * tt)
+        rad = max(rad, 2.3)
+        yc = y0 + (i + 0.5) * hseg
+        cx += lx * hseg
+        cz += lz * hseg
+        m = TERRAIN_MATERIALS[int(BAND_LUT[int(math.floor(yc + s_here + STRATA_BASE)) % STRATA_PERIOD])]
+        op_cyl(c, cx, yc, cz, hseg + 0.8, rad, m)
+    hat_r = rad + rng.uniform(1.0, 1.8)
+    op_cyl(c, cx, y1 + hat_h / 2, cz, hat_h, hat_r, "Limestone")
+    op_ball(c, cx, y1 + hat_h - hat_r * 0.5 + 1.0, cz, hat_r * 0.5, "Limestone")
+    top = y1 + hat_h + 1.0
     c.feat["hoodoo"].append({"x": x0, "z": z0, "base": base, "top": top, "hat_r": hat_r, "foot_r": rf})
     return top

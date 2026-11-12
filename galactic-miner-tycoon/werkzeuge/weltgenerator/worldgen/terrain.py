@@ -10,15 +10,19 @@ from .ctx import Ctx
 from .layout import BALCONY_AZ, ang_diff, pol
 from .noise import smoothstep as ss
 
-RIM_R = 1940.0
+RIM_R = 1972.0
 BALCONY_FLOOR = 50.0
 BENCH_E2 = 30.0
 
 
 def ring_fields(c: Ctx):
     """Verwischter Radius (Ring-Grenzen mit Domain-Warping, +-80 Studs, Wellenlaenge 250) und Sektor C-Nordost."""
+    # Ring-Grenzen verwischt (+-80, Wellenlaenge 250) fuer Materialien; fuer Hoehen ein weicherer Warp,
+    # sonst staucht der Warp das Profil und verdoppelt stellenweise die Neigung.
     w = c.nz.fbm("ringwarp", c.x, c.z, 260, 3) * 150.0
-    c.rw = c.r + np.clip(w, -80, 80) * ss(150, 300, c.r)
+    c.rw_mat = c.r + np.clip(w, -80, 80) * ss(150, 300, c.r)
+    wh = c.nz.fbm("ringwarph", c.x, c.z, 620, 2) * 160.0
+    c.rw = c.r + np.clip(wh, -75, 75) * ss(150, 300, c.r)
     azj = c.az + c.nz.fbm("sectorjit", c.x, c.z, 400, 2) * 25.0
     d1 = ang_diff(azj, 30.0)          # Mitte des Nordost-Sektors (300..120)
     c.wNE = 1.0 - ss(90.0, 110.0, np.abs(d1))
@@ -29,7 +33,7 @@ def _scarp(rw, rk, hk, g):
     """Schichtstufe: steil (g=1, Wand + Schutthalde) oder sanfte Rampe (g=0). hk>0: aussen hoeher."""
     habs = abs(hk)
     w_sharp = habs / math.tan(math.radians(62)) + 10.0
-    w_gentle = habs / math.tan(math.radians(4.2))
+    w_gentle = habs / math.tan(math.radians(8.5))   # Rampe: kurz und befahrbar (<= 20 Grad), spart Bauflaeche
     w = w_gentle + (w_sharp - w_gentle) * g
     t = np.clip((rw - rk) / w + 0.5, 0.0, 1.0)
     gentle = t * t * (3 - 2 * t)
@@ -50,30 +54,28 @@ def _scarp(rw, rk, hk, g):
     return -habs * (1.0 - p), t, w
 
 
-SCARPS = [  # (Radius, Hoehe, Name)
-    (1110.0, -10.0, "s1"),
-    (1455.0, 12.0, "s2"),
-    (1562.0, 14.0, "s3"),
-    (1776.0, 14.0, "s4"),
+SCARPS = [  # (Radius, Hoehe, Name, nur Nordost-Sektor C)
+    (650.0, 12.0, "s0", True),      # Basaltplateau C-Nordost
+    (1110.0, -12.0, "s1", False),   # Abbruch C -> D-Becken
+    (1110.0, -10.0, "s1b", True),   # (im Nordosten hoeher)
+    (1500.0, 28.0, "s2", False),    # Steilstufe D -> Hochland E
+    (1776.0, 14.0, "s4", False),    # Stufe E1 -> E2
 ]
 
 
 def profile(rw, wNE, gs=None, wig=None):
     """Radiales Hoehenprofil (y). gs: Schaerfe der Stufen (None = alle sanft, fuer Wash-Boeden)."""
-    cl = -8.0 + 10.0 * wNE
+    # Grosse ebene Flaechen, Hoehenwechsel gebuendelt in Schichtstufen (wie Colorado-Plateau)
     h = -6.0 * ss(165, 262, rw) - 4.0 * ss(300, 560, rw)
-    h = h + (cl + 10.0) * ss(560, 730, rw)
-    h = h + (-8.0 - cl) * ss(960, 1090, rw)
-    h = h - 6.0 * ss(1135, 1270, rw)
-    h = h + 2.0 * ss(1475, 1540, rw)
-    h = h + 6.0 * ss(1580, 1680, rw)
-    h = h + 2.0 * ss(1690, 1760, rw)
-    h = h + 4.0 * ss(1795, 1880, rw)
-    for k, (rk, hk, name) in enumerate(SCARPS):
+    h = h + 2.0 * (1.0 - wNE) * ss(600, 780, rw)          # C-Suedwest: Duenenland -8
+    h = h - 4.0 * ss(1130, 1230, rw)                       # D-Becken -24
+    h = h + 8.0 * ss(1530, 1760, rw)                       # Hochland E1 +4 -> +12
+    h = h + 4.0 * ss(1795, 1880, rw)                       # E2 +26 -> +30
+    for k, (rk, hk, name, ne) in enumerate(SCARPS):
         g = 0.0 if gs is None else gs[k]
         off = 0.0 if wig is None else wig[k]
         dh, _, _ = _scarp(rw, rk + off, hk, g)
-        h = h + dh
+        h = h + dh * (wNE if ne else 1.0)
     return h
 
 
@@ -82,26 +84,32 @@ def base_terrain(c: Ctx):
     x, z, rw = c.x, c.z, c.rw
     nz = c.nz
     gs, wig = [], []
-    for k, (rk, hk, name) in enumerate(SCARPS):
-        g = ss(-0.04, 0.16, nz.fbm("scarpg" + name, x, z, 230, 3))
+    for k, (rk, hk, name, ne) in enumerate(SCARPS):
+        gname = name.rstrip("b")
+        g = ss(-0.2, -0.05, nz.fbm("scarpg" + gname, x, z, 260, 3))
         gs.append(g)
-        wig.append(nz.fbm("scarpw" + name, x, z, 70, 3) * 30.0)
+        wig.append(nz.fbm("scarpw" + gname, x, z, 70, 3) * 30.0)
     c.scarp_g = gs
     c.scarp_wig = wig
     h = profile(rw, c.wNE, gs, wig)
     # Stufen-Waende merken (fuer Material + Deko)
     sc = c.mask("scarp")
-    for k, (rk, hk, name) in enumerate(SCARPS):
+    for k, (rk, hk, name, ne) in enumerate(SCARPS):
         _, t, w = _scarp(rw, rk + wig[k], hk, gs[k])
         wall = (gs[k] > 0.5) & (t > 0.05) & (t < 0.95)
+        if ne:
+            wall &= c.wNE > 0.5
         sc |= wall
+    c.obstacle |= sc
     # Grund-Rauschen (Vorgabe 2.5), Amplituden leicht gedaempft wegen Bauzonen-Neigung <= 6 Grad
-    n = (nz.fbm("o1", x, z, 300, 1) * 6.0 + nz.fbm("o2", x, z, 80, 1) * 2.0
-         + nz.fbm("o3", x, z, 24, 1) * 0.55 + nz.fbm("o4", x, z, 9, 1) * 0.12)
+    # Amplituden gegenueber Vorgabe 2.5 reduziert, sonst liegt zu viel Flaeche ueber 6 Grad (Bauzonen-Regel)
+    n = (nz.fbm("o1", x, z, 300, 1) * 3.0 + nz.fbm("o2", x, z, 90, 1) * 0.7
+         + nz.fbm("o3", x, z, 28, 1) * 0.08)
     amp = 1.0 - 0.6 * (1.0 - ss(200, 300, rw))         # Ring A ruhiger
     amp = amp * (1.0 - 0.4 * ss(1200, 1260, rw) * (1.0 - ss(1430, 1470, rw)))  # D-Becken x0.6
     amp = amp * ss(150, 215, c.r)                       # Plateau eben
     micro = nz.fbm("plateau", x, z, 40, 2) * 0.45 * (1.0 - ss(150, 215, c.r))
+    micro = micro + (nz.fbm("microw", x, z, 52, 2) * 1.5 + nz.fbm("microw2", x, z, 20, 1) * 0.3) * ss(140, 190, c.r) * (1.0 - ss(380, 520, c.r))
     c.H = h + n * amp + micro
     c.base_smooth = h  # ohne Rauschen (fuer Washes)
 
@@ -140,11 +148,13 @@ def carve_washes(c: Ctx, regen=True):
         pz = -rs * np.cos(np.radians(azl))
         iz, ix = c.idx(px, pz)
         prof = profile(c.rw[iz, ix], c.wNE[iz, ix])
-        prof = gaussian_filter1d(prof, 18.0, mode="nearest")
+        prof = gaussian_filter1d(prof, 11.0, mode="nearest")
         depth = 3.0 + 0.9 * c.nz.fbm(f"washdep{k}", rs, np.full_like(rs, 7.0 * k), 300, 2) * 2
-        depth = np.clip(depth, 2.0, 4.0) * ss(170, 290, rs) * (1.0 - ss(1830, 1890, rs))
+        depth = np.clip(depth, 2.0, 4.0) * ss(195, 300, rs) * (1.0 - ss(1830, 1890, rs))
         floor = prof - depth
-        hw = 50.0 + 30.0 * ss(250, 1100, rs)
+        # Breite 50-90 Studs (halbe Breite 25-45), wechselnd
+        hw = (27.0 + 12.0 * ss(250, 1100, rs)) * (1.0 + 0.32 * c.nz.fbm(f"washw{k}", rs, np.full_like(rs, 3.0 * k), 260, 2) * 2.0)
+        hw = np.clip(hw, 24.0, 46.0) * (0.55 + 0.45 * ss(190, 300, rs))
         # Zelle -> seitlicher Abstand zur Linie
         a_here = azl[ri]
         lat = r * np.sin(np.radians(ang_diff(az, a_here)))
@@ -153,13 +163,27 @@ def carve_washes(c: Ctx, regen=True):
         hwc = hw[ri]
         fl = floor[ri]
         dep = depth[ri]
-        bank = 14.0
+        bank = 12.0
         cut = fl + dep * ss(hwc - bank, hwc, d) + np.maximum(0.0, d - hwc) * math.tan(math.radians(33))
+        # Geflochtene Nebenarme: flache Rinnen neben dem Hauptbett, die sich wieder vereinen
+        for j in range(2):
+            r0 = 320 + 600 * j + c.u(0, 250)
+            L = c.u(220, 380)
+            side = 1 if c.u() < 0.5 else -1
+            off = side * (hw[ri] + c.u(18, 30)) * np.sin(np.pi * np.clip((r - r0) / L, 0, 1)) ** 0.8
+            da = np.abs(lat - off)
+            arm = (r > r0) & (r < r0 + L)
+            armcut = fl + 1.2 + dep * 0.6 * ss(5, 11, da) + np.maximum(0.0, da - 11) * math.tan(math.radians(25))
+            cut = np.where(arm, np.minimum(cut, armcut), cut)
+            c.mask("wash_arm")[:] |= ok & arm & (da < 10) & (dep > 0.5)
         sel = ok & (d < hwc + 160)
         H[sel] = np.minimum(H[sel], cut[sel])
         inner = ok & (d < hwc) & (dep > 0.5)
         wash_m |= inner
         floor_m |= ok & (d < hwc - bank) & (dep > 0.5)
+        # Kiesinseln im Bett (Ground, laenglich, leicht erhaben)
+        bars = ok & (d < hwc - bank * 0.6) & (dep > 0.5) & (c.nz.fbm(f"bars{k}", lat / 9.0, r / 70.0, 1.0, 2) > 0.33)
+        c.mask("wash_bar")[:] |= bars
         closer = ok & (d - hwc < best)
         best[closer] = (d - hwc)[closer]
         wid[closer] = k
@@ -182,15 +206,14 @@ def rim(c: Ctx):
     nz = c.nz
     th = np.radians(az)
     px, pz = RIM_R * np.sin(th), -RIM_R * np.cos(th)       # Projektion auf den Kammkreis
-    rc = RIM_R + nz.fbm("rimrc", px, pz, 520, 3) * 75.0 + nz.fbm("rimrc2", px, pz, 140, 2) * 18.0
-    macro = nz.fbm("rimmacro", px, pz, 900, 2)
-    peaks = nz.ridged("rimpk", px, pz, 260, 3, sharp=2.0)
-    teeth = nz.ridged("rimteeth", px, pz, 70, 2, sharp=2.4)
-    hc = 205.0 + 170.0 * macro + 95.0 * np.clip(peaks, 0, 1) ** 1.7 + 16.0 * teeth
-    # Tafel-Kronen: manche Abschnitte enden flach in Stufen (wie die Mesas)
-    crown = ss(0.05, 0.2, nz.fbm("rimcrown", px, pz, 700, 2))
-    hc = hc * (1 - crown) + (np.floor(hc / 34.0) * 34.0 + 6.0) * crown
-    hc = np.clip(hc, 150.0, 318.0)
+    rc = RIM_R + nz.fbm("rimrc", px, pz, 600, 3) * 80.0 + nz.fbm("rimrc2", px, pz, 160, 2) * 20.0
+    rc = np.clip(rc, 1955.0, 2015.0)
+    # Massive mit Gipfeln und Saetteln unterschiedlicher Hoehe (Review: keine gleichmaessige Wand)
+    massif = ss(-0.25, 0.3, nz.fbm("rimmacro", px, pz, 650, 2))
+    peaks = np.clip(nz.ridged("rimpk", px, pz, 230, 3, sharp=2.2), 0, 1)
+    teeth = nz.ridged("rimteeth", px, pz, 60, 2, sharp=2.4)
+    hc = 118.0 + 125.0 * massif + 120.0 * peaks ** 1.8 * (0.25 + 0.75 * massif) + 14.0 * teeth
+    hc = np.clip(hc, 110.0, 330.0)
     # Balkon-Kerben
     notch = np.full(r.shape, 1e9)
     for b in BALCONY_AZ:
@@ -201,14 +224,17 @@ def rim(c: Ctx):
     c.rim_rc, c.rim_hc = rc, hc
     H = c.H
     hb = H
-    # Innenseite: Stufen-Wand (Baender) mit Rinnen und Spornen
+    # Innenseite: gestufte Wand mit Rinnen und Spornen; Sporne laufen als Grate ins Hochland
     gully = nz.ridged("rimgully", px, pz, 55, 2, sharp=1.6)
     t = rc - r
+    spur = np.maximum(0.0, nz.ridged("rimspur", px, pz, 190, 2, sharp=3.0) - 0.35) / 0.65
+    spur_len = 55.0 * spur ** 1.5
     t_eff = np.maximum(0.0, t + 6.0 * nz.fbm("rimledge", x, z, 40, 2) + 22.0 * (gully - 0.5) * ss(0, 60, t))
-    drop = _staircase(t_eff, 34.0, 9.0, 13.0)
+    t_spur = np.maximum(0.0, t - spur_len)
+    drop = np.minimum(_staircase(t_eff, 30.0, 6.0, 7.0), _staircase(t_spur, 30.0, 6.0, 7.0) + spur_len * 0.9)
     h_in = hc - drop
-    tfoot = np.maximum(1.0, (hc - hb) / 1.45)
-    tal_h = 0.24 * (hc - hb)
+    tfoot = np.maximum(1.0, (hc - hb) / 2.6)
+    tal_h = 0.13 * (hc - hb)
     tal_l = tal_h / math.tan(math.radians(31))
     tq = np.clip((t - tfoot + 0.35 * tal_l) / tal_l, 0, 1)
     h_tal = hb + tal_h * (1.0 - tq) ** 1.4
@@ -219,7 +245,7 @@ def rim(c: Ctx):
     to = r - rc
     drop_o = _staircase(np.maximum(0.0, to + 3.0 * nz.fbm("rimout", x, z, 30, 2)), 40.0, 4.5, 5.0)
     h_out = hc - drop_o
-    bottom = -95.0 - 0.9 * np.maximum(0.0, 2050.0 - r) + nz.fbm("bottom", x, z, 90, 3) * 45.0
+    bottom = -95.0 - 0.9 * np.maximum(0.0, 2080.0 - r) + nz.fbm("bottom", x, z, 90, 3) * 45.0
     bottom = np.minimum(bottom, -80.0)
     outer = to >= 0
     H2 = np.where(inner, newh, H)
@@ -237,6 +263,42 @@ def rim(c: Ctx):
     c.obstacle |= rim_m | tal_m
     c.feat["rim_rc"] = rc
     _balconies(c)
+
+
+def foothills(c: Ctx, n=16):
+    """Vorberge/Massive vor dem Randgebirge, die die Kammlinie ueberschneiden (Slate/Rock, keine Baender)."""
+    rng = c.rng
+    done = 0
+    for _ in range(600):
+        if done >= n:
+            break
+        a = rng.uniform(0, 360)
+        if min(abs(ang_diff(a, b)) for b in BALCONY_AZ) < 9 or min(abs(ang_diff(a, w)) for w in c.L.washes) < 8:
+            continue
+        r = rng.uniform(1870, 1915)
+        x0, z0 = pol(a, r)
+        if c.mask("claimed")[c.idx(x0, z0)]:
+            continue
+        if any(math.hypot(x0 - f["x"], z0 - f["z"]) < 260 for f in c.feat["foothill"]):
+            continue
+        R = rng.uniform(40, 80)
+        hgt = rng.uniform(30, 75)
+        sl = c.win(x0, z0, R * 1.6)
+        x, z = c.local(sl)
+        th = np.arctan2(z - z0, x - x0)
+        q = np.hypot(x - x0, z - z0) / R * (1 + 0.22 * c.nz.fbm("fh%d" % done, x, z, 40, 3))
+        prof = np.where(q < 1.4, hgt * np.clip(1 - q / 1.4, 0, 1) ** 1.25, -1e9)
+        prof = prof + c.nz.ridged("fhr%d" % done, x, z, 35, 2) * 6 * np.clip(1 - q, 0, 1)
+        base = float(np.percentile(c.H[sl], 40))
+        hn = np.where(prof > -1e8, base + prof, -1e9)
+        c.H[sl] = np.maximum(c.H[sl], hn)
+        m = hn > c.H[sl] - 0.01
+        m &= q < 1.35
+        c.mask("rim")[sl] |= m & (prof > 2)
+        c.obstacle[sl] |= m & (prof > 4)
+        c.feat["foothill"].append({"x": x0, "z": z0, "R": R})
+        done += 1
+    return done
 
 
 def _balconies(c: Ctx):
@@ -276,7 +338,8 @@ def floating_rocks(c: Ctx):
     for a, rr, y, R in big:
         x0, z0 = pol(a, rr)
         rocks.append((x0, z0, y, R, True))
-    arch = [(18, 2330, 30), (100, 2250, -60), (165, 2300, 110), (222, 2420, -20), (338, 2280, 160)]
+    # Archipel 0 liegt vom Balkon Az 45 aus gesehen vor Saturn (Postkarte Ring E)
+    arch = [(40, 2330, 165), (100, 2250, -60), (165, 2300, 110), (222, 2420, -20), (338, 2280, 160)]
     lim = 2304 - 8
     for a, rr, ybase in arch:
         ax, azz = pol(a + c.u(-5, 5), rr + c.u(-40, 40))

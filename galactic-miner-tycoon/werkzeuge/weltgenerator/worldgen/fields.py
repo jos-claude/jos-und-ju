@@ -52,10 +52,8 @@ def volcano(c: Ctx, cx, cz, top, crater_d, west_az=None, name="volcano", small=F
     body = (hv > Hl + 0.5) & (rho < Rv_a)
     c.mask("volcano")[sl] |= body
     set_mat(c, sl, body, "Basalt")
-    ash = body & (nz.fbm(name + "ash", ang * 3.0, rho * 0.05, 9, 3) > 0.25) & (rho > Rc + 10)
-    set_mat(c, sl, ash, "Ground" if not small else "Mud")
     set_mat(c, sl, rho < rf + 2, "CrackedLava")
-    c.obstacle[sl] |= body & (q < 0.82)
+    c.obstacle[sl] |= body
     claim(c, sl, rho < Rv_a * 1.05 + 10)
     c.feat["volcano"].append({"x": cx, "z": cz, "top": top, "Rc": Rc, "Rv": Rv, "base": base, "small": small,
                               "floor": top - dep})
@@ -67,38 +65,56 @@ def volcano(c: Ctx, cx, cz, top, crater_d, west_az=None, name="volcano", small=F
     return base
 
 
-def lava_tongue(c: Ctx, sx, sz, dir_deg, length, width, name="tongue"):
-    """Lavazunge: erhaben (2-3), lappiger Rand, Basalt mit CrackedLava-Rissen (25-30 %)."""
-    pts = []
-    a = dir_deg
-    px, pz = sx, sz
-    step = 8.0
-    for i in range(int(length / step)):
-        pts.append((px, pz))
-        a += c.nz.fbm(name + "dir", np.array(i * 0.1), np.array(3.0), 1.0, 1) * 9
-        px += step * math.sin(math.radians(a))
-        pz -= step * math.cos(math.radians(a))
-    pts = np.array(pts)
-    lo, hi = pts.min(0) - width, pts.max(0) + width
+def lava_tongue(c: Ctx, sx, sz, dir_deg, length, width, name="tongue", own=None):
+    """Lavazunge: erhaben (2-3), lappiger Rand, breiter werdende Stirn, ein Seitenarm.
+    Basalt mit Saeulen-Zellen und CrackedLava nur in Rissen. Stoppt vor Washes und anderen Formen."""
+    def path(x0, z0, a, L, salt):
+        pts = []
+        px, pz = x0, z0
+        for i in range(int(L / 8.0)):
+            iz, ix = c.idx(px, pz)
+            if c.void[iz, ix] or (i > 3 and (c.wash_dist[iz, ix] < 18 or (c.mask("claimed")[iz, ix] and not
+                                                                            (own is not None and own[iz, ix])))):
+                break
+            pts.append((px, pz))
+            a += float(c.nz.fbm(name + salt, np.array(i * 0.13), np.array(3.0), 1.0, 1)) * 10
+            px += 8.0 * math.sin(math.radians(a))
+            pz -= 8.0 * math.cos(math.radians(a))
+        return pts, a
+    main, a_end = path(sx, sz, dir_deg, length, "dir")
+    if len(main) < 6:
+        return 0
+    k = len(main) // 2
+    side, _ = path(main[k][0], main[k][1], dir_deg + (35 if c.u() < 0.5 else -35), length * 0.4, "dir2")
+    pts = np.array(main + side[1:])
+    tt = np.concatenate([np.linspace(0, 1, len(main)), 0.5 + 0.5 * np.linspace(0, 1, max(0, len(side) - 1))])
+    lo, hi = pts.min(0) - width * 1.5, pts.max(0) + width * 1.5
     sl = c.win((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, max(hi[0] - lo[0], hi[1] - lo[1]) / 2 + 10)
     x, z = c.local(sl)
     from scipy.spatial import cKDTree
+    wx = x + c.nz.fbm(name + "wx", x, z, 40, 2) * 14.0
+    wz = z + c.nz.fbm(name + "wz", x, z, 40, 2) * 14.0
     tr = cKDTree(pts)
-    d, i = tr.query(np.stack([x.ravel(), z.ravel()], 1))
+    d, i = tr.query(np.stack([wx.ravel(), wz.ravel()], 1))
     d = d.reshape(x.shape)
-    t = (i / max(1, len(pts) - 1)).reshape(x.shape)
-    hw = width / 2 * (0.6 + 0.6 * np.sin(math.pi * np.clip(t * 1.1, 0, 1)) ** 0.5) * (1 + 0.25 * c.nz.fbm(name + "w", x, z, 26, 2))
+    t = tt[i].reshape(x.shape)
+    hw = width / 2 * (0.45 + 0.8 * t ** 0.7) * (1 + 0.2 * c.nz.fbm(name + "w", x, z, 30, 2))
     inside = d < hw
-    lobe = ss(hw, hw - 6, d)
-    thick = 2.6 * lobe * (1 - 0.5 * t)
+    lobe = ss(hw, hw - 7, d)
+    thick = 2.4 * lobe * (1 - 0.35 * t)
     Hl = c.H[sl]
-    c.H[sl] = Hl + thick
-    f1, f2, _ = c.nz.voronoi(name + "cr", x, z, 22)
-    crack = inside & ((f2 - f1) < 3.2)
+    f1, f2, cid = c.nz.voronoi(name + "cr", x, z, 20)
+    crack = inside & ((f2 - f1) < 3.2) & (lobe > 0.5)
+    b1, b2, bid = c.nz.voronoi(name + "cells", x, z, 12)
+    cells = np.where(inside & ~crack, ((bid % 5) / 4.0) * 1.2 * lobe * ss(0, 2.5, b2 - b1), 0.0)
+    c.H[sl] = Hl + thick + cells - crack * 0.6
     set_mat(c, sl, inside, "Basalt")
     set_mat(c, sl, crack, "CrackedLava")
     c.mask("lava")[sl] |= inside
     c.obstacle[sl] |= inside
+    lf_claim = c.mask("claimed")
+    lf_claim[sl] |= inside
+    return len(pts)
 
 
 def lava_fields(c: Ctx):
@@ -134,7 +150,9 @@ def dunes(c: Ctx):
     v = x * math.cos(a) + z * math.sin(a)       # quer zum Wind (Kaemme ~ 340/160)
     zone = (c.wNE < 0.5) & (c.rw > 650) & (c.rw < 1075)
     zone &= ~c.mask("claimed")
-    env = ss(-0.02, 0.22, c.nz.fbm("duneenv", x, z, 240, 3))
+    # Duenenfelder dicht um den Bogen (Az 180-250), sonst lockerer mit breiten Sandpfannen dazwischen
+    near_arch = ss(45, 15, np.abs((c.az - 212 + 180) % 360 - 180))
+    env = ss(0.10 - 0.14 * near_arch, 0.30 - 0.1 * near_arch, c.nz.fbm("duneenv", x, z, 240, 3))
     env = env * ss(0, 40, c.wash_dist) * ss(640, 720, c.rw) * ss(1080, 1010, c.rw)
     lam = 112.0 + 18.0 * c.nz.fbm("dunelam", x, z, 600, 2)
     wb = w + 46.0 * c.nz.fbm("dunebend", v * 0.6, w * 0.15, 170, 3) + 14.0 * c.nz.fbm("dunebend2", x, z, 60, 2)
@@ -143,14 +161,15 @@ def dunes(c: Ctx):
     prof = np.where(t < ac, (t / ac) ** 1.15, (1 - t) / (1 - ac))
     Hd = 6.0 + 15.0 * ss(-0.3, 0.5, c.nz.fbm("duneh", x, z, 300, 2))
     dz = Hd * prof * env
-    rip = 0.35 * np.sin(2 * math.pi * (w + 6 * c.nz.fbm("rip", x, z, 30, 2)) / 15.0) * ss(0.0, 0.3, env + 0.3)
+    # Rippeln nur angedeutet (Hoehenkarte hat 4 Studs Aufloesung), nur an den Duenenflanken
+    rip = 0.12 * np.sin(2 * math.pi * (w + 6 * c.nz.fbm("rip", x, z, 30, 2)) / 16.0) * ss(0.1, 0.4, env)
     add = np.where(zone, dz + rip, 0.0)
     c.H = c.H + add
     m = zone & (env > 0.2)
     c.mask("dune")[:] |= m
     c.obstacle |= zone & (dz > 3.0)
-    sl = (slice(None), slice(None))
-    set_mat(c, sl, zone & (env > 0.05), "Sand")
+    zall = (c.wNE < 0.5) & (c.rw > 640) & (c.rw < 1090) & ~c.mask("claimed")
+    c.mask("dune_zone")[:] |= zall
 
 
 def wave(c: Ctx, cx, cz, rx=170.0, rz=85.0, rot_deg=None, name="wave"):
@@ -191,7 +210,7 @@ def wave(c: Ctx, cx, cz, rx=170.0, rz=85.0, rot_deg=None, name="wave"):
 def highland(c: Ctx):
     x, z = c.x, c.z
     e = ss(1580, 1660, c.rw) * (c.r < 1890)
-    waves = 4.0 * c.nz.fbm("ewave", x, z, 400, 2)
+    waves = 2.6 * c.nz.fbm("ewave", x, z, 420, 2)
     c.H = c.H + waves * e
     # Nebelbecken: 3 flache Senken (-10)
     for k in range(3):
@@ -211,9 +230,8 @@ def highland(c: Ctx):
         c.feat["fogbasin"].append({"x": px, "z": pz, "R": R, "az": a})
     # Schnee in Mulden, Eisflecken
     curv = c.nz.fbm("snowcurv", x, z, 70, 3)
-    snow = (e > 0.5) & (curv < -0.22) & ~c.mask("wash")
-    sl = (slice(None), slice(None))
-    set_mat(c, sl, snow, "Snow")
+    snow = (e > 0.5) & (curv < -0.25) & ~c.mask("wash")
+    c.mask("snow")[:] |= snow
     for k in range(6):
         a, r = c.u(0, 360), c.u(1650, 1850)
         px, pz = pol(a, r)

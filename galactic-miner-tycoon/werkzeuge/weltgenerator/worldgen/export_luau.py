@@ -103,7 +103,9 @@ def export(world: World, out_dir: Path):
             total += len(s)
 
     meta = dict(world.meta)
-    meta["grid"] = {"n": N, "cell": CELL, "origin": -HALF, "hmin": HMIN, "hq": HQ}
+    # surfaceOffset: Roblox zeigt die Oberflaeche einer vollen Zelle 2 Studs ueber der Zellgrenze (in Studio gemessen)
+    meta["grid"] = {"n": N, "cell": CELL, "origin": -HALF, "hmin": HMIN, "hq": HQ,
+                    "surfaceOffset": world.meta.get("surfaceOffset", 2.0)}
     meta["materials"] = TERRAIN_MATERIALS
     meta["chunks"] = chunk_counts
     meta["waterLevels"] = list(world.water_levels)
@@ -135,9 +137,13 @@ def export(world: World, out_dir: Path):
                 e["collide"] = True
             if p.light:
                 e["light"] = p.light
+            if getattr(p, "particles", None):
+                e["particles"] = p.particles
             parts.append(e)
         variants = [{role: color3(c) for role, c in v.items()} for v in t.variants]
         templates[t.name] = {"category": t.category, "parts": parts, "variants": variants}
+        if getattr(t, "extra", None):
+            templates[t.name].update(t.extra)
     _write(data_dir / "Templates.luau", "return " + luau(templates) + "\n")
 
     # --- Platzierungen (je Vorlage ein flaches Zahlenfeld, 8 Werte pro Objekt) ---
