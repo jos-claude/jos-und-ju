@@ -103,7 +103,9 @@ def export(world: World, out_dir: Path):
             total += len(s)
 
     meta = dict(world.meta)
-    meta["grid"] = {"n": N, "cell": CELL, "origin": -HALF, "hmin": HMIN, "hq": HQ}
+    # surfaceOffset: Roblox zeigt die Oberflaeche einer vollen Zelle 2 Studs ueber der Zellgrenze (in Studio gemessen)
+    meta["grid"] = {"n": N, "cell": CELL, "origin": -HALF, "hmin": HMIN, "hq": HQ,
+                    "surfaceOffset": world.meta.get("surfaceOffset", 2.0)}
     meta["materials"] = TERRAIN_MATERIALS
     meta["chunks"] = chunk_counts
     meta["waterLevels"] = list(world.water_levels)

@@ -192,6 +192,9 @@ local function buildTerrain(meta: any)
 	local origin: number = grid.origin
 	local hmin: number = grid.hmin
 	local hq: number = grid.hq
+	-- In Studio gemessen: Eine volle Zelle neben Luft zeigt ihre Oberflaeche 2 Studs ueber der Zellgrenze.
+	-- Deshalb alle Hoehen um surfaceOffset absenken, damit die sichtbare Oberflaeche auf der Soll-Hoehe liegt.
+	local surfaceOffset: number = grid.surfaceOffset or 0
 
 	log("Dekodiere Terrain-Daten ...")
 	local hBytes = readChannel("H", meta.chunks.H)
@@ -232,7 +235,10 @@ local function buildTerrain(meta: any)
 		end
 	end
 	local strataBase: number = strata.base
-	local waterLevels: { number } = meta.waterLevels
+	local waterLevels: { number } = {}
+	for i, level in meta.waterLevels do
+		waterLevels[i] = level - surfaceOffset
+	end
 	local AIR = Enum.Material.Air
 	local WATER = Enum.Material.Water
 	local STRATA_FLAG = 32
@@ -277,7 +283,7 @@ local function buildTerrain(meta: any)
 					local idx = z * n + x
 					local q = buffer.readu16(H, idx * 2)
 					if q > 0 then
-						local h = q / hq + hmin
+						local h = q / hq + hmin - surfaceOffset
 						local bottom = h - buffer.readu8(D, idx) * cell
 						if bottom < ymin then
 							ymin = bottom
@@ -319,7 +325,7 @@ local function buildTerrain(meta: any)
 						local w = buffer.readu8(W, idx)
 						local waterLevel = if w > 0 then waterLevels[w] else -math.huge
 						if q > 0 then
-							local h = q / hq + hmin
+							local h = q / hq + hmin - surfaceOffset
 							local bottom = h - buffer.readu8(D, idx) * cell
 							local code = buffer.readu8(M, idx)
 							local isStrata = code >= STRATA_FLAG
@@ -580,7 +586,9 @@ local function setProps(inst: Instance, props: any)
 		local ok, err = pcall(function()
 			(inst :: any)[prop] = value
 		end)
-		if not ok then
+		if not ok and prop == "Technology" then
+			log(string.format("Hinweis: Lighting.Technology bitte einmal von Hand auf %s stellen (Skripte duerfen das nicht).", tostring(value)))
+		elseif not ok then
 			warn(string.format("[WorldBuilder] %s.%s nicht gesetzt: %s", inst.ClassName, prop, tostring(err)))
 		end
 	end
