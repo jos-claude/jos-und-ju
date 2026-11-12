@@ -1,6 +1,7 @@
 # Entscheidung 014: Lobby-Raumschiff und Spielstände (Welten) mit Koop
 
-- **Status:** Beschlossen (12.11.2026, Ju) für die Punkte 2 bis 6. Punkt 1 (Zeitpunkt) wartet auf Bestätigung.
+- **Status:** Beschlossen (12.11.2026, Ju)
+- **Hinweis:** Der Umfang in M1 gegenüber M1b (Punkt 1) ist ein Vorschlag von Claude und noch nicht bestätigt.
 - **Datum:** 12.11.2026
 - **Von:** Jos und Ju (aufgeschrieben von Claude)
 - **Betrifft:** 005, 008 (dort stand „Koop später“), `../spiel/13-multiplayer.md`
@@ -26,7 +27,9 @@
 - **Zerstören durch Mitspieler:** Es braucht Rechte, damit niemand fremde Basen kaputt macht.
 
 ## Festlegungen (Ju, 12.11.2026)
-1. **Zeitpunkt:** Vorschlag (noch nicht bestätigt): M1 zuerst ohne Lobby, aber alle Daten schon als „Welt mit ID“ speichern. Die Lobby wird danach ein eigener Meilenstein.
+1. **Zeitpunkt und Ablauf (beschlossen):** Ein neuer Spieler spawnt **direkt auf Insel 1**, nicht in der Lobby. Nach dem Tutorial (ca. 2 bis 3 Minuten, mit kurzer Cutscene) kauft er die **erste Basiserweiterung (Raum 2)**. Darin steht ein **Teleportfeld zur Lobby**. Das kommt **vor den Förderbändern** (Raum 3). Ab dem nächsten Beitritt spawnt der Spieler **zuerst in der Lobby** und wählt dort seine Welten.
+   - Daten werden von Anfang an als „Welt mit ID“ gespeichert. Die erste Welt wird beim ersten Spielstart automatisch angelegt.
+   - Vorschlag zum Umfang: Die Lobby braucht ab M1 mindestens das Spielstand-Pad (2 Plätze). Einladen, gemeinsames Bauen, Rechte und Chat folgen im nächsten Meilenstein (M1b).
 2. **Spielstände:** **2 pro Spieler.** Weitere Plätze kann man später **mit Robux kaufen** (Monetarisierung, noch nicht gebaut, siehe `../spiel/12-monetarisierung.md`).
 3. **Spieler pro Welt:** **bis zu 4.**
 4. **Rechte:** Der Besitzer lädt ein und kann Mitglieder entfernen. Alle Mitglieder dürfen bauen und kaufen, das Lager ist gemeinsam. Nur der Besitzer startet die Rakete.

@@ -3,6 +3,9 @@
 - **Status:** Entwurf
 - **Zuletzt geändert:** 11.11.2026
 
+## Hinweis (Entscheidungen 013, 014)
+Die Minuten-Tabelle unten ist veraltet. Neu: Man spawnt auf Insel 1, nach 2 bis 3 Minuten Tutorial kauft man Raum 2 mit Teleportfeld zur Lobby, später folgen Förderbänder (Raum 3). Danach spawnt man zuerst in der Lobby. Die Tabelle wird neu geschrieben, wenn der Ablauf feststeht.
+
 ## Die Kernschleife
 ```
 Basis ausbauen (Buttons) ─► Bohrer/Förderbänder fördern Rohstoffe

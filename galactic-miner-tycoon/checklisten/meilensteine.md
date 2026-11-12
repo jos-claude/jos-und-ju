@@ -9,6 +9,9 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 - [ ] Aufgabenverteilung Jos / Ju geklärt
 
 ## M1 – Heimatplanet-Prototyp (Tycoon-Kern)
+- [ ] Tutorial mit kurzer Cutscene (ca. 2 bis 3 Minuten): Bohrer setzen, Lager füllen, ersten Raum kaufen
+- [ ] Raum 2 mit Teleportfeld zur Lobby (Entscheidung 014)
+- [ ] Einfache Lobby (Raumschiff) mit Spielstand-Pad, 2 Plätze; ab dem zweiten Beitritt spawnt man dort
 - [ ] Heimatplanet-Welt in Studio (Boden, Himmel, Bauplatz)
 - [ ] Kauf-Buttons in der Welt funktionieren (Rohstoffe abziehen, Gebäude erscheint)
 - [ ] Erzvorkommen erscheinen nach Fortschritt, ab Mindestradius; Bohrer lässt sich darauf platzieren und fördert in seinen Puffer
@@ -18,6 +21,12 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 - [ ] Erze: Eisen, Kupfer, Kohle mit steigender Entfernung
 - [ ] Rohstoff-Anzeige im HUD
 - [ ] Speichern und Laden (DataStore)
+
+## M1b – Koop (Entscheidung 014, Vorschlag)
+- [ ] Freunde einladen, bis zu 4 Spieler pro Welt
+- [ ] Rechte: Besitzer lädt ein und entfernt, alle bauen, nur Besitzer startet die Rakete
+- [ ] Lobby-Chat (Roblox-Standardchat), Beitritt nur auf Einladung
+- [ ] Stats (Stärke, Geschwindigkeit) pro Welt gespeichert
 
 ## M2 – Automatisierung & Verarbeitung
 - [ ] Förderbänder verlegen (Bohrer zu Kasten): Routenvorschlag annehmen oder selbst legen, kosten Erze
