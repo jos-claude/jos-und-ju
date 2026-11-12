@@ -2,7 +2,7 @@
 -- Nachgebaute Roblox-Umgebung fuer den WorldBuilder, ausgefuehrt mit Lune.
 -- Aufruf: lune run lune_check.luau <modus> <pfad> <ergebnis.json> <szenario>
 --   modus  : init (Ordner mit init.luau, Settings.luau, Data/) | bundle-module | bundle-script (pfad = BuildIsland1.luau)
---   szenario: full | terrain_off | props_off
+--   szenario: full | terrain_off | props_off | terrain_only | lighting_only;  5. Argument: channels | nochannels | failchannels
 -- Alles Aufgezeichnete (Terrain-Aufrufe, Instanzbaum, Lighting, Logs) wird als JSON geschrieben.
 
 local fs = require("@lune/fs")
@@ -11,6 +11,8 @@ local process = require("@lune/process")
 local serde = require("@lune/serde")
 
 local MODE, ROOT, OUTFILE, SCENARIO = process.args[1], process.args[2], process.args[3], process.args[4] or "full"
+-- Terrain-API: channels = WriteVoxelChannels vorhanden | nochannels = Methode fehlt | failchannels = Methode wirft beim Aufruf
+local CHANNEL_MODE = process.args[5] or "channels"
 
 local rtypeof_raw = typeof
 local function rtypeof(v)
@@ -299,7 +301,7 @@ function Instance.new(className, parent)
 	if not def then
 		error(`Unable to create an Instance of type "{tostring(className)}"`, 2)
 	end
-	local inst = setmetatable({ _class = className, _def = def, _set = {}, _setOrder = {}, _kids = {}, _parent = nil, _alive = true }, InstMT)
+	local inst = setmetatable({ _attrs = {}, _class = className, _def = def, _set = {}, _setOrder = {}, _kids = {}, _parent = nil, _alive = true }, InstMT)
 	rawget(inst, "_set").Name = className
 	if className == "Terrain" then rawset(inst, "_set", { Name = "Terrain" }) end
 	return inst
@@ -323,6 +325,9 @@ InstMT.__index = function(self, k)
 		return v
 	end
 	if class == "Terrain" and TerrainRec and TerrainRec.methods[k] then
+		if k == "WriteVoxelChannels" and CHANNEL_MODE == "nochannels" then
+			error("WriteVoxelChannels is not a valid member of Terrain", 2)
+		end
 		return TerrainRec.methods[k]
 	end
 	local m = Methods[k]
@@ -356,6 +361,7 @@ InstMT.__newindex = function(self, k, v)
 		note(`PointLight.Range {v} > 60 wird geklemmt`)
 	end
 	rawget(self, "_set")[k] = v
+	if class == "Terrain" then table.insert(TerrainRec.calls, { m = "SetProp", k = k }) end
 	local order = rawget(self, "_setOrder")
 	if not table.find(order, k) then table.insert(order, k) end
 end
@@ -393,11 +399,20 @@ function Methods.Clone(self)
 	local copy = Instance.new(rawget(self, "_class"))
 	rawset(copy, "_set", table.clone(rawget(self, "_set")))
 	rawset(copy, "_setOrder", table.clone(rawget(self, "_setOrder")))
+	rawset(copy, "_attrs", table.clone(rawget(self, "_attrs")))
 	for _, kid in rawget(self, "_kids") do
 		local k2 = Methods.Clone(kid)
 		setParent(k2, copy)
 	end
 	return copy
+end
+function Methods.SetAttribute(self, name, value)
+	if type(name) ~= "string" then error("SetAttribute: Name muss ein String sein", 2) end
+	if value ~= nil and type(value) ~= "boolean" and type(value) ~= "number" and type(value) ~= "string" then error("SetAttribute: Typ nicht erlaubt", 2) end
+	rawget(self, "_attrs")[name] = value
+end
+function Methods.GetAttribute(self, name)
+	return rawget(self, "_attrs")[name]
 end
 function Methods.GetService() error("kein DataModel", 2) end
 function Methods.SetWaypoint(self, name) TerrainRec.history[#TerrainRec.history + 1] = name end
@@ -484,6 +499,66 @@ function TerrainRec.methods.WriteVoxels(self, region, res, materials, occupancy)
 	table.insert(TerrainRec.calls, call)
 end
 
+function TerrainRec.methods.WriteVoxelChannels(self, region, res, channels)
+	if CHANNEL_MODE == "failchannels" then
+		table.insert(TerrainRec.calls, { m = "WriteVoxelChannelsFail" })
+		error("WriteVoxelChannels: simulierter Fehler", 2)
+	end
+	argcheck("WriteVoxelChannels", 1, region, "Region3")
+	checknum(res, 2, "WriteVoxelChannels")
+	if res ~= 4 then error("WriteVoxelChannels: Aufloesung muss 4 sein", 2) end
+	for _, ax in { "X", "Y", "Z" } do
+		if (region.Min[ax] / 4) % 1 ~= 0 or (region.Max[ax] / 4) % 1 ~= 0 then error("WriteVoxelChannels: Region3 nicht ausgerichtet", 2) end
+	end
+	if type(channels) ~= "table" then error("WriteVoxelChannels: Tabelle erwartet", 2) end
+	for k in channels do
+		if k ~= "SolidMaterial" and k ~= "SolidOccupancy" and k ~= "LiquidOccupancy" then error("WriteVoxelChannels: unbekannter Kanal " .. tostring(k), 2) end
+	end
+	local sx, sy, sz = region.Size.X / 4, region.Size.Y / 4, region.Size.Z / 4
+	local call = { m = "WriteVoxelChannels", min = { region.Min.X, region.Min.Y, region.Min.Z }, max = { region.Max.X, region.Max.Y, region.Max.Z }, dims = { sx, sy, sz },
+		vx = {}, vy = {}, vz = {}, mat = {}, occ = {}, lvx = {}, lvy = {}, lvz = {}, lq = {}, badAirOcc = 0, badSolidZero = 0, keys = {} }
+	for k in channels do table.insert(call.keys, k) end
+	local ox, oy, oz = region.Min.X / 4, region.Min.Y / 4, region.Min.Z / 4
+	local AIR, WATER = Enum.Material.Air, Enum.Material.Water
+	local function dimcheck(name, arr)
+		if type(arr) ~= "table" or #arr ~= sx then error(`{name}: X-Groesse {type(arr) == "table" and #arr or "?"} statt {sx}`, 3) end
+		for i = 1, sx do
+			if type(arr[i]) ~= "table" or #arr[i] ~= sy then error(`{name}: Y-Groesse falsch bei x={i}`, 3) end
+			for j = 1, sy do
+				if type(arr[i][j]) ~= "table" or #arr[i][j] ~= sz then error(`{name}: Z-Groesse falsch bei x={i},y={j}`, 3) end
+			end
+		end
+	end
+	local SM, SO, LO = channels.SolidMaterial, channels.SolidOccupancy, channels.LiquidOccupancy
+	for name, arr in { SolidMaterial = SM, SolidOccupancy = SO, LiquidOccupancy = LO } do dimcheck(name, arr) end
+	local n, nl = 0, 0
+	for i = 1, sx do
+		for j = 1, sy do
+			for k = 1, sz do
+				local m, o, l = SM and SM[i][j][k], SO and SO[i][j][k], LO and LO[i][j][k]
+				if m ~= nil then
+					if rtypeof(m) ~= "EnumItem" or m.EnumType ~= "Material" then error(`SolidMaterial ungueltig bei {i},{j},{k}`, 2) end
+					if m == WATER then error(`SolidMaterial darf nicht Water sein ({i},{j},{k})`, 2) end
+				end
+				if o ~= nil and (type(o) ~= "number" or o ~= o or o < 0 or o > 1) then error(`SolidOccupancy ausserhalb 0..1 bei {i},{j},{k}: {tostring(o)}`, 2) end
+				if l ~= nil and (type(l) ~= "number" or l ~= l or l < 0 or l > 1) then error(`LiquidOccupancy ausserhalb 0..1 bei {i},{j},{k}: {tostring(l)}`, 2) end
+				if m ~= nil and m ~= AIR then
+					if o == 0 then call.badSolidZero += 1 end
+					n += 1
+					call.vx[n], call.vy[n], call.vz[n], call.mat[n], call.occ[n] = ox + i - 1, oy + j - 1, oz + k - 1, m.Name, o
+				elseif o and o > 0 then
+					call.badAirOcc += 1
+				end
+				if l and l > 0 then
+					nl += 1
+					call.lvx[nl], call.lvy[nl], call.lvz[nl], call.lq[nl] = ox + i - 1, oy + j - 1, oz + k - 1, l
+				end
+			end
+		end
+	end
+	table.insert(TerrainRec.calls, call)
+end
+
 ----------------------------------------------------------------------
 -- Welt
 ----------------------------------------------------------------------
@@ -519,9 +594,14 @@ newNamed("Sky", "OldSky", lightingInst)
 newNamed("Atmosphere", "OldAtmosphere", lightingInst)
 newNamed("BloomEffect", "OldBloom", lightingInst)
 newNamed("Folder", "KeepMe", lightingInst) -- bleibt unberuehrt
+newNamed("BloomEffect", "WorldMine", lightingInst) -- fremder Effekt mit "World"-Namen ohne Attribut -> ins Backup
+local staleAtmo = newNamed("Atmosphere", "WorldOld", lightingInst) -- Rest eines frueheren Builds -> zerstoeren
+staleAtmo:SetAttribute("WorldBuilder", true)
 -- schon vorhandene alte Insel (muss ersetzt werden)
 local oldIsland = newNamed("Folder", "Island1", workspaceInst)
 newNamed("Folder", "AlterInhalt", oldIsland)
+
+TerrainRec.calls = {} -- Aufbau-Aufzeichnungen verwerfen
 
 -- Dateien -> ModuleScript-Baum (wie Rojo)
 local function makeModule(name, path)
@@ -574,7 +654,7 @@ local function dump(inst, skipKids)
 	for k, v in rawget(inst, "_set") do
 		props[k] = plain(v)
 	end
-	local out = { class = rawget(inst, "_class"), name = rawget(inst, "_set").Name, props = props, kids = {} }
+	local out = { class = rawget(inst, "_class"), name = rawget(inst, "_set").Name, props = props, kids = {}, attrs = table.clone(rawget(inst, "_attrs")) }
 	if not skipKids then
 		for _, kid in rawget(inst, "_kids") do
 			table.insert(out.kids, dump(kid))
@@ -608,7 +688,7 @@ baseEnv = {
 ----------------------------------------------------------------------
 -- Lauf
 ----------------------------------------------------------------------
-local result = { mode = MODE, scenario = SCENARIO, builds = {}, notes = NOTES, error = nil }
+local result = { mode = MODE, scenario = SCENARIO, channelMode = CHANNEL_MODE, builds = {}, notes = NOTES, error = nil }
 
 local function snapshot(detail)
 	local snap = {

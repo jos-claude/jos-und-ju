@@ -10,7 +10,10 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-REAL = HERE.parent.parent.parent / "src" / "ServerStorage" / "WorldBuilder" / "init.luau"
+sys.path.insert(0, str(HERE))
+import patches  # noqa: E402
+
+REAL = patches.OUT   # Grundlage: echte init.luau plus bekannte Patch-Vorschlaege (patches.py), damit die Grundlinie gruen ist
 OUT = HERE / "out" / "mutants"
 
 def _details(out):
@@ -31,7 +34,14 @@ MUTANTS = [
     ("Schichtversatz S ignoriert", "local off = buffer.readu8(S, idx) + strataBase", "local off = strataBase"),
     ("Deckschicht <= statt <", "elseif depth < topDepth then", "elseif depth <= topDepth then"),
     ("Unterboden: subDepth vertauscht", "elseif depth < subDepth then", "elseif depth < topDepth then"),
-    ("Wasser ab h statt darueber", "elseif yb >= h and yb < waterLevel then", "elseif yb > h and yb < waterLevel then"),
+    ("Fluessigkeit nur oberhalb der Oberkante (Ufer-Voxel fehlt)", "if waterLevel > h and yb < waterLevel and yb + cell > h then", "if waterLevel > h and yb < waterLevel and yb >= h then"),
+    ("Fluessigkeit ohne Bedingung Stand > Oberkante (Befund)", "if waterLevel > h and yb < waterLevel", "if yb < waterLevel"),
+    ("Fluessigkeitswert durch 8", "liquid[ix][iy][iz] = math.min(1, (waterLevel - yb) / cell)", "liquid[ix][iy][iz] = math.min(1, (waterLevel - yb) / (cell * 2))"),
+    ("Kanal LiquidOccupancy bekommt feste Belegung", "LiquidOccupancy = liquid,", "LiquidOccupancy = occupancy,"),
+    ("Rueckfall: Wasser ueberschreibt feste Voxel", "if oRow[iz] == 0 and lRow[iz] > 0 then", "if lRow[iz] > 0 then"),
+    ("Rueckfall nicht dauerhaft", "useChannels = false\n", "useChannels = true\n"),
+    ("Neubau: Attribut wird nicht erkannt", 'child:GetAttribute("WorldBuilder") then', 'child:GetAttribute("WorldBuilderX") then'),
+    ("Neubau: eigene Effekte ohne Attribut", 'inst:SetAttribute("WorldBuilder", true)', 'inst.Name = inst.Name'),
     ("Fuelltiefe addiert statt subtrahiert", "local bottom = h - buffer.readu8(D, idx) * cell", "local bottom = h - (buffer.readu8(D, idx) + 1) * cell"),
     ("Region3 zu klein (sz-1)", "Vector3.new(origin + (cx + sx) * cell, y0 + ny * cell, origin + (cz + sz) * cell)", "Vector3.new(origin + (cx + sx) * cell, y0 + ny * cell, origin + (cz + sz - 1) * cell)"),
     ("Hoehe ohne hmin", "local h = q / hq + hmin\n\t\t\t\t\t\t\tlocal bottom", "local h = q / hq\n\t\t\t\t\t\t\tlocal bottom"),
@@ -46,6 +56,9 @@ MUTANTS = [
 
 
 def main():
+    patches.main_write() if hasattr(patches, "main_write") else None
+    patches.OUT.parent.mkdir(parents=True, exist_ok=True)
+    patches.OUT.write_text(patches.apply(patches.REAL.read_text(encoding="utf-8")), encoding="utf-8")
     src = REAL.read_text(encoding="utf-8")
     OUT.mkdir(parents=True, exist_ok=True)
     blind = 0
