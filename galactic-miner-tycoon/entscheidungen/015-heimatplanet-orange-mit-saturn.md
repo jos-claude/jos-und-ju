@@ -12,7 +12,7 @@
 4. **Wichtig, damit nichts missverstanden wird:** Das Bild zeigt nur das **grobe Prinzip**. Der echte Planet ist **deutlich größer**, die Förderbänder stehen nicht einfach in der Landschaft, sondern werden vom Spieler wie in 010 und 012 verlegt. Alle Spielregeln (Mindestradius, Spawn nach Fortschritt, Lager, Räume) gelten unverändert.
 
 ## Offen
-- Soll der Planet im Spiel eine **flache große Plattform** mit Planeten-Rand und Weltraum-Himmel sein oder wirklich eine Kugel? Empfehlung: flache Plattform, sonst braucht es Kugel-Schwerkraft.
+- **Spielfläche (beschlossen, Ju, 12.11.2026): flache große Plattform** mit Planeten-Rand und Weltraum-Himmel, keine echte Kugel (keine Kugel-Schwerkraft nötig).
 - Größe der Insel in Studs (Vorschlag: Radius 500, siehe `../daten/ressourcen.md`).
 
 ## Folgen
