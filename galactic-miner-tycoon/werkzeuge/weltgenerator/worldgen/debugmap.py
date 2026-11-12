@@ -57,3 +57,25 @@ def render(w: World, path, crop=None, scale=1):
     if scale != 1:
         im = im.resize((im.width * scale, im.height * scale), Image.NEAREST)
     im.save(path)
+
+
+def render_build(w: World, build, path, deco=None):
+    """Karte der Bauzonen: Gelaende gedimmt, Bauzone gruen, Deko-Zone violett, Ringe."""
+    from PIL import ImageDraw
+    render(w, path)
+    im = Image.open(path).convert("RGB")
+    a = np.asarray(im).astype(np.float64) * 0.55
+    g = np.array([90, 220, 120], float)
+    a[build] = a[build] * 0.35 + g * 0.65
+    if deco is not None:
+        a[deco] = a[deco] * 0.4 + np.array([210, 90, 220]) * 0.6
+    im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).resize((1728, 1728), Image.NEAREST)
+    d = ImageDraw.Draw(im)
+    s = 1728 / 4608
+    cx = cy = 864
+    for r in (250, 600, 1100, 1600, 1900, 2000):
+        rr = r * s
+        d.ellipse((cx - rr, cy - rr, cx + rr, cy + rr), outline=(255, 255, 255), width=2)
+        d.text((cx + rr * 0.71 + 4, cy - rr * 0.71), f"r {r}", fill=(255, 255, 255))
+    d.text((20, 20), "Bauzonen (gruen), Deko-Zonen mit Hindernissen (violett)", fill=(255, 255, 255))
+    im.save(path)

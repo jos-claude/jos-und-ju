@@ -33,7 +33,12 @@ def analyse(w: World, c, deco_zone=None):
     cz, cx = N // 2, N // 2
     reach = lab == lab[cz, cx]
     cand = (~void) & (sl <= 6.0) & (~obstacle) & (wdepth <= 0.5)
-    patch = ndi.binary_opening(cand, structure=np.ones((10, 10), bool))
+    # Flecken: duenne Saeume (< 20 Studs) weg, dann zusammenhaengende Flaeche >= 40 x 40 Studs (100 Zellen)
+    patch = ndi.binary_opening(cand, structure=np.ones((5, 5), bool))
+    lab2, n2 = ndi.label(patch)
+    if n2:
+        sizes = ndi.sum(patch, lab2, index=np.arange(1, n2 + 1))
+        patch = np.concatenate([[False], sizes >= 100])[lab2]
     build = patch & reach
     r = c.r
     out = {"rings": {}, "build": build}
@@ -153,7 +158,7 @@ def report_lines(res):
     lines = ["Pruefwerte:"]
     for k, (v, v2) in res["rings"].items():
         extra = f" (bis r 1900; ganzer Ring bis 2000: {v2 * 100:.0f} %)" if v2 is not None else ""
-        lines.append(f"  Bauzone Ring {k}: {v * 100:.0f} %{extra}  {'OK' if v >= 0.6 else 'UNTER 60 %'}")
+        lines.append(f"  Bauzone Ring {k}: {v * 100:.1f} %{extra}  {'OK' if v >= 0.6 else 'unter 60 %'}")
     lines.append(f"  Flood-Fill: {res['reach_frac'] * 100:.0f} % der Flaeche bis r 1880 von der Basis erreichbar (Neigung <= 25)")
     lines.append(f"  Wasser: max. Tiefe {res['water_max']:.2f} (<= 4), offene Ufer-Kanten {res['water_leaks']}")
     lines.append(f"  Lokale Mulden ohne Wasser: {res['depr_count']}, max. Tiefe {res['depr_max']:.1f}, Zellen > 30 Grad darin: {res['depr_steep']}")

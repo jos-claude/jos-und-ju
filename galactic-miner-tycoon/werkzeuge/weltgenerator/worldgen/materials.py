@@ -203,6 +203,14 @@ def finalize(c: Ctx, w: World):
         idx = np.searchsorted(uniq, vals) + 1
         wat[has] = idx.astype(np.uint8)
     w.water = wat
+    # Ufer dicht: trockene Nachbarn eines Wasserfelds liegen mindestens 0,25 ueber dem Spiegel
+    if has.any():
+        lv = np.array([np.nan] + list(w.water_levels))[wat]
+        for _ in range(2):
+            for dz, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nb_l = np.roll(np.roll(np.where(wat > 0, lv, -np.inf), dz, 0), dx, 1)
+                leak = (wat == 0) & ~void & (w.h < nb_l + 0.25) & np.isfinite(nb_l)
+                w.h = np.where(leak, np.ceil((nb_l + 0.25) * 4) / 4, w.h)
     # Fuelltiefe
     w.finalize_depth(extra=12.0, min_depth=12.0)
     bot = c.bottom

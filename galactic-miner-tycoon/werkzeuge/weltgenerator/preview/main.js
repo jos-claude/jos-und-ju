@@ -17,7 +17,7 @@ const hud = document.getElementById('hud');
 const Q = new URLSearchParams(location.search);
 const WIDTH = +(Q.get('w') || innerWidth);
 const HEIGHT = +(Q.get('h') || innerHeight);
-const NEON_GAIN = 2.4;
+const NEON_GAIN = 1.55;
 
 const deg = (d) => d * Math.PI / 180;
 const lin = (c) => new THREE.Color().setRGB(c[0] / 255, c[1] / 255, c[2] / 255, THREE.SRGBColorSpace);
@@ -362,11 +362,23 @@ async function main() {
     }
     if (mn < Infinity) { state[i] = 2; top[i] = mn; bot[i] = mn; }
   }
+  // Spalten nahe am Weltraum (Rand, Schwebfelsen): Unterseite immer zeichnen
+  const nearVoid = new Uint8Array(NN);
+  for (let iz = 0; iz < N; iz++) for (let ix = 0; ix < N; ix++) {
+    const i = iz * N + ix;
+    if (state[i] !== 1) continue;
+    let nv = 0;
+    for (let dz = -2; dz <= 2 && !nv; dz++) for (let dx = -2; dx <= 2; dx++) {
+      const jx = ix + dx, jz = iz + dz;
+      if (jx < 0 || jz < 0 || jx >= N || jz >= N || state[jz * N + jx] !== 1) { nv = 1; break; }
+    }
+    nearVoid[i] = nv;
+  }
   function buildGrid(kind) {
     const vid = new Int32Array(NN).fill(-1);
     const pos = [];
     let nv = 0;
-    const deep = (i) => state[i] === 2 || (state[i] === 1 && D[i] >= 8);
+    const deep = (i) => state[i] === 2 || (state[i] === 1 && (D[i] >= 8 || nearVoid[i]));
     for (let i = 0; i < NN; i++) {
       const ok = kind === 'top' ? state[i] > 0 : deep(i);
       if (!ok) continue;
@@ -565,9 +577,10 @@ async function main() {
           const tr = Math.round((p.transparency || 0) * 20) / 20;
           const glass = p.material === 'Glass';
           const key = `${p.shape}|${neon ? 'N' : glass ? 'G' : 'S'}|${tr}|${p.castShadow ? 1 : 0}`;
-          if (!groups.has(key)) groups.set(key, { shape: p.shape, neon, glass, tr, cast: p.castShadow, m: [], c: [] });
+          const keyS = key + (t.category === 'Sky' ? '|sky' : '');
+          if (!groups.has(keyS)) groups.set(keyS, { shape: p.shape, neon, glass, tr, cast: p.castShadow, m: [], c: [], sky: t.category === 'Sky' });
           const col = lin(colors[p.role] || [255, 0, 255]);
-          const gr = groups.get(key);
+          const gr = groups.get(keyS);
           gr.m.push(world); gr.c.push(col);
           partCount.n++;
           if (p.light && lightList.length < 128) {
@@ -583,8 +596,9 @@ async function main() {
       let mat;
       if (g.neon) mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: g.tr > 0, opacity: 1 - g.tr * 0.85, depthWrite: g.tr < 0.5 });
       else if (g.glass) mat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: Math.max(0.15, 1 - g.tr), roughness: 0.1, metalness: 0.1 });
-      else mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, metalness: 0.0, transparent: g.tr > 0, opacity: 1 - g.tr, depthWrite: g.tr < 0.5 });
+      else mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.42, metalness: 0.0, envMapIntensity: 0.5, transparent: g.tr > 0, opacity: 1 - g.tr, depthWrite: g.tr < 0.5 });
       const im = new THREE.InstancedMesh(GEO[g.shape], mat, g.m.length);
+      if (g.sky) im.userData.skyDeco = true;
       g.m.forEach((m, i) => im.setMatrixAt(i, m));
       g.c.forEach((c, i) => im.setColorAt(i, g.neon ? c.clone().multiplyScalar(NEON_GAIN) : c));
       im.castShadow = g.cast && g.tr < 0.5; im.receiveShadow = !g.neon;
@@ -617,9 +631,9 @@ async function main() {
 
   // ---------------------------------------------------------------- Platzhalter Basis (nur Vorschau)
   {
-    const base = new THREE.Mesh(new THREE.BoxGeometry(120, 30, 60), new THREE.MeshStandardMaterial({ color: lin([242, 140, 40]), roughness: 0.5 }));
-    base.position.set(0, 15, 0);
-    base.rotation.y = -deg(40);
+    // Start-Halle wie im Place (Mitte x 0, z 44, Grundflaeche ca. 60 x 28)
+    const base = new THREE.Mesh(new THREE.BoxGeometry(60, 20, 28), new THREE.MeshStandardMaterial({ color: lin([242, 140, 40]), roughness: 0.5 }));
+    base.position.set(0, 10, 44);
     base.castShadow = base.receiveShadow = true;
     scene.add(base);
   }
@@ -630,7 +644,7 @@ async function main() {
   const renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
   const B = L.Bloom || {};
-  const bloom = new UnrealBloomPass(new THREE.Vector2(WIDTH, HEIGHT), (B.Intensity ?? 0.45) * 1.6, Math.min(1, (B.Size ?? 24) / 40), (B.Threshold ?? 1.4) * 0.8);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(WIDTH, HEIGHT), (B.Intensity ?? 0.45) * 0.9, Math.min(1, (B.Size ?? 24) / 60), (B.Threshold ?? 1.4) * 0.85);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
   const CC = L.ColorCorrection || {};
@@ -698,6 +712,7 @@ async function main() {
     scene.fog = null;
     scene.traverse((o) => { if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.needsUpdate = true; }); } });
     scene.userData.sky.visible = false;
+    scene.traverse((o) => { if (o.userData && o.userData.skyDeco) o.visible = false; });
     scene.background = new THREE.Color(0x0b1622);
     sun.target.position.set(0, 0, 0);
     sun.position.set(SUN.x * 6000, SUN.y * 6000, SUN.z * 6000);

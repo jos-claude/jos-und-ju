@@ -53,7 +53,6 @@ def make(c):
     lm = {f["key"]: f for f in c.feat["landmark"]}
     cams = {}
     sx, _, sz = c.L.spawn
-    sx, sz = pol(40, 78)          # Vorschau: etwas vor dem Basis-Platzhalter
     eye = H(sx, sz) + 5.0
     # (a) Held: hinter der Basis, schraeg von oben, Richtung Az 40 (Saturn im Bild)
     hx, hz = pol(220, 270)
@@ -132,6 +131,24 @@ def make(c):
         _, px, pz, g, m = best
         cams["mesa_close"] = _cam((px, g + 5.0, pz), (m["x"], g + (m["top"] - m["base"]) * 0.45, m["z"]), fov=70,
                                   shadow=(m["x"], m["z"], 300))
+    # Deko-Nahansichten (aus den Inseln)
+    isl = getattr(c, "deco_islands", [])
+    ga = next((i for i in isl if i["theme"] == "grove" and i["ring"] == "A"), None)
+    if ga:
+        cpos = _ahead(ga["x"], ga["z"], 215, 62)
+        cams["grove_a"] = _cam((cpos[0], H(*cpos) + 7, cpos[1]), (ga["x"], H(ga["x"], ga["z"]) + 12, ga["z"]), fov=70,
+                               shadow=(ga["x"], ga["z"], 180))
+    cg = [i for i in isl if i["theme"] == "crystal"]
+    if cg:
+        g = max(cg, key=lambda i: i["fault"]["L"])
+        cpos = _ahead(g["x"], g["z"], 200, 75)
+        cams["ring_d_garden"] = _cam((cpos[0], H(*cpos) + 9, cpos[1]), (g["x"], H(g["x"], g["z"]) + 5, g["z"]), fov=70,
+                                     shadow=(g["x"], g["z"], 200))
+    oa = next((i for i in isl if i["theme"] == "oasis" and i["ring"] == "C"), None)
+    if oa:
+        cpos = _ahead(oa["x"], oa["z"], 230, 150)
+        cams["ring_c_oasis"] = _cam((cpos[0], H(*cpos) + 34, cpos[1]), (oa["x"], H(oa["x"], oa["z"]) + 4, oa["z"]), fov=70,
+                                    shadow=(oa["x"], oa["z"], 320))
     l9 = lm.get("L9")
     if l9:
         cpos = _ahead(l9["x"], l9["z"], 200, 420)

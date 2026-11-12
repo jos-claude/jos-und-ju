@@ -17,6 +17,18 @@ from .world import RGB, World
 SEED = 1
 
 
+def build_zone_raster(c, build, cell=16):
+    """Bauzonen als grobes Raster fuer den Erz-Spawn: eine 16x16-Zelle zaehlt, wenn alle 4x4-Spalten Bauzone sind.
+    Ring E nur bis r 1900 (Randgebirge ist Grenze)."""
+    k = int(cell // 4)
+    n = build.shape[0] // k
+    b = build[: n * k, : n * k].reshape(n, k, n, k).all(axis=(1, 3))
+    xs = -2304 + cell / 2 + cell * np.arange(n)
+    X, Z = np.meshgrid(xs, xs)
+    b &= np.hypot(X, Z) <= 1900
+    return {"cell": cell, "n": n, "origin": -2304.0, "mask": b}
+
+
 def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
     t0 = time.time()
 
@@ -35,11 +47,17 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
     fields.outcrops(c, zoneA, 0.05, (2.0, 4.0), "outA")
     fields.outcrops(c, zoneB, 0.04, (2.5, 5.0), "outB")
     fields.outcrops(c, zoneD, 0.03, (3.0, 6.0), "outD")
-    fields.low_floating_stones(c, 50)
+    fields.low_floating_stones(c, 30)
     terrain.foothills(c, 10)
     terrain.rim(c)
     terrain.floating_rocks(c)
     log("Rand, Balkone, Schwebfelsen")
+    from .landforms import check_ops
+    thin = check_ops(c.ops)
+    c.thin_ops = thin
+    if thin:
+        print(f"  WARNUNG: {len(thin)} Zusatzformen duenner als Durchmesser 8 (werden in Roblox klumpig): "
+              + ", ".join(sorted({o['op'] + '/' + o['material'] for o in thin})))
     materials.assign(c)
     materials.apply_overrides(c)
     log("Materialien")
@@ -67,17 +85,22 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
         "sun": {"azimuth": SUN_AZ, "elevation": SUN_EL, "direction": lighting.sun_direction()},
         "spawn": [round(sx, 2), round(float(c.h_at(sx, sz)) + 0.5, 2), round(sz, 2)],
     })
-    w.preview = {"cameras": cameras.make(c), "map": cameras.map_data(c)}
+    if p is not None:
+        placement.place_all(p)
+        c.deco_zone = p.obstacle_mask()
     res = checks.analyse(w, c, getattr(c, "deco_zone", None))
     w.report = checks.report_lines(res)
+    w.report.append(f"  Zusatzformen: {len(c.ops)}, davon zu duenn (< Durchmesser 8): {len(getattr(c, 'thin_ops', []))}")
     w.checks = res
     log("Pruefungen")
     if p is not None:
-        placement.place_all(p)
         w.report.append("Deko je Art (Objekte / Teile / Lichter):")
         for g in sorted(p.count, key=lambda k: -p.parts[k]):
             if g.startswith("_"):
                 continue
             w.report.append(f"  {g:14s} {p.count[g]:5d} / {p.parts[g]:6d} / {p.lights[g]:3d}")
+        c.deco_islands = p.islands
         log("Deko gesetzt")
+    w.preview = {"cameras": cameras.make(c), "map": cameras.map_data(c)}
+    w.build_zones = build_zone_raster(c, res["build"])
     return w

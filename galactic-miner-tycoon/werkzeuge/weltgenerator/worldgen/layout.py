@@ -111,5 +111,5 @@ def make_layout(seed: int) -> Layout:
     add("playaC", 150 + j(4), 955 + j(20), diam=180.0)
     for i, (a, r, d) in enumerate([(172, 1300, 300), (186, 1440, 200), (204, 1330, 240), (212, 1450, 150)]):
         add(f"playaD{i}", a + j(3), r + j(20), diam=d + j(30))
-    spawn_xz = pol(40.0, 46.0)
-    return Layout(seed=seed, washes=washes, slots=s, spawn=(spawn_xz[0], 0.0, spawn_xz[1]))
+    # Spawn wie im Place (Jus Code): (0, 0, 20); Start-Halle liegt bei x ~ 0, z 30-58 (hinter dem Spieler bei Blick Az 40)
+    return Layout(seed=seed, washes=washes, slots=s, spawn=(0.0, 0.0, 20.0))

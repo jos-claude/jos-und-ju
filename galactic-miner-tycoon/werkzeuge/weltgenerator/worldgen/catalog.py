@@ -103,7 +103,7 @@ CACTUS = [C("#8FE3C0"), C("#B592F0")]
 PEBBLE = {"Sandstone": C("#F4A9C4"), "Limestone": C("#F9E7A3"), "Slate": C("#A99BE0"), "Rock": C("#C48BBE"),
           "Mud": C("#D9795F"), "Salt": C("#FCEFEA")}
 PEBBLE_KEYS = list(PEBBLE)
-TUFT = [C("#9BE06B"), C("#8FE3C0"), C("#C8E86A")]
+TUFT = [C("#A6DC6E"), C("#8CCF7C"), C("#C4DB72")]
 FLOWER = [C("#FFE36B"), C("#FF9FB5"), C("#FFFFFF")]
 
 
@@ -378,7 +378,7 @@ def fossil(rng, k):
 def pebble(rng, k):
     sh = k % 4
     if sh == 0:
-        parts = [ball((0, 0.6, 0), 2.0, "main", "Slate", cast_shadow=False)]
+        parts = [ell((0, 0.45, 0), (2.4, 1.2, 1.8), "main", angles(0.15, 0.4, -0.1), "Slate", cast_shadow=False)]
     elif sh == 1:
         parts = [ell((0, 0.5, 0), (2.8, 1.5, 2.1), "main", rot_y(0.5), "Slate", cast_shadow=False)]
     elif sh == 2:
@@ -408,12 +408,12 @@ def tuft(rng, k):
     if k < 3:
         parts = []
         for i in range(2):
-            rot = rot_y(i * 1.57 + rng.uniform(-0.2, 0.2)) @ angles(rng.uniform(-0.15, 0.15), 0, 0)
-            parts.append(wedge((0, 1.0, 0), (0.25, 2.2, 1.3), "main", rot, cast_shadow=False))
+            rot = rot_y(i * 1.9 + rng.uniform(-0.3, 0.3)) @ angles(rng.uniform(-0.25, 0.25), 0, rng.uniform(-0.2, 0.2))
+            parts.append(wedge((0, 0.7, 0), (0.16, 1.5, 0.75), "main", rot, cast_shadow=False))
         variants = [{"main": cc} for cc in TUFT]
         return Template(f"GrassTuft_{k}", "Flora", parts, variants)
-    parts = [block((0, 0.8, 0), (0.22, 1.7, 0.22), "stem", cast_shadow=False),
-             ball((0, 1.8, 0), 0.95, "bloom", cast_shadow=False)]
+    parts = [block((0, 0.6, 0), (0.18, 1.3, 0.18), "stem", cast_shadow=False),
+             ball((0, 1.35, 0), 0.7, "bloom", cast_shadow=False)]
     variants = [{"stem": C("#8FD07A"), "bloom": cc} for cc in FLOWER]
     return Template(f"Flower_{k}", "Flora", parts, variants)
 
@@ -442,7 +442,8 @@ def edge_barrier():
 
 
 def titan_vein_segment():
-    return Template("TitanVein", "Landmark", [block((0, 0, 0), (1.2, 1.0, 1.8), "main", "Neon", transparency=0.05, cast_shadow=False)],
+    return Template("TitanVein", "Landmark", [block((0, 0, 0), (1.2, 1.0, 1.8), "main", None, "Neon", transparency=0.05,
+                                                    cast_shadow=False)],
                     [{"main": C("#9BE8FF")}])
 
 
