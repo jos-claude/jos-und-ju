@@ -18,6 +18,7 @@ from .noise import smoothstep as ss
 from .world import CELL, MAT, World
 
 LEE = (math.sin(math.radians(LEE_DIR)), -math.cos(math.radians(LEE_DIR)))
+PLATEAU_OK = ("Tuft", "Pebble", "Moss", "Noodle")
 # Hindernis-Deko (hoeher als Kniehoehe oder mit Kollision): nur in Deko-Zonen
 OBSTACLE_GROUPS = {"BalloonTree", "CrystalM", "CrystalMLit", "CrystalG", "CrystalTitan", "OrganPipe", "PearlCactus",
                    "CopperRock", "Mushroom", "SteamVent", "Lantern", "LanternLit"}
@@ -95,7 +96,9 @@ class Placer:
         if not allow_rock and (c.strata[iz, ix] and c.slope[iz, ix] > 8):
             return False
         sx, _, sz = c.L.spawn
-        if (x - sx) ** 2 + (z - sz) ** 2 < 14 ** 2:
+        if (x - sx) ** 2 + (z - sz) ** 2 < 15 ** 2:
+            return False
+        if -40 <= x <= 40 and 20 <= z <= 70:          # Start-Halle (Jus Place)
             return False
         return True
 
@@ -103,8 +106,8 @@ class Placer:
     def put(self, group, x, z, s=1.0, variant=0, y=None, yaw=None, lean=True, rx=0.0, rz=0.0, sink=0.15,
             radius=2.0, tmpl=None, mark=True):
         t = tmpl or self.groups[group][int(self.rng.integers(0, len(self.groups[group])))]
-        if y is None and group not in ("Tuft", "Pebble") and math.hypot(x, z) < 152.0 + (radius * s + 5 if group in OBSTACLE_GROUPS else 0):
-            return None             # Plateau r < 150 bleibt frei (nur Bueschel und Kiesel)
+        if y is None and group not in PLATEAU_OK and math.hypot(x, z) < 152.0 + (radius * s + 5 if group in OBSTACLE_GROUPS else 0):
+            return None             # Plateau r < 150 bleibt frei (nur Kniehohes ohne Kollision)
         if y is None:
             y = self.ground(x, z) - sink * s
         if yaw is None:
@@ -237,7 +240,7 @@ def theme_grove(p, isl, big=1.0):
     F = c.F
     grove_trees(p, isl, int(round(18 * big)))
     scatter(p, isl, "Moss", int(14 * big), 5, cond=lambda iz, ix, x, z: F[iz, ix] > 0.2, var_fn=lambda: int(p.rng.choice([0, 1])),
-            lean=False, sink=0.4)
+            lean=False, sink=0.05)
     scatter(p, isl, "Noodle", int(18 * big), 2.2, cond=lambda iz, ix, x, z: 0.08 < F[iz, ix] < 0.6, rmin=0.4, rmax=1.25,
             var_fn=lambda: int(p.rng.choice(4, p=np.array(catalog.NOODLE_W) / 100)))
     scatter(p, isl, "Lantern", int(6 * big), 2.0, cond=lambda iz, ix, x, z: F[iz, ix] > 0.25, var_fn=_rv(p, 3))
@@ -245,7 +248,7 @@ def theme_grove(p, isl, big=1.0):
         scatter(p, isl, "LanternLit", 1, 2.0, cond=lambda iz, ix, x, z: F[iz, ix] > 0.3, var_fn=_rv(p, 3))
     scatter(p, isl, "Mushroom", int(5 * big), 2.5, cond=lambda iz, ix, x, z: c.S[iz, ix] > 0.35 or F[iz, ix] > 0.55,
             var_fn=_rv(p, 4))
-    tufts(p, isl, int(110 * big))
+    tufts(p, isl, int(42 * big))
     scatter(p, isl, "Pebble", int(10 * big), 1.5, s_fn=lambda: p.rng.uniform(0.6, 1.6), var_fn=_rv(p, 6), lean=False, rmin=0.5, rmax=1.2)
 
 
@@ -289,7 +292,7 @@ def theme_pond(p, isl, water):
     scatter(p, isl, "Lantern", 10, 2.0, cond=lambda iz, ix, x, z: d[iz, ix] < 30, var_fn=_rv(p, 3), rmax=1.2)
     scatter(p, isl, "LanternLit", 1, 2.0, cond=lambda iz, ix, x, z: d[iz, ix] < 25, var_fn=_rv(p, 3))
     scatter(p, isl, "Moss", 12, 5, cond=lambda iz, ix, x, z: d[iz, ix] < 40, var_fn=lambda: int(p.rng.choice([0, 1])),
-            lean=False, sink=0.4, rmax=1.2)
+            lean=False, sink=0.05, rmax=1.2)
     tufts(p, isl, 60)
 
 
@@ -305,7 +308,7 @@ def theme_mesa_foot(p, isl):
     c = p.c
     grove_trees(p, isl, 12)
     scatter(p, isl, "Mushroom", 6, 2.5, cond=lambda iz, ix, x, z: c.S[iz, ix] > 0.3, var_fn=_rv(p, 4))
-    scatter(p, isl, "Moss", 8, 5, var_fn=lambda: int(p.rng.choice([0, 1])), lean=False, sink=0.4)
+    scatter(p, isl, "Moss", 8, 5, var_fn=lambda: int(p.rng.choice([0, 1])), lean=False, sink=0.05)
     scatter(p, isl, "Noodle", 14, 2.2, var_fn=lambda: int(p.rng.choice(4, p=np.array(catalog.NOODLE_W) / 100)), rmin=0.3, rmax=1.3)
     tufts(p, isl, 30)
 
@@ -331,7 +334,7 @@ def theme_oasis(p, isl):
                     break
                 q = (f["x"] + p.rng.uniform(-45, 45), f["z"] + p.rng.uniform(-45, 45))
     grove_trees(p, isl, 7)
-    scatter(p, isl, "Moss", 14, 5, var_fn=lambda: int(p.rng.choice([0, 1])), lean=False, sink=0.4)
+    scatter(p, isl, "Moss", 14, 5, var_fn=lambda: int(p.rng.choice([0, 1])), lean=False, sink=0.05)
     scatter(p, isl, "Mushroom", 10, 2.5, var_fn=_rv(p, 4))
     scatter(p, isl, "Lantern", 12, 2.0, var_fn=_rv(p, 3))
     scatter(p, isl, "LanternLit", 2, 2.0, var_fn=_rv(p, 3))
@@ -383,7 +386,7 @@ def theme_crystal_garden(p, isl, fault):
             s = p.rng.uniform(0.8, 1.6)
             if p.free(x, z, 1.8 * s):
                 p.put("CrystalS", x, z, s, fam if p.rng.uniform() < 0.7 else fam2, lean=False, sink=0.3, radius=1.4)
-    scatter(p, isl, "Moss", 8, 5, var_fn=lambda: 2, lean=False, sink=0.4)
+    scatter(p, isl, "Moss", 8, 5, var_fn=lambda: 2, lean=False, sink=0.05)
     scatter(p, isl, "PearlCactus", 4, 3, var_fn=lambda: 1)
     scatter(p, isl, "Pebble", 14, 1.5, s_fn=lambda: p.rng.uniform(0.6, 1.4), var_fn=lambda: int(p.rng.choice([2, 3, 5])), lean=False)
 
@@ -397,7 +400,7 @@ def theme_terrace(p, isl, terr):
                 if p.ok_ground(x, z, 14, allow_rock=True) and p.free(x, z, 7):
                     p.put("SteamVent", x, z, 1.0, 0, lean=False, sink=0.6, radius=6)
                     break
-    scatter(p, isl, "Moss", 10, 5, var_fn=lambda: int(p.rng.choice([1, 2])), lean=False, sink=0.4, rmin=0.7, rmax=1.3)
+    scatter(p, isl, "Moss", 10, 5, var_fn=lambda: int(p.rng.choice([1, 2])), lean=False, sink=0.05, rmin=0.7, rmax=1.3)
     scatter(p, isl, "Lantern", 8, 2.0, var_fn=_rv(p, 3), rmin=0.75, rmax=1.3)
     scatter(p, isl, "LanternLit", 1, 2.0, var_fn=_rv(p, 3), rmin=0.75, rmax=1.3)
     scatter(p, isl, "CrystalS", 6, 1.6, var_fn=lambda: variant_crystal(p, "D"), lean=False, rmin=0.8, rmax=1.3)
@@ -426,15 +429,15 @@ def theme_geode(p, isl, g):
 def theme_cool(p, isl):
     c = p.c
     grove_trees(p, isl, 10, scale=0.75)
-    scatter(p, isl, "Moss", 10, 5, var_fn=lambda: 2, lean=False, sink=0.4)
-    scatter(p, isl, "CrystalTitan", 4, 2.5, var_fn=_rv(p, 2), lean=False, sink=0.4)
+    scatter(p, isl, "Moss", 10, 5, var_fn=lambda: 2, lean=False, sink=0.05)
+    scatter(p, isl, "CrystalTitan", 4, 2.5, var_fn=_rv(p, 2), lean=False, sink=0.05)
     scatter(p, isl, "Pebble", 10, 1.5, s_fn=lambda: p.rng.uniform(0.6, 1.4), var_fn=lambda: int(p.rng.choice([2, 5])), lean=False)
 
 
 def theme_ice(p, isl):
-    scatter(p, isl, "CrystalTitan", 6, 2.5, s_fn=lambda: p.rng.uniform(0.7, 1.5), var_fn=_rv(p, 2), lean=False, sink=0.4,
+    scatter(p, isl, "CrystalTitan", 6, 2.5, s_fn=lambda: p.rng.uniform(0.7, 1.5), var_fn=_rv(p, 2), lean=False, sink=0.05,
             max_slope=30, allow_rock=True)
-    scatter(p, isl, "Moss", 4, 5, var_fn=lambda: 2, lean=False, sink=0.4)
+    scatter(p, isl, "Moss", 4, 5, var_fn=lambda: 2, lean=False, sink=0.05)
 
 
 # ------------------------------------------------------------------ Planung (vor dem Finalisieren)
@@ -584,7 +587,7 @@ def base_ring(p: Placer):
     clumps = 0
     hall = lambda x, z: abs(x) < 42 and 18 < z < 72          # Start-Halle (Jus Place) freihalten
     for _ in range(6000):
-        if clumps >= 150:
+        if clumps >= 80:
             break
         a = rng.uniform(0, 360)
         r = rng.uniform(150, 265) if rng.uniform() < 0.75 else rng.uniform(40, 150)
@@ -597,7 +600,7 @@ def base_ring(p: Placer):
             continue
         if c.mask("wash")[iz, ix] and r < 250:
             continue
-        tuft_clump(p, x, z, int(rng.integers(5, 13)) if r > 150 else int(rng.integers(3, 7)), spread=rng.uniform(2.5, 5.0))
+        tuft_clump(p, x, z, int(rng.integers(4, 9)) if r > 150 else int(rng.integers(3, 6)), spread=rng.uniform(2.5, 5.0))
         clumps += 1
     # kleine Nudeln (kniehoch) ausserhalb von r 150, in Gruppen
     for k in range(10):
@@ -612,6 +615,38 @@ def base_ring(p: Placer):
         x, z = pol(a, r)
         if not hall(x, z) and p.ok_ground(x, z, 20) and p.free(x, z, 1):
             p.put("Pebble", x, z, rng.uniform(0.5, 1.1), int(rng.integers(0, 6)), lean=False, radius=1)
+    # Plateau r 25-150: sparsam, in Gruepchen, viel freier Boden (alles kniehoch, ohne Kollision)
+    def plateau_spot(rmin=25, rmax=150):
+        for _ in range(200):
+            a, r = rng.uniform(0, 360), rng.uniform(rmin, rmax)
+            x, z = pol(a, r)
+            if p.ok_ground(x, z, 10) and not c.mask("wash")[c.idx(x, z)]:
+                return x, z
+        return None
+    for k in range(12):                                   # Kiesel-Gruppen (3-5)
+        q = plateau_spot()
+        if q:
+            v = int(rng.integers(0, 6))
+            for j in range(int(rng.integers(3, 6))):
+                x, z = q[0] + rng.normal(0, 1.8), q[1] + rng.normal(0, 1.8)
+                if p.ok_ground(x, z, 12) and p.free(x, z, 0.8):
+                    p.put("Pebble", x, z, rng.uniform(0.4, 1.0), v if rng.uniform() < 0.7 else int(rng.integers(0, 6)), lean=False, radius=0.7)
+    for k in range(18):                                   # Bueschel-Gruppen
+        q = plateau_spot()
+        if q:
+            tuft_clump(p, q[0], q[1], int(rng.integers(3, 7)), spread=2.5)
+    for k in range(10):                                   # einzelne Bluemchen
+        q = plateau_spot()
+        if q:
+            p.put("Tuft", q[0], q[1], rng.uniform(0.9, 1.2), int(rng.integers(0, 3)), tmpl=p.groups["Tuft"][3 + k % 2], sink=0.08, radius=0.5)
+    for k in range(7):                                    # flache Moospolster
+        q = plateau_spot(40, 150)
+        if q and p.free(q[0], q[1], 4):
+            p.put("Moss", q[0], q[1], rng.uniform(0.35, 0.6), int(rng.choice([0, 1])), lean=False, sink=0.05, radius=4)
+    for k in range(3):                                    # kleine Nudelpflanzen <= 6 Studs
+        q = plateau_spot(40, 150)
+        if q and p.free(q[0], q[1], 2):
+            p.put("Noodle", q[0], q[1], rng.uniform(0.7, 0.82), int(rng.choice(4, p=np.array(catalog.NOODLE_W) / 100)), radius=2)
     # Mini-Kristall links vom Tor (Wegweiser)
     for a, r in ((24, 178), (330, 205)):
         x, z = pol(a + rng.uniform(-3, 3), r)
@@ -739,7 +774,7 @@ def scattered(p: Placer):
         if c.F[iz_, ix_] < 0.35:
             continue
         if p.ok_ground(x, z, 14) and p.free(x, z, 4):
-            p.put("Moss", x, z, size_class(p), int(rng.choice([0, 1, 2], p=[0.45, 0.4, 0.15])), lean=False, sink=0.4, radius=4)
+            p.put("Moss", x, z, size_class(p), int(rng.choice([0, 1, 2], p=[0.45, 0.4, 0.15])), lean=False, sink=0.05, radius=4)
             n += 1
     for fi in range(5):
         for _ in range(300):
@@ -840,14 +875,14 @@ def edge_extras(p: Placer):
     rng = p.rng
     for b in c.feat["balcony"]:
         isl = {"x": b["x"] * 0.995, "z": b["z"] * 0.995, "R": 22, "ring": "E"}
-        scatter(p, isl, "Moss", 2, 4, s_fn=lambda: p.rng.uniform(0.4, 0.6), var_fn=lambda: 2, lean=False, sink=0.4, allow_rock=True)
+        scatter(p, isl, "Moss", 2, 4, s_fn=lambda: p.rng.uniform(0.4, 0.6), var_fn=lambda: 2, lean=False, sink=0.05, allow_rock=True)
         tufts(p, isl, 14)
         scatter(p, isl, "CrystalS", 2, 1.5, var_fn=lambda: 1, lean=False, allow_rock=True)
     for f in c.feat["float"]:
         if f["big"]:
             isl = {"x": f["x"], "z": f["z"], "R": f["R"] * 0.7, "ring": "D"}
             grove_trees(p, isl, 6)
-            scatter(p, isl, "Moss", 6, 5, var_fn=_rv(p, 3), lean=False, sink=0.4, allow_rock=True)
+            scatter(p, isl, "Moss", 6, 5, var_fn=_rv(p, 3), lean=False, sink=0.05, allow_rock=True)
             scatter(p, isl, "CrystalS", 4, 1.6, var_fn=lambda: variant_crystal(p, "D"), lean=False, allow_rock=True)
             tufts(p, isl, 16)
         else:

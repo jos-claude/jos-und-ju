@@ -594,7 +594,7 @@ async function main() {
     }
     for (const g of groups.values()) {
       let mat;
-      if (g.neon) mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: g.tr > 0, opacity: 1 - g.tr * 0.85, depthWrite: g.tr < 0.5 });
+      if (g.neon) mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: g.tr > 0, opacity: 1 - g.tr * (g.tr > 0.5 ? 1.0 : 0.85), depthWrite: g.tr < 0.5 });
       else if (g.glass) mat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: Math.max(0.15, 1 - g.tr), roughness: 0.1, metalness: 0.1 });
       else mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.42, metalness: 0.0, envMapIntensity: 0.5, transparent: g.tr > 0, opacity: 1 - g.tr, depthWrite: g.tr < 0.5 });
       const im = new THREE.InstancedMesh(GEO[g.shape], mat, g.m.length);

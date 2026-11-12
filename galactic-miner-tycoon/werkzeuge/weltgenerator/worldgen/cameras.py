@@ -87,10 +87,12 @@ def make(c):
                                    shadow=(l4["x"], l4["z"], 400))
     l7 = lm.get("L7")
     if l7:
-        cpos = _ahead(l7["x"], l7["z"], 70, 210)
-        tgt = _ahead(l7["x"], l7["z"], 275, 300)
-        cams["ring_d_terraces"] = _cam((cpos[0], H(*cpos) + 26, cpos[1]), (tgt[0], H(*tgt) + 10, tgt[1]), fov=70,
-                                       shadow=(l7["x"], l7["z"], 500))
+        # leicht von oben, vom Hangfuss Richtung Quelle (Gegenlicht)
+        t7 = next((t for t in c.feat["terrace"] if t["name"] == "L7"), {"x": l7["x"], "z": l7["z"], "down": 75})
+        cpos = _ahead(t7["x"], t7["z"], t7["down"], 175)
+        tgt = _ahead(t7["x"], t7["z"], t7["down"] + 180, 30)
+        cams["ring_d_terraces"] = _cam((cpos[0], H(*cpos) + 55, cpos[1]), (tgt[0], H(*tgt) - 4, tgt[1]), fov=65,
+                                       shadow=(t7["x"], t7["z"], 400))
     l6 = lm.get("L6")
     if l6:
         a6 = math.degrees(math.atan2(l6["x"], -l6["z"])) % 360

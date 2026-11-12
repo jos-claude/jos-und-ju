@@ -4521,16 +4521,16 @@ return {
 		parts = {
 			{
 				shape = "Ellipsoid",
-				size = {12, 2.588, 9.388},
-				cf = {0, 0.776, 0, 0.3277, 0, 0.9448, 0, 1, 0, -0.9448, 0, 0.3277},
+				size = {12, 2.155, 9.388},
+				cf = {0, 0.431, 0, 0.3277, 0, 0.9448, 0, 1, 0, -0.9448, 0, 0.3277},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
 			},
 			{
 				shape = "Ellipsoid",
-				size = {4.8, 2.329, 4.32},
-				cf = {-1.489, 1.423, 1.564, 0.3277, 0, 0.9448, 0, 1, 0, -0.9448, 0, 0.3277},
+				size = {5.04, 1.293, 4.32},
+				cf = {-1.489, 0.819, 1.564, 0.3277, 0, 0.9448, 0, 1, 0, -0.9448, 0, 0.3277},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
@@ -4538,13 +4538,13 @@ return {
 		},
 		variants = {
 			{
-				main = Color3.fromRGB(168, 224, 112),
+				main = Color3.fromRGB(176, 217, 138),
 			},
 			{
-				main = Color3.fromRGB(127, 224, 176),
+				main = Color3.fromRGB(143, 214, 181),
 			},
 			{
-				main = Color3.fromRGB(183, 155, 232),
+				main = Color3.fromRGB(184, 170, 214),
 			},
 		},
 	},
@@ -4553,16 +4553,16 @@ return {
 		parts = {
 			{
 				shape = "Ellipsoid",
-				size = {12, 2.071, 8.558},
-				cf = {0, 0.621, 0, -0.2602, 0, 0.9656, 0, 1, 0, -0.9656, 0, -0.2602},
+				size = {12, 1.948, 8.558},
+				cf = {0, 0.39, 0, -0.2602, 0, 0.9656, 0, 1, 0, -0.9656, 0, -0.2602},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
 			},
 			{
 				shape = "Ellipsoid",
-				size = {4.8, 1.864, 4.32},
-				cf = {0.909, 1.139, 1.959, -0.2602, 0, 0.9656, 0, 1, 0, -0.9656, 0, -0.2602},
+				size = {5.04, 1.169, 4.32},
+				cf = {0.909, 0.74, 1.959, -0.2602, 0, 0.9656, 0, 1, 0, -0.9656, 0, -0.2602},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
@@ -4570,13 +4570,13 @@ return {
 		},
 		variants = {
 			{
-				main = Color3.fromRGB(168, 224, 112),
+				main = Color3.fromRGB(176, 217, 138),
 			},
 			{
-				main = Color3.fromRGB(127, 224, 176),
+				main = Color3.fromRGB(143, 214, 181),
 			},
 			{
-				main = Color3.fromRGB(183, 155, 232),
+				main = Color3.fromRGB(184, 170, 214),
 			},
 		},
 	},
@@ -4585,16 +4585,16 @@ return {
 		parts = {
 			{
 				shape = "Ellipsoid",
-				size = {12, 2.087, 9.658},
-				cf = {0, 0.626, 0, 0.8925, 0, 0.4511, 0, 1, 0, -0.4511, 0, 0.8925},
+				size = {12, 1.955, 9.658},
+				cf = {0, 0.391, 0, 0.8925, 0, 0.4511, 0, 1, 0, -0.4511, 0, 0.8925},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
 			},
 			{
 				shape = "Ellipsoid",
-				size = {4.8, 1.879, 4.32},
-				cf = {2.053, 1.148, -0.671, 0.8925, 0, 0.4511, 0, 1, 0, -0.4511, 0, 0.8925},
+				size = {5.04, 1.173, 4.32},
+				cf = {2.053, 0.743, -0.671, 0.8925, 0, 0.4511, 0, 1, 0, -0.4511, 0, 0.8925},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
@@ -4602,13 +4602,13 @@ return {
 		},
 		variants = {
 			{
-				main = Color3.fromRGB(168, 224, 112),
+				main = Color3.fromRGB(176, 217, 138),
 			},
 			{
-				main = Color3.fromRGB(127, 224, 176),
+				main = Color3.fromRGB(143, 214, 181),
 			},
 			{
-				main = Color3.fromRGB(183, 155, 232),
+				main = Color3.fromRGB(184, 170, 214),
 			},
 		},
 	},
@@ -4617,16 +4617,16 @@ return {
 		parts = {
 			{
 				shape = "Ellipsoid",
-				size = {12, 2.8, 11.112},
-				cf = {0, 0.84, 0, 0.9322, 0, 0.362, 0, 1, 0, -0.362, 0, 0.9322},
+				size = {12, 2.24, 11.112},
+				cf = {0, 0.448, 0, 0.9322, 0, 0.362, 0, 1, 0, -0.362, 0, 0.9322},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
 			},
 			{
 				shape = "Ellipsoid",
-				size = {4.8, 2.52, 4.32},
-				cf = {-1.408, 1.54, 1.638, 0.9322, 0, 0.362, 0, 1, 0, -0.362, 0, 0.9322},
+				size = {5.04, 1.344, 4.32},
+				cf = {-1.408, 0.851, 1.638, 0.9322, 0, 0.362, 0, 1, 0, -0.362, 0, 0.9322},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
@@ -4634,13 +4634,13 @@ return {
 		},
 		variants = {
 			{
-				main = Color3.fromRGB(168, 224, 112),
+				main = Color3.fromRGB(176, 217, 138),
 			},
 			{
-				main = Color3.fromRGB(127, 224, 176),
+				main = Color3.fromRGB(143, 214, 181),
 			},
 			{
-				main = Color3.fromRGB(183, 155, 232),
+				main = Color3.fromRGB(184, 170, 214),
 			},
 		},
 	},
@@ -5094,11 +5094,11 @@ return {
 		},
 		variants = {
 			{
-				main = Color3.fromRGB(143, 227, 192),
+				main = Color3.fromRGB(158, 216, 190),
 				pearl = Color3.fromRGB(255, 159, 208),
 			},
 			{
-				main = Color3.fromRGB(181, 146, 240),
+				main = Color3.fromRGB(180, 166, 216),
 				pearl = Color3.fromRGB(255, 159, 208),
 			},
 		},
@@ -5137,11 +5137,11 @@ return {
 		},
 		variants = {
 			{
-				main = Color3.fromRGB(143, 227, 192),
+				main = Color3.fromRGB(158, 216, 190),
 				pearl = Color3.fromRGB(255, 159, 208),
 			},
 			{
-				main = Color3.fromRGB(181, 146, 240),
+				main = Color3.fromRGB(180, 166, 216),
 				pearl = Color3.fromRGB(255, 159, 208),
 			},
 		},
@@ -5180,11 +5180,11 @@ return {
 		},
 		variants = {
 			{
-				main = Color3.fromRGB(143, 227, 192),
+				main = Color3.fromRGB(158, 216, 190),
 				pearl = Color3.fromRGB(255, 159, 208),
 			},
 			{
-				main = Color3.fromRGB(181, 146, 240),
+				main = Color3.fromRGB(180, 166, 216),
 				pearl = Color3.fromRGB(255, 159, 208),
 			},
 		},
@@ -5255,11 +5255,11 @@ return {
 		},
 		variants = {
 			{
-				main = Color3.fromRGB(143, 227, 192),
+				main = Color3.fromRGB(158, 216, 190),
 				pearl = Color3.fromRGB(255, 159, 208),
 			},
 			{
-				main = Color3.fromRGB(181, 146, 240),
+				main = Color3.fromRGB(180, 166, 216),
 				pearl = Color3.fromRGB(255, 159, 208),
 			},
 		},
@@ -5711,17 +5711,25 @@ return {
 		category = "Flora",
 		parts = {
 			{
-				shape = "Wedge",
-				size = {0.16, 1.5, 0.75},
-				cf = {0, 0.7, 0, 0.9706, -0.1127, 0.2128, 0.1436, 0.9803, -0.1358, -0.1933, 0.1624, 0.9676},
+				shape = "Block",
+				size = {0.4, 1.895, 0.22},
+				cf = {0.529, 0.73, 0.157, 0, 0.3563, 0.9344, 0.1132, 0.9284, -0.354, -0.9936, 0.1058, -0.0403},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
 			},
 			{
-				shape = "Wedge",
-				size = {0.16, 1.5, 0.75},
-				cf = {0, 0.7, 0, -0.1051, -0.0345, 0.9939, -0.0819, 0.9963, 0.0259, -0.9911, -0.0787, -0.1076},
+				shape = "Block",
+				size = {0.4, 1.603, 0.22},
+				cf = {-0.085, 0.632, 0.367, 0, -0.0499, 0.9988, 0.2147, 0.9755, 0.0487, -0.9767, 0.2145, 0.0107},
+				role = "main",
+				material = "SmoothPlastic",
+				castShadow = false,
+			},
+			{
+				shape = "Block",
+				size = {0.4, 1.792, 0.22},
+				cf = {-0.331, 0.698, -0.359, 0, -0.2176, 0.976, -0.242, 0.947, 0.2112, -0.9703, -0.2362, -0.0527},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
@@ -5743,17 +5751,33 @@ return {
 		category = "Flora",
 		parts = {
 			{
-				shape = "Wedge",
-				size = {0.16, 1.5, 0.75},
-				cf = {0, 0.7, 0, 0.9831, -0.0803, -0.1645, 0.0681, 0.9946, -0.0786, 0.1699, 0.0661, 0.9832},
+				shape = "Block",
+				size = {0.4, 1.572, 0.22},
+				cf = {0.426, 0.603, -0.003, 0, 0.2879, 0.9577, -0.0018, 0.9577, -0.2879, -1, -0.0018, 0.0005},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
 			},
 			{
-				shape = "Wedge",
-				size = {0.16, 1.5, 0.75},
-				cf = {0, 0.7, 0, -0.3196, -0.035, 0.9469, 0.0183, 0.9989, 0.0431, -0.9474, 0.0311, -0.3187},
+				shape = "Block",
+				size = {0.4, 2.001, 0.22},
+				cf = {0.082, 0.826, 0.413, 0, 0.0432, 0.9991, 0.2167, 0.9753, -0.0422, -0.9762, 0.2165, -0.0094},
+				role = "main",
+				material = "SmoothPlastic",
+				castShadow = false,
+			},
+			{
+				shape = "Block",
+				size = {0.4, 1.853, 0.22},
+				cf = {-0.325, 0.767, 0.078, 0, -0.1411, 0.99, 0.0342, 0.9894, 0.141, -0.9994, 0.0338, 0.0048},
+				role = "main",
+				material = "SmoothPlastic",
+				castShadow = false,
+			},
+			{
+				shape = "Block",
+				size = {0.4, 1.97, 0.22},
+				cf = {-0.035, 0.821, -0.361, 0, -0.0159, 0.9999, -0.1642, 0.9863, 0.0157, -0.9864, -0.1641, -0.0026},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
@@ -5775,17 +5799,41 @@ return {
 		category = "Flora",
 		parts = {
 			{
-				shape = "Wedge",
-				size = {0.16, 1.5, 0.75},
-				cf = {0, 0.7, 0, 0.9882, 0.0518, -0.1444, -0.0795, 0.9778, -0.1936, 0.1312, 0.2028, 0.9704},
+				shape = "Block",
+				size = {0.4, 1.38, 0.22},
+				cf = {0.455, 0.491, -0.024, 0, 0.3706, 0.9288, -0.0207, 0.9286, -0.3705, -0.9998, -0.0192, 0.0077},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
 			},
 			{
-				shape = "Wedge",
-				size = {0.16, 1.5, 0.75},
-				cf = {0, 0.7, 0, -0.1705, 0.0801, 0.9821, -0.189, 0.9755, -0.1124, -0.9671, -0.2048, -0.1512},
+				shape = "Block",
+				size = {0.4, 2.02, 0.22},
+				cf = {0.046, 0.811, 0.507, 0, 0.0278, 0.9996, 0.3053, 0.9519, -0.0265, -0.9523, 0.3051, -0.0085},
+				role = "main",
+				material = "SmoothPlastic",
+				castShadow = false,
+			},
+			{
+				shape = "Block",
+				size = {0.4, 1.368, 0.22},
+				cf = {-0.206, 0.516, 0.29, 0, -0.1321, 0.9912, 0.1875, 0.9737, 0.1297, -0.9823, 0.1858, 0.0248},
+				role = "main",
+				material = "SmoothPlastic",
+				castShadow = false,
+			},
+			{
+				shape = "Block",
+				size = {0.4, 1.271, 0.22},
+				cf = {-0.217, 0.472, -0.252, 0, -0.1357, 0.9908, -0.1596, 0.978, 0.134, -0.9872, -0.1581, -0.0217},
+				role = "main",
+				material = "SmoothPlastic",
+				castShadow = false,
+			},
+			{
+				shape = "Block",
+				size = {0.4, 1.885, 0.22},
+				cf = {0.152, 0.776, -0.345, 0, 0.0757, 0.9971, -0.1723, 0.9822, -0.0745, -0.985, -0.1718, 0.013},
 				role = "main",
 				material = "SmoothPlastic",
 				castShadow = false,
@@ -5916,11 +5964,29 @@ return {
 		parts = {
 			{
 				shape = "Cylinder",
+				size = {600, 3, 3},
+				cf = {0, 300, 0, 0, 1, 0, 1, 0, 0, 0, 0, -1},
+				role = "main",
+				material = "Neon",
+				transparency = 0.4,
+				castShadow = false,
+			},
+			{
+				shape = "Cylinder",
 				size = {600, 7, 7},
 				cf = {0, 300, 0, 0, 1, 0, 1, 0, 0, 0, 0, -1},
 				role = "main",
 				material = "Neon",
-				transparency = 0.85,
+				transparency = 0.75,
+				castShadow = false,
+			},
+			{
+				shape = "Cylinder",
+				size = {600, 14, 14},
+				cf = {0, 300, 0, 0, 1, 0, 1, 0, 0, 0, 0, -1},
+				role = "main",
+				material = "Neon",
+				transparency = 0.9,
 				castShadow = false,
 			},
 		},

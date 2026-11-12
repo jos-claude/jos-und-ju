@@ -108,9 +108,9 @@ def terraces(c: Ctx, cx, cz, n_basins, width, length, down_az, name="terr", sour
     for i, (aj, br, rx, rz) in enumerate(basins):
         hill_here = hill_top - slope * (aj - rz * 0.6 + length / 2)
         F = snap4_down(hill_here - 2.6)
-        dep = rng.uniform(1.5, 2.4)
+        dep = rng.uniform(1.5, 2.2)
         W = F + dep
-        rim = W + 0.6
+        rim = W + rng.uniform(1.5, 2.0)          # helle Salt-Raender stehen 1,5-2 ueber dem Wasser
         la, lb = a - aj, b - br
         q = np.hypot(la / rz, lb / rx)
         th = np.arctan2(la, lb)

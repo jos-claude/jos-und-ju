@@ -98,8 +98,8 @@ CRYSTAL_W = [30, 25, 20, 10, 15]
 LANTERN = [C("#FFC76B"), C("#FF8FB8"), C("#6DEBDD")]
 MUSHROOM = [C("#B58CF0"), C("#FF9CC2"), C("#FFB88A"), C("#7FD8CF")]
 ORGAN = [C("#F28BA0"), C("#F4D87A"), C("#7FE0B0")]
-MOSS = [C("#A8E070"), C("#7FE0B0"), C("#B79BE8")]
-CACTUS = [C("#8FE3C0"), C("#B592F0")]
+MOSS = [C("#B0D98A"), C("#8FD6B5"), C("#B8AAD6")]
+CACTUS = [C("#9ED8BE"), C("#B4A6D8")]
 PEBBLE = {"Sandstone": C("#F4A9C4"), "Limestone": C("#F9E7A3"), "Slate": C("#A99BE0"), "Rock": C("#C48BBE"),
           "Mud": C("#D9795F"), "Salt": C("#FCEFEA")}
 PEBBLE_KEYS = list(PEBBLE)
@@ -299,11 +299,11 @@ def organ_pipe(rng, k):
 
 def moss(rng, k):
     D = 12.0
-    hh = rng.uniform(2.0, 3.2)
+    hh = 0.2 * D * rng.uniform(0.8, 1.0)                 # Hoehe <= 0,25 x Breite
     rot = rot_y(rng.uniform(0, 3))
-    parts = [ell((0, hh * 0.3, 0), (D, hh, D * rng.uniform(0.7, 0.95)), "main", rot, cast_shadow=False)]
+    parts = [ell((0, hh * 0.2, 0), (D, hh, D * rng.uniform(0.7, 0.95)), "main", rot, cast_shadow=False)]   # 30 % im Boden
     a = rng.uniform(0, 6.28)
-    parts.append(ell((math.cos(a) * D * 0.18, hh * 0.55, math.sin(a) * D * 0.18), (D * 0.4, hh * 0.9, D * 0.36), "main", rot,
+    parts.append(ell((math.cos(a) * D * 0.18, hh * 0.38, math.sin(a) * D * 0.18), (D * 0.42, hh * 0.6, D * 0.36), "main", rot,
                      cast_shadow=False))
     variants = [{"main": cc} for cc in MOSS]
     return Template(f"Moss_{k}", "Flora", parts, variants)
@@ -407,9 +407,14 @@ def copper_rock(rng, k):
 def tuft(rng, k):
     if k < 3:
         parts = []
-        for i in range(2):
-            rot = rot_y(i * 1.9 + rng.uniform(-0.3, 0.3)) @ angles(rng.uniform(-0.25, 0.25), 0, rng.uniform(-0.2, 0.2))
-            parts.append(wedge((0, 0.7, 0), (0.16, 1.5, 0.75), "main", rot, cast_shadow=False))
+        nb = 3 + k % 3
+        for i in range(nb):
+            a = i * 2 * math.pi / nb + rng.uniform(-0.4, 0.4)
+            L = rng.uniform(1.2, 2.1)
+            d = tilt_dir(a, math.radians(rng.uniform(8, 24)))
+            base = np.array([math.cos(a) * 0.2, -0.15, math.sin(a) * 0.2])
+            parts.append(block(base + d * L / 2, (0.4, L, 0.22), "main", basis_y(d) @ rot_y(rng.uniform(0, 3)) if False else basis_y(d),
+                               cast_shadow=False))
         variants = [{"main": cc} for cc in TUFT]
         return Template(f"GrassTuft_{k}", "Flora", parts, variants)
     parts = [block((0, 0.6, 0), (0.18, 1.3, 0.18), "stem", cast_shadow=False),
@@ -431,8 +436,9 @@ def fog_ball():
 
 def light_beam():
     """Lichtstrahl (Neon, Transparenz 0,85, Laenge 600) senkrecht nach oben."""
-    return Template("LightBeam", "Landmark", [cyl((0, 0, 0), (0, 600, 0), 7.0, "main", "Neon", transparency=0.85, cast_shadow=False)],
-                    [{"main": C("#BFF5FF")}, {"main": C("#E3B8FF")}])
+    parts = [cyl((0, 0, 0), (0, 600, 0), d, "main", "Neon", transparency=t, cast_shadow=False)
+             for d, t in ((3.0, 0.4), (7.0, 0.75), (14.0, 0.9))]
+    return Template("LightBeam", "Landmark", parts, [{"main": C("#BFF5FF")}, {"main": C("#E3B8FF")}])
 
 
 def edge_barrier():

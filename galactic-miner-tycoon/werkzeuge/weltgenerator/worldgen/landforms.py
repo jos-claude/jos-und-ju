@@ -185,6 +185,8 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
         per = 2 * math.pi * R * (1 + aspect) / 2
         k = max(5, int(round(per / (rng.uniform(13, 19) if rough else rng.uniform(22, 30)))))
         g = np.maximum(0.0, np.cos(k * th + rng.uniform(0, 6.3) + 0.8 * c.nz.fbm("gul", x, z, 80, 2))) ** (4 if rough else 8)
+        rmin0 = R / math.sqrt(aspect)
+        g = g * ss(0.3 * rmin0, 0.65 * rmin0, np.hypot(x - cx, z - cz))   # Rinnen nur am Rand, keine Loecher oben
         gd = rng.uniform(3.0, 4.5) if rough else rng.uniform(2.0, 3.5)
     else:
         g = np.zeros_like(s)

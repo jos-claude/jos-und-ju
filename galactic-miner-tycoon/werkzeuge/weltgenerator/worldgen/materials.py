@@ -32,7 +32,7 @@ LAYERS = {
     "topDepth": 5, "subDepth": 14, "bedrock": "Slate",
     "subsoil": {
         "Ground": "Mud", "Grass": "Ground", "LeafyGrass": "Mud", "Sand": "Sandstone", "Mud": "Mud",
-        "Basalt": "Basalt", "CrackedLava": "Basalt", "Salt": "Limestone", "Snow": "Slate", "Ice": "Glacier",
+        "Basalt": "Basalt", "CrackedLava": "Basalt", "Salt": "Salt", "Snow": "Slate", "Ice": "Glacier",
         "Glacier": "Glacier", "Slate": "Slate", "Rock": "Rock", "Limestone": "Limestone", "Sandstone": "Sandstone",
         "Concrete": "Salt",
     },
