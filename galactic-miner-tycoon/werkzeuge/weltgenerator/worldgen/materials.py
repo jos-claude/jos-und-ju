@@ -102,8 +102,8 @@ def assign(c: Ctx):
     top[ringB & (pB < -0.30)] = MUD
     # C Nordost: Asche (Basalt) mit Korall-Inseln; C Suedwest: Sand mit Korall
     ne = c.wNE + nz.fbm("nedither", x, z, 40, 2) * 0.5 > 0.5
-    top[ringC & ne] = MAT["Basalt"]
-    top[ringC & ne & (pC > 0.22)] = G
+    top[ringC & ne & (pC < -0.08)] = MAT["Basalt"]
+    top[ringC & ne & (pB < -0.25)] = MUD
     top[ringC & ~ne] = SAND
     top[ringC & ~ne & (pC > 0.25)] = G
     # D: Ground, Sand, Mud

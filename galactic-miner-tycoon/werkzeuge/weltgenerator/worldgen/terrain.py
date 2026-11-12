@@ -10,7 +10,7 @@ from .ctx import Ctx
 from .layout import BALCONY_AZ, ang_diff, pol
 from .noise import smoothstep as ss
 
-RIM_R = 1958.0
+RIM_R = 1940.0
 BALCONY_FLOOR = 50.0
 BENCH_E2 = 30.0
 
@@ -124,8 +124,9 @@ def wash_lines(c: Ctx):
     c.wash_lines = lines
 
 
-def carve_washes(c: Ctx):
-    wash_lines(c)
+def carve_washes(c: Ctx, regen=True):
+    if regen:
+        wash_lines(c)
     x, z, r, az = c.x, c.z, c.r, c.az
     best = np.full(r.shape, 1e9)
     wid = np.full(r.shape, -1, np.int16)
@@ -181,10 +182,15 @@ def rim(c: Ctx):
     nz = c.nz
     th = np.radians(az)
     px, pz = RIM_R * np.sin(th), -RIM_R * np.cos(th)       # Projektion auf den Kammkreis
-    rc = RIM_R + nz.fbm("rimrc", px, pz, 320, 3) * 45.0
-    peaks = nz.ridged("rimpk", px, pz, 170, 3, sharp=2.2)
-    hc = 178.0 + 150.0 * np.clip(peaks, 0, 1) ** 1.5 + nz.fbm("rimhc", px, pz, 520, 2) * 40.0
-    hc = np.clip(hc, 165.0, 318.0)
+    rc = RIM_R + nz.fbm("rimrc", px, pz, 520, 3) * 75.0 + nz.fbm("rimrc2", px, pz, 140, 2) * 18.0
+    macro = nz.fbm("rimmacro", px, pz, 900, 2)
+    peaks = nz.ridged("rimpk", px, pz, 260, 3, sharp=2.0)
+    teeth = nz.ridged("rimteeth", px, pz, 70, 2, sharp=2.4)
+    hc = 205.0 + 170.0 * macro + 95.0 * np.clip(peaks, 0, 1) ** 1.7 + 16.0 * teeth
+    # Tafel-Kronen: manche Abschnitte enden flach in Stufen (wie die Mesas)
+    crown = ss(0.05, 0.2, nz.fbm("rimcrown", px, pz, 700, 2))
+    hc = hc * (1 - crown) + (np.floor(hc / 34.0) * 34.0 + 6.0) * crown
+    hc = np.clip(hc, 150.0, 318.0)
     # Balkon-Kerben
     notch = np.full(r.shape, 1e9)
     for b in BALCONY_AZ:
@@ -211,9 +217,9 @@ def rim(c: Ctx):
     newh = np.maximum(H, np.maximum(h_in, np.where(tal_ok, h_tal, -1e9)))
     # Aussenseite: steile Abbruchkante (70-80 Grad) mit Simsen
     to = r - rc
-    drop_o = _staircase(np.maximum(0.0, to + 4.0 * nz.fbm("rimout", x, z, 30, 2)), 38.0, 6.0, 7.0)
+    drop_o = _staircase(np.maximum(0.0, to + 3.0 * nz.fbm("rimout", x, z, 30, 2)), 40.0, 4.5, 5.0)
     h_out = hc - drop_o
-    bottom = -112.0 - 0.95 * np.maximum(0.0, 2085.0 - r) + nz.fbm("bottom", x, z, 90, 3) * 45.0
+    bottom = -95.0 - 0.9 * np.maximum(0.0, 2050.0 - r) + nz.fbm("bottom", x, z, 90, 3) * 45.0
     bottom = np.minimum(bottom, -80.0)
     outer = to >= 0
     H2 = np.where(inner, newh, H)

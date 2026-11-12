@@ -470,7 +470,8 @@ class Saturn:
                                                           "#A8B5A0"))
         # (bis |Breite|, Farbe) von Aequator Richtung Pol; Norden und Sueden leicht verschieden
         north = [(6.5, EQ), (9.5, Z1), (17.0, B1), (21.0, Z2), (27.5, B2), (33.0, EQ * 0.5 + Z1 * 0.5), (40.0, B1),
-                 (46.0, Z1), (52.5, B2), (58.0, B1 * 0.6 + Z1 * 0.4), (64.0, B2 * 0.6 + POLE * 0.4), (90.1, POLE)]
+                 (46.0, Z1), (52.5, B2), (59.0, B1 * 0.6 + Z1 * 0.4), (67.0, B2 * 0.5 + B1 * 0.5),
+                 (72.0, B2 * 0.5 + POLE * 0.5), (90.1, POLE)]
         south = [(6.0, EQ), (9.0, Z1), (16.0, B1), (20.5, Z2), (28.0, B2), (34.0, Z1), (41.0, B1), (48.0, Z1),
                  (55.0, B2), (62.0, B1 * 0.5 + POLE * 0.5), (90.1, POLE)]
         lat = np.arange(-90.0, 90.0001, 0.05)
@@ -492,6 +493,9 @@ class Saturn:
         w /= w.sum()
         pad = np.concatenate([np.repeat(col[:1], k, 0), col, np.repeat(col[-1:], k, 0)])
         col = np.stack([np.convolve(pad[:, i], w, mode="valid") for i in range(3)], axis=1)
+        # Kontrast etwas zuruecknehmen (Referenzbild: weiche, cremige Baender)
+        mean = col[np.abs(lat) < 60].mean(axis=0)
+        col = mean + (col - mean) * 0.82
         self.band_lat = lat
         self.band_col = col  # sRGB
 
@@ -512,8 +516,8 @@ class Saturn:
         # Polar-Sechseck (Nordpol, ~78 Grad) als feine dunkle Linie
         colat = 90.0 - lat
         hex_r = 11.5 / np.cos(np.radians((np.degrees(lon) % 60.0) - 30.0))
-        hexline = np.exp(-(((colat - hex_r) / 0.9) ** 2)) * (lat > 0)
-        col *= (1.0 - 0.10 * hexline)[:, None]
+        hexline = np.exp(-(((colat - hex_r) / 1.8) ** 2)) * (lat > 0)
+        col *= (1.0 - 0.06 * hexline)[:, None]
         # ein heller Sturmfleck im noerdlichen Band
         storm_c = np.array([math.cos(0.5) * math.cos(math.radians(41.5)), math.sin(0.5) * math.cos(math.radians(41.5)),
                             math.sin(math.radians(41.5))])
@@ -524,7 +528,11 @@ class Saturn:
 
     # -- Zeichnen ----------------------------------------------------------
     def cone(self):
-        return self.c, math.atan(self.R * self.ring_out * 1.02) + math.radians(0.4)
+        # groesster Winkelabstand des Ringaussenrands von der Mitte (nahe Seite erscheint perspektivisch groesser)
+        phi = np.linspace(0.0, 2.0 * np.pi, 1441)
+        q = np.stack([np.cos(phi), np.sin(phi), np.zeros_like(phi)], 1) * (self.ring_out * self.R)
+        w = normalize(q @ self.M + self.c)
+        return self.c, float(np.arccos(np.clip(w @ self.c, -1, 1)).max()) + math.radians(0.3)
 
     def shade(self, d):
         n = len(d)
@@ -590,7 +598,7 @@ class Saturn:
             mu0 = abs(L[2])
             mu = np.abs(V[ring][:, 2])
             lit_face = np.sign(L[2]) == np.sign(V[ring][:, 2])
-            F = np.where(lit_face, 1.55 * mu0 / (mu0 + mu), 0.6 * (1.0 - a))
+            F = np.where(lit_face, 1.38 * mu0 / (mu0 + mu), 0.6 * (1.0 - a))
             # Planetenschatten auf den Ringen (weiche Kante = Sonnenscheibe)
             sc = np.array([1.0, 1.0, q])
             Ls = L * sc
@@ -625,7 +633,7 @@ class RockyMoon:
         self.maria = maria
         self.crater_depth = crater_depth
         cc = normalize(rng.normal(size=(craters, 3)))
-        rad = np.radians(rng.uniform(3.0, 16.0, craters) * rng.choice([1.0, 1.0, 1.0, 1.6], craters))
+        rad = np.radians(2.5 + 9.0 * rng.random(craters) ** 2.2)  # viele kleine, wenige grosse
         self.cr_c, self.cr_r = cc, rad
         self.cr_alb = rng.uniform(-0.06, 0.10, craters)
 
@@ -652,7 +660,7 @@ class RockyMoon:
         pert = np.zeros_like(nrm)
         for c, r, al in zip(self.cr_c, self.cr_r, self.cr_alb):
             cosd = nrm @ c
-            near = cosd > math.cos(r * 1.5)
+            near = cosd > math.cos(r * 1.6)
             if not near.any():
                 continue
             nn = nrm[near]
@@ -660,10 +668,12 @@ class RockyMoon:
             x = ang / r
             tvec = c[None, :] - cosd[near][:, None] * nn
             tvec = tvec / np.maximum(np.linalg.norm(tvec, axis=1, keepdims=True), 1e-9)
-            slope = np.where(x < 1.0, 1.2 * x, -1.4 * np.exp(-(((x - 1.0) / 0.22) ** 2)) * (x - 1.0) / 0.22)
-            slope *= self.crater_depth
-            pert[near] += slope[:, None] * tvec * 0.55
-            alb[near] *= 1.0 + al * (x < 1.0) + 0.06 * np.exp(-(((x - 1.0) / 0.12) ** 2))
+            # Hoehenprofil h(x) = -exp(-(x/0.75)^4) + 0.3 exp(-((x-1)/0.25)^2): flacher Boden, weicher Wall
+            g1 = np.exp(-((x / 0.75) ** 4))
+            g2 = np.exp(-(((x - 1.0) / 0.25) ** 2))
+            dh = g1 * 4.0 * x ** 3 / 0.75 ** 4 - 0.3 * g2 * 2.0 * (x - 1.0) / 0.25 ** 2
+            pert[near] += (0.16 * self.crater_depth * dh)[:, None] * tvec
+            alb[near] *= 1.0 + al * g1 + 0.05 * g2
         ns = normalize(nrm + pert)
         mu0 = ns @ self.L
         mu0_geo = nrm @ self.L
@@ -724,13 +734,13 @@ class IceGiant:
             band = 1.0 + 0.05 * np.sin(lat * 9.0 + 0.6 * self.noise.fbm(nrm * 3.0, octaves=3) * 6) \
                 + 0.04 * self.noise.fbm(np.stack([nrm[:, 0] * 2, nrm[:, 1] * 2, lat * 14], 1), octaves=3)
             col = srgb_to_linear(np.clip(self.base[None, :] * band[:, None], 0, 1))
-            diff = np.clip((mu0 + 0.03) / 1.03, 0, 1) ** 0.9
-            limb = 0.45 + 0.55 * mu ** 0.5
-            lit = col * (1.25 * diff * limb)[:, None]
+            diff = np.clip(mu0, 0, 1) ** 0.9
+            limb = 0.62 + 0.38 * mu ** 0.5
+            lit = col * (1.65 * diff * limb)[:, None]
             # Randlicht an der beleuchteten Kante
-            rim = (1.0 - mu) ** 2.5 * smoothstep(-0.25, 0.45, mu0)
-            lit += self.rim[None, :] * (0.65 * rim)[:, None]
-            night = hex_lin("#0D2830")[None, :] * (0.55 + 0.45 * mu)[:, None]
+            rim = (1.0 - mu) ** 2.2 * smoothstep(-0.25, 0.45, mu0)
+            lit += self.rim[None, :] * (0.95 * rim)[:, None]
+            night = hex_lin("#07161B")[None, :] * (0.6 + 0.4 * mu)[:, None]
             rgb[hit] += lit + night * (1 - diff)[:, None]
             alpha[hit] = 1.0
         return rgb, alpha
@@ -759,7 +769,11 @@ class SkySpec:
     saturn: tuple = (40.0, 28.0, 14.0)  # Azimut, Elevation, Kugel-Durchmesser
     saturn_ring_opening: float = 20.0
     saturn_roll: float = 14.0  # rechte Seite hoeher (Vorgabe "Roll -14 Grad, rechte Seite hoeher")
-    saturn_phase: float | None = None  # None = physikalisch aus der Sonnenrichtung
+    # Saturn-Licht (Stil): Phasenwinkel 30,5 Grad = 93 % beleuchtet, Licht von links (Positionswinkel
+    # auf dem Bild: 0 = rechts, 90 = oben). Die echte Sonne steht von Saturn aus gesehen 69 Grad ueber
+    # der Ringebene -> es gaebe weder Ring- noch Planetenschatten. None = physikalisch.
+    saturn_phase: float | None = 30.5
+    saturn_light_pa: float | None = 185.0
     moon1: tuple = (14.0, 40.0, 2.0)
     moon2: tuple = (150.0, 50.0, 1.1)
     ice_giant: tuple = (300.0, 14.0, 3.0)
@@ -771,6 +785,27 @@ class SkySpec:
     n_bright: int = 25
     n_cluster: int = 150
     n_filaments: int = 40
+
+
+def light_geometry(center_dir, light_dir):
+    """Phasenwinkel (Grad), beleuchteter Anteil und Positionswinkel des Lichts auf dem Bild (0 = rechts, 90 = oben)."""
+    c = normalize(center_dir)
+    L = normalize(light_dir)
+    r, u = _screen_frame(c)
+    phase = math.degrees(math.acos(np.clip(L @ -c, -1, 1)))
+    pa = math.degrees(math.atan2(L @ u, L @ r)) % 360.0
+    return phase, (1.0 + math.cos(math.radians(phase))) / 2.0, pa
+
+
+def saturn_light_dir(center_dir, sun_dir, phase_deg=None, pa_deg=None):
+    """Lichtrichtung fuer das Saturnsystem: echte Sonne, oder Phase/Positionswinkel vorgegeben (Stil)."""
+    c = normalize(center_dir)
+    phase0, _, pa0 = light_geometry(c, sun_dir)
+    phase = phase0 if phase_deg is None else phase_deg
+    pa = pa0 if pa_deg is None else pa_deg
+    r, u = _screen_frame(c)
+    ph, ps = math.radians(phase), math.radians(pa)
+    return normalize(math.cos(ph) * (-c) + math.sin(ph) * (math.cos(ps) * r + math.sin(ps) * u))
 
 
 class SkyModel:
@@ -794,20 +829,16 @@ class SkyModel:
         sun_rgb = np.array([1.0, 0.95, 0.86])
         self.sun = SunDisc(self.sun_dir, spec.sun_disc_deg)
         sc = dir_from_az_el(spec.saturn[0], spec.saturn[1])
-        L_sat = self.sun_dir
-        if spec.saturn_phase is not None:
-            # Stil: Phasenwinkel vorgeben, Richtung (Positionswinkel) bleibt die der echten Sonne
-            v = -sc
-            perp = normalize(self.sun_dir - (self.sun_dir @ v) * v)
-            ph = math.radians(spec.saturn_phase)
-            L_sat = math.cos(ph) * v + math.sin(ph) * perp
+        self.saturn_light = L_sat = saturn_light_dir(sc, self.sun_dir, spec.saturn_phase, spec.saturn_light_pa)
         self.saturn = Saturn(sc, spec.saturn[2], spec.saturn_ring_opening, spec.saturn_roll, L_sat, sun_rgb,
                              seed + 100)
-        self.moon1 = RockyMoon(dir_from_az_el(*spec.moon1[:2]), spec.moon1[2], self.sun_dir, "#A9B2C0", seed + 200)
+        self.moon1 = RockyMoon(dir_from_az_el(*spec.moon1[:2]), spec.moon1[2], self.sun_dir, "#A9B2C0", seed + 200,
+                               craters=38, maria=0.20, crater_depth=0.55)
         self.moon2 = RockyMoon(dir_from_az_el(*spec.moon2[:2]), spec.moon2[2], self.sun_dir, "#E8D9A8", seed + 300,
                                craters=12, maria=0.10, crater_depth=0.6)
         self.ice = IceGiant(dir_from_az_el(*spec.ice_giant[:2]), spec.ice_giant[2], self.sun_dir, seed + 400)
         self.bodies = [self.sun, self.saturn, self.moon1, self.moon2, self.ice]
+        self.cones = [b.cone() for b in self.bodies]
 
         self._make_filaments(rng)
         self._make_stars(rng)
@@ -828,21 +859,17 @@ class SkyModel:
     def _make_filaments(self, rng):
         n = self.spec.n_filaments
         f = {}
-        # Staubfaeden: ueberwiegend im sichtbaren Teil des Bandes (u -10..190)
+        # Staubfaeden: ueberwiegend im sichtbaren Teil des Bandes (u -15..195), meist entlang des Bandes
         f["u"] = rng.uniform(-15.0, 195.0, n)
-        f["v"] = rng.normal(0.0, 4.0, n)
-        f["ang"] = np.radians(rng.normal(0.0, 16.0, n))
-        f["len"] = rng.uniform(6.0, 32.0, n)
-        f["w"] = rng.uniform(0.18, 0.9, n) * rng.choice([1.0, 1.0, 1.8], n)
-        f["amp"] = rng.uniform(0.35, 0.95, n)
-        f["A1"] = rng.uniform(0.2, 1.6, n)
-        f["k1"] = rng.uniform(0.15, 0.6, n)
+        f["v"] = rng.normal(0.0, 4.5, n)
+        f["ang"] = np.radians(rng.normal(0.0, 12.0, n))
+        f["len"] = rng.uniform(7.0, 30.0, n)
+        f["w"] = rng.uniform(0.35, 1.3, n)
+        f["amp"] = rng.uniform(0.30, 0.75, n)
+        f["A1"] = rng.uniform(0.3, 1.4, n)
+        f["k1"] = rng.uniform(0.12, 0.35, n)
         f["p1"] = rng.uniform(0, 2 * np.pi, n)
-        f["A2"] = rng.uniform(0.05, 0.5, n)
-        f["k2"] = rng.uniform(0.8, 2.0, n)
-        f["p2"] = rng.uniform(0, 2 * np.pi, n)
-        f["kb"] = rng.uniform(0.4, 1.4, n)
-        f["pb"] = rng.uniform(0, 2 * np.pi, n)
+        f["seed"] = rng.uniform(0, 100, n)
         self.fil = f
 
     def _filament_dust(self, u, v):
@@ -854,74 +881,94 @@ class SkyModel:
             ca, sa = math.cos(f["ang"][i]), math.sin(f["ang"][i])
             s = du * ca + dv * sa
             half = f["len"][i] / 2.0
-            near = np.abs(s) < half
+            near = (np.abs(s) < half) & (np.abs(-du * sa + dv * ca) < 6.0)
             if not near.any():
                 continue
             s_n = s[near]
             t = -du[near] * sa + dv[near] * ca
-            off = f["A1"][i] * np.sin(f["k1"][i] * s_n + f["p1"][i]) + f["A2"][i] * np.sin(f["k2"][i] * s_n + f["p2"][i])
-            w = f["w"][i] * (0.55 + 0.45 * np.sin(0.21 * s_n + f["pb"][i]) ** 2)
-            across = np.exp(-(((t - off) / w) ** 2))
-            taper = smoothstep(half, half * 0.45, np.abs(s_n))
-            breakup = 0.45 + 0.55 * np.sin(f["kb"][i] * s_n + f["pb"][i]) ** 2
+            # sanft geschwungene Mittellinie, Breite und Dichte schwanken mit Rauschen entlang des Fadens
+            off = f["A1"][i] * np.sin(f["k1"][i] * s_n + f["p1"][i])
+            nn = self.noise3.fbm(np.stack([s_n * 0.18 + f["seed"][i], np.full_like(s_n, f["seed"][i]),
+                                           t * 0.35], 1), octaves=3)
+            w = f["w"][i] * (0.7 + 0.9 * np.clip(nn + 0.3, 0, 1))
+            across = np.exp(-(((t - off - 0.6 * nn) / w) ** 2))
+            taper = smoothstep(half, half * 0.35, np.abs(s_n))
+            breakup = smoothstep(-0.25, 0.25, nn + 0.1)
             keep[near] *= 1.0 - f["amp"][i] * across * taper * breakup
         return 1.0 - keep
 
-    def _nebula(self, d, el):
-        """Gibt (Farbe linear, Deckkraft) fuer das Band und die Staubdichte zurueck."""
+    def band_fields(self, d, el=None):
+        """Felder des Nebelbands je Richtung: Profil, Wolkendichte, Magenta, Staub (alle 0..1)."""
         n = len(d)
-        col = np.zeros((n, 3))
-        a = np.zeros(n)
-        dust = np.zeros(n)
+        if el is None:
+            el = np.degrees(np.arcsin(np.clip(d[:, 1], -1, 1)))
+        out = {k: np.zeros(n) for k in ("prof", "dens", "mag", "dust")}
         u, v = self.band_coords(d)
         # unter dem Horizont auslaufen lassen (Dn-Flaeche nur Verlauf + Sterne)
         fade = smoothstep(-34.0, -14.0, el)
-        sel = (np.abs(v) < 40.0) & (fade > 0)
+        sel = (np.abs(v) < 58.0) & (fade > 0)
+        out["sel"] = sel
         if not sel.any():
-            return col, a, dust
-        us, vs, ds = u[sel], v[sel], d[sel]
+            return out
+        us, vs = u[sel], v[sel]
         ur = np.radians(us)
+        vr = np.radians(vs)
         nz, nz2, nz3 = self.noise, self.noise2, self.noise3
         cu, su = np.cos(ur), np.sin(ur)
-        vr = np.radians(vs)
         # Mittellinie und Breite schwanken entlang des Bandes
-        off = nz.fbm(np.stack([cu * 1.2, su * 1.2, np.full_like(cu, 3.3)], 1), octaves=3) * 9.0
-        sig = (self.spec.band_width / 2.3548) * (1.0 + 0.55 * nz.fbm(np.stack([cu * 1.5, su * 1.5,
-                                                                                  np.full_like(cu, 7.1)], 1), octaves=3))
-        prof = np.exp(-0.5 * ((vs - off) / sig) ** 2)
-        wide = np.exp(-0.5 * ((vs - off) / (sig * 1.9)) ** 2)
-        # Wolken: anisotrop, entlang des Bandes gestreckt; Domain-Warp fuer organische Formen
-        P = np.stack([cu * 2.2, su * 2.2, vr * 4.5], 1)
-        wx = nz2.fbm(P * 1.3 + 1.7, octaves=3)
-        wy = nz2.fbm(P * 1.3 + 9.2, octaves=3)
-        Pw = P + 0.55 * np.stack([wx, wy, wx * 0.5], 1)
-        clouds = nz.fbm(Pw * 1.6, octaves=6, gain=0.55)
-        clouds = np.clip(0.5 + 1.6 * clouds, 0, 1.4)
-        knots = np.clip(nz3.fbm(Pw * 4.0, octaves=4) * 2.2, 0, 1)  # Sternwolken-Knoten
-        dens = prof * (0.30 + 0.95 * clouds ** 1.4 + 0.5 * knots * prof)
+        off = nz.fbm(np.stack([cu * 1.2, su * 1.2, np.full_like(cu, 3.3)], 1), octaves=3) * 8.0
+        sig = (self.spec.band_width / 2.3548) * (1.0 + 0.6 * nz.fbm(np.stack([cu * 1.5, su * 1.5,
+                                                                                 np.full_like(cu, 7.1)], 1), octaves=3))
+        x = (vs - off) / sig
+        prof = np.exp(-0.5 * x ** 2)
+        wide = np.exp(-0.5 * (x / 1.9) ** 2) * smoothstep(56.0, 38.0, np.abs(vs))
+        # Wolken: leicht entlang des Bandes gestreckt, Domain-Warp fuer organische Formen
+        P = np.stack([cu * 3.0, su * 3.0, vr * 4.6], 1)
+        wx = nz2.fbm(P * 0.9 + 1.7, octaves=3)
+        wy = nz2.fbm(P * 0.9 + 9.2, octaves=3)
+        Pw = P + 0.8 * np.stack([wx, wy, wx * 0.7], 1)
+        c1 = nz.fbm(Pw * 1.4, octaves=6, gain=0.55)
+        clouds = smoothstep(-0.30, 0.42, c1)
+        knots = smoothstep(0.05, 0.45, nz3.fbm(Pw * 3.2 + 5.0, octaves=4))  # helle Sternwolken
+        dens = prof ** 1.15 * (0.28 + 0.62 * clouds + 0.35 * knots * clouds)
         # Magenta-Zuege: eher an den Raendern, langgezogen
-        Pm = np.stack([cu * 1.6 + 4.0, su * 1.6, vr * 7.0], 1)
-        mag = smoothstep(0.02, 0.32, nz3.fbm(Pm + 0.35 * np.stack([wy, wx, wy], 1), octaves=5, gain=0.55))
-        mag *= wide * (0.5 + 0.5 * (1 - prof))
-        # Staub: 40 Faeden + feines rauschendes Netz
-        dust_f = self._filament_dust(us, vs)
-        ridge = nz2.fbm(np.stack([cu * 3.0 + 2.0, su * 3.0, vr * 16.0], 1) + 0.25 * np.stack([wx, wy, wx], 1),
-                        octaves=5, ridged=True, gain=0.5)
-        dust_n = smoothstep(0.62, 0.86, ridge) * prof * 0.55
-        dst = 1.0 - (1.0 - dust_f * (0.35 + 0.65 * wide)) * (1.0 - dust_n)
-        # feines Korn (unaufgeloeste Sterne)
-        grain = 1.0 + 0.35 * nz3.fbm(ds * 220.0, octaves=2)
+        Pm = np.stack([cu * 2.2 + 4.0, su * 2.2, vr * 6.0], 1)
+        mag = smoothstep(0.05, 0.38, nz3.fbm(Pm + 0.5 * np.stack([wy, wx, wy], 1), octaves=5, gain=0.55))
+        mag *= wide * (0.35 + 0.65 * (1 - prof))
+        # Staub: grosse weiche Dunkelwolken in der Bandmitte + 40 einzelne Faeden
+        lane_n = nz2.fbm(np.stack([cu * 4.0 + 2.0, su * 4.0, vr * 9.0], 1) + 0.6 * np.stack([wx, wy, wx], 1),
+                         octaves=5, gain=0.5)
+        lanes = smoothstep(0.10, 0.34, lane_n) * np.exp(-0.5 * (x / 0.85) ** 2) * 0.75
+        dust_f = self._filament_dust(us, vs) * (0.4 + 0.6 * wide)
+        dust = 1.0 - (1.0 - lanes) * (1.0 - dust_f)
+        f = fade[sel]
+        out["prof"][sel] = prof * f
+        out["dens"][sel] = dens * f
+        out["mag"][sel] = mag * f
+        out["dust"][sel] = dust * f
+        return out
+
+    def _nebula(self, d, el):
+        """Farbe (linear) und Deckkraft des Bandes sowie die Staubdichte."""
+        n = len(d)
+        bf = self.band_fields(d, el)
+        sel = bf["sel"]
+        col = np.zeros((n, 3))
+        a = np.zeros(n)
+        if not sel.any():
+            return col, a, bf["dust"]
+        dens, mag, dust = bf["dens"][sel], bf["mag"][sel], bf["dust"][sel]
+        grain = 1.0 + 0.25 * self.noise3.fbm(d[sel] * 260.0, octaves=2)  # unaufgeloeste Sterne
         core = hex_lin("#5A8FA8")
         magc = hex_lin("#9B6BB8")
-        a_core = np.clip(0.12 * 1.35 * dens * grain * (1.0 - 0.9 * dst), 0, 0.5) * fade[sel]
-        a_mag = np.clip(0.08 * 1.3 * mag * (1.0 - 0.7 * dst), 0, 0.3) * fade[sel]
+        a_core = np.clip(0.12 * 1.25 * dens * grain * (1.0 - 0.92 * dust), 0, 0.2)
+        a_mag = np.clip(0.08 * mag * (1.0 - 0.7 * dust), 0, 0.1)
         # zwei Schichten "over" zusammenfassen
         a_tot = 1 - (1 - a_core) * (1 - a_mag)
-        c_tot = (core[None, :] * a_core[:, None] * (1 - a_mag[:, None]) + magc[None, :] * a_mag[:, None])
+        c_tot = core[None, :] * a_core[:, None] * (1 - a_mag[:, None]) + magc[None, :] * a_mag[:, None]
         col[sel] = c_tot / np.maximum(a_tot, 1e-9)[:, None]
         a[sel] = a_tot
-        dust[sel] = dst * fade[sel]
-        return col, a, dust
+        return col, a, bf["dust"]
 
     # -- Sterne ------------------------------------------------------------
     def _random_dirs(self, rng, n, band_boost=0.6):
@@ -952,7 +999,7 @@ class SkyModel:
         cc = dir_from_az_el(sp.cluster[0], sp.cluster[1])
         r0, u0 = _screen_frame(cc)
         uu = rng.random(sp.n_cluster) * 0.93
-        rr = 1.05 / np.sqrt(uu ** (-2.0 / 3.0) - 1.0)
+        rr = 1.35 / np.sqrt(uu ** (-2.0 / 3.0) - 1.0)
         rr = np.minimum(rr, sp.cluster[2] / 2.0 * 1.15)
         th = rng.uniform(0, 2 * np.pi, sp.n_cluster)
         ox = np.radians(rr) * np.cos(th) * 1.25
@@ -967,6 +1014,23 @@ class SkyModel:
         fw = np.concatenate([fw_s, fw_m, fw_c])
         pk = np.concatenate([pk_s, pk_m, pk_c])
         rgb = np.concatenate([self._star_colors(rng, sp.n_small), self._star_colors(rng, sp.n_medium), rgb_c])
+        # Sternstaub: viele sehr schwache Sterne (Referenzbild wirkt dicht), im Band nach Wolkendichte
+        n_dust = 4500
+        pos_d = self._random_dirs(rng, n_dust, band_boost=0.6)
+        fw_d = rng.uniform(0.035, 0.06, n_dust)
+        pk_d = 0.06 + 0.22 * rng.random(n_dust) ** 2.0
+        cand = normalize(rng.normal(size=(60000, 3)))
+        bf = self.band_fields(cand)
+        w = bf["dens"] * (1.0 - 0.85 * bf["dust"])
+        pos_b = cand[rng.random(len(cand)) < w / max(w.max(), 1e-9)][:9000]
+        nb = len(pos_b)
+        fw_b = rng.uniform(0.035, 0.065, nb)
+        pk_b = 0.05 + 0.25 * rng.random(nb) ** 2.2
+        pos = np.concatenate([pos, pos_d, pos_b])
+        fw = np.concatenate([fw, fw_d, fw_b])
+        pk = np.concatenate([pk, pk_d, pk_b])
+        rgb = np.concatenate([rgb, self._star_colors(rng, n_dust), self._star_colors(rng, nb)])
+        self.n_band_stars = nb
         self.stars = StarField(pos, fw, pk, rgb)
         # helle Sterne mit Glow
         pos_b = self._random_dirs(rng, sp.n_bright, band_boost=0.3)
@@ -984,8 +1048,12 @@ class SkyModel:
         s = np.clip(np.sin(np.radians(np.maximum(el, 0.0))), 0, 1)
         t = (1.0 - s) ** 1.9
         up = zen[None, :] * (1 - t[:, None]) + hor[None, :] * t[:, None]
-        tb = smoothstep(0.0, -9.0, el)
-        low = hor[None, :] * (1 - tb[:, None]) + bel[None, :] * tb[:, None]
+        # unter dem Horizont: Tuerkis -> Daemmerblau -> Violett (direkt gemischt wuerde es grau)
+        mid = hex_rgb("#22364E")
+        t1 = smoothstep(0.0, -5.0, el)
+        t2 = smoothstep(-3.0, -13.0, el)
+        low = hor[None, :] * (1 - t1[:, None]) + mid[None, :] * t1[:, None]
+        low = low * (1 - t2[:, None]) + bel[None, :] * t2[:, None]
         low *= (1.0 - 0.28 * smoothstep(-12.0, -70.0, el))[:, None]
         col = np.where((el >= 0)[:, None], up, low)
         return srgb_to_linear(col), el
@@ -1018,14 +1086,17 @@ class SkyModel:
         daz = np.abs((az - sun_az + 180.0) % 360.0 - 180.0)
         w_az = w_az * (0.75 + 0.25 * np.exp(-(daz / 35.0) ** 2))
         h = sp.horizon_glow_height
-        w_el = np.where(el >= 0, np.exp(-el / (h * 0.42)), np.exp(el / 1.6))
+        e = el - 0.6
+        w_el = np.where(e >= 0, np.exp(-e / (h * 0.40)) * (0.82 + 0.18 * np.exp(-e / 0.8)),
+                        np.exp(-0.5 * (e / 2.2) ** 2))
         ga = sp.horizon_glow_alpha * w_az * w_el
         glow = hex_lin(sp.horizon_glow)
         col = col * (1 - ga[:, None]) + glow[None, :] * ga[:, None]
         # Sonnen-Glow bis 12 Grad (+ breiter, sehr schwacher Hof)
         ang_s = np.degrees(np.arccos(np.clip(d @ self.sun_dir, -1, 1)))
         r = sp.sun_disc_deg / 2.0
-        p = np.clip(1.0 - (np.maximum(ang_s - r, 0.0) / (sp.sun_glow_deg - r)), 0, 1) ** 2.2
+        x = np.clip(np.maximum(ang_s - r, 0.0) / (sp.sun_glow_deg - r), 0, 1)
+        p = (0.65 * np.exp(-4.2 * x) + 0.35 * np.exp(-1.6 * x)) * (1 - x * x) ** 2
         ga = sp.sun_glow_alpha * p
         col = col * (1 - ga[:, None]) + hex_lin(sp.sun_glow)[None, :] * ga[:, None]
         col += hex_lin("#FFB070")[None, :] * (0.05 * np.exp(-ang_s / 9.0))[:, None]
@@ -1035,16 +1106,14 @@ class SkyModel:
     # -- Himmelskoerper ----------------------------------------------------
     def bodies_mask(self, d, fp):
         m = np.zeros(len(d), dtype=bool)
-        for b in self.bodies:
-            c, r = b.cone()
+        for c, r in self.cones:
             m |= d @ c > np.cos(r + 2.0 * fp)
         return m
 
     def bodies_shade(self, d):
         rgb = np.zeros((len(d), 3))
         a = np.zeros(len(d))
-        for b in self.bodies:
-            c, r = b.cone()
+        for b, (c, r) in zip(self.bodies, self.cones):
             sel = d @ c > math.cos(r)
             if sel.any():
                 cr, ca = b.shade(d[sel])
@@ -1056,7 +1125,7 @@ class SkyModel:
         """Ein Hauch Himmelsfarbe ueber den Koerpern (sie stehen 'im' Himmel, nicht davor geklebt)."""
         g, el = self.gradient(d)
         trans = 0.90 + 0.08 * smoothstep(5.0, 60.0, el)
-        return g * 0.45, trans
+        return g * 0.30, trans
 
     # -- Pixel -------------------------------------------------------------
     def shade_pixels(self, d, fp, sub_dirs, ss=4, rng=None):
@@ -1116,7 +1185,7 @@ ROBLOX_FACES = {
 def roblox_lookup(d):
     """Umkehrung: Richtung -> (Flaeche, u, v) wie Roblox die Skybox abtastet."""
     d = np.asarray(d, dtype=np.float64)
-    ax, ay, az = np.abs(d[:, 0]), np.abs(d[:, 1]), np.abs(d[:, 2])
+    ax, ay, az = (np.maximum(np.abs(d[:, i]), 1e-300) for i in range(3))
     face = np.empty(len(d), dtype=object)
     u = np.zeros(len(d))
     v = np.zeros(len(d))
@@ -1162,7 +1231,7 @@ def threejs_lookup(d):
     """So wie three.js die CubeTexture abtastet (zum Pruefen): Richtung -> (Flaeche, s, t in [-1,1])."""
     r = np.asarray(d, dtype=np.float64).copy()
     r[:, 0] *= -1.0
-    ax, ay, az = np.abs(r[:, 0]), np.abs(r[:, 1]), np.abs(r[:, 2])
+    ax, ay, az = (np.maximum(np.abs(r[:, i]), 1e-300) for i in range(3))
     face = np.empty(len(r), dtype=object)
     s = np.zeros(len(r))
     t = np.zeros(len(r))

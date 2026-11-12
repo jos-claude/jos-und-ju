@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weltvorschau Insel 1</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0a1b2c; overflow: hidden; }
+  canvas { display: block; }
+  #hud { position: fixed; left: 8px; top: 8px; color: #fff; font: 12px/1.4 monospace; text-shadow: 0 1px 2px #000; pointer-events: none; }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "/node_modules/three/build/three.module.js",
+    "three/addons/": "/node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="hud">lade ...</div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

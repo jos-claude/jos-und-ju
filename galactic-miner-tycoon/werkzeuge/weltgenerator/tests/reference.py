@@ -51,32 +51,45 @@ def column_material(world, ix, iz, h, yc):
     return layers["bedrock"]
 
 
-def expected_voxels(world):
-    """-> (voxels {(vx,vy,vz): (material, occupancy)}, void_water_columns {(vx,vz): level})."""
-    vox = {}
-    void_water = {}
-    cols = np.argwhere((world.h > VOID) | (world.water > 0))
+def expected_voxels(world, mode="channels"):
+    """Erwartete Voxel je Spalte aus den README-Regeln.
+
+    mode "channels": -> (solid {(vx,vy,vz): (material, belegung)}, liquid {(vx,vy,vz): belegung})
+        Wasser steht nur im Fluessigkeitskanal: Spalten mit Terrain, Wasserstand ueber der Oberkante,
+        Voxel mit yb < Stand und yb+4 > h, Wert min(1, (Stand-yb)/4).
+    mode "fallback": -> (solid inkl. Material Water in Voxeln ohne feste Belegung, {})
+    Spalten ohne Terrain (VOID) bekommen nie Wasser.
+    """
+    solid, liquid = {}, {}
+    cols = np.argwhere(world.h > VOID)
     for iz, ix in cols.tolist():
         wi = int(world.water[iz, ix])
         wl = world.water_levels[wi - 1] if wi else None
         h = quant_height(float(world.h[iz, ix]))
-        vxz = (ix + ORIGIN_VOXEL, iz + ORIGIN_VOXEL)
-        if h is None:
-            if wl is not None:
-                void_water[vxz] = wl
-            continue
+        vx, vz = ix + ORIGIN_VOXEL, iz + ORIGIN_VOXEL
         bottom = h - int(world.depth[iz, ix]) * CELL
         k0 = int(math.floor(bottom / CELL)) - 1
-        k1 = int(math.ceil((max(h, wl if wl is not None else h)) / CELL)) + 1
+        k1 = int(math.ceil(max(h, wl if wl is not None else h) / CELL)) + 1
         for k in range(k0, k1 + 1):
             yb = k * CELL
+            has_solid = False
             if yb < h and yb + CELL > bottom:
                 m = column_material(world, ix, iz, h, yb + CELL / 2)
-                if m != "Air":
-                    vox[(vxz[0], k, vxz[1])] = (m, min(1.0, (h - yb) / CELL))
-            elif wl is not None and yb >= h and yb < wl:
-                vox[(vxz[0], k, vxz[1])] = ("Water", min(1.0, (wl - yb) / CELL))
-    return vox, void_water
+                if m == "Air":
+                    m = LAYERS_BEDROCK(world)  # Schutz: Index 0 ohne Schicht-Flag (der Exporter ersetzt das schon durch Ground)
+                solid[(vx, k, vz)] = (m, min(1.0, (h - yb) / CELL))
+                has_solid = True
+            if wl is not None and wl > h and yb < wl and yb + CELL > h:
+                occ = min(1.0, (wl - yb) / CELL)
+                if mode == "channels":
+                    liquid[(vx, k, vz)] = occ
+                elif not has_solid:
+                    solid[(vx, k, vz)] = ("Water", occ)
+    return solid, liquid
+
+
+def LAYERS_BEDROCK(world):
+    return world.meta["layers"]["bedrock"]
 
 
 # ---------------------------------------------------------------- Deko

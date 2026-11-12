@@ -98,9 +98,11 @@ def make_bundle(wb_dir: Path, out_file: Path):
     mod.main()
 
 
-def lune_scenario(mode, path, name, scenario):
+def lune_scenario(mode, path, name, scenario, chan="channels"):
     res = OUT / f"result_{name}.json"
-    p, secs = run_lune([HERE / "lune_check.luau", mode, path, res, scenario], name)
+    if res.exists():
+        res.unlink()
+    p, secs = run_lune([HERE / "lune_check.luau", mode, path, res, scenario, chan], name)
     if p.returncode != 0 or not res.exists():
         return None, secs
     return json.loads(res.read_text()), secs
@@ -174,65 +176,86 @@ def run_decoder_tests(builder: Path):
 
 # ------------------------------------------------------------------ Vergleiche
 
-def voxel_dict(calls):
-    d, bad_air, bad_zero = {}, 0, 0
+def collect(calls):
+    """-> solid {(vx,vy,vz): (mat, occ)}, liquid {(vx,vy,vz): occ}, bad_air, bad_zero, doppelte Schluessel."""
+    solid, liquid, dups = {}, {}, []
+    bad_air = bad_zero = 0
     for c in calls:
-        if c["m"] != "WriteVoxels":
+        if c["m"] not in ("WriteVoxels", "WriteVoxelChannels"):
             continue
         bad_air += c["badAirOcc"]
         bad_zero += c["badSolidZero"]
         for x, y, z, m, o in zip(c["vx"], c["vy"], c["vz"], c["mat"], c["occ"]):
-            if (x, y, z) in d:
-                d.setdefault("__dup__", []).append((x, y, z))
-            d[(x, y, z)] = (m, o)
-    return d, bad_air, bad_zero
+            if (x, y, z) in solid:
+                dups.append((x, y, z))
+            solid[(x, y, z)] = (m, o)
+        for x, y, z, l in zip(c.get("lvx", []), c.get("lvy", []), c.get("lvz", []), c.get("lq", [])):
+            if (x, y, z) in liquid:
+                dups.append((x, y, z))
+            liquid[(x, y, z)] = l
+    return solid, liquid, bad_air, bad_zero, dups
 
 
-def compare_terrain(area, build, world, exp_vox, void_water):
+def diff_dict(act, exp, tol=1e-9):
+    missing = [k for k in exp if k not in act]
+    extra = [k for k in act if k not in exp]
+    wrong = []
+    for k in exp:
+        if k in act:
+            a, e = act[k], exp[k]
+            if isinstance(e, tuple):
+                if a[0] != e[0] or abs(a[1] - e[1]) > tol:
+                    wrong.append(k)
+            elif abs(a - e) > tol:
+                wrong.append(k)
+    return missing, extra, wrong
+
+
+def compare_terrain(area, build, world, mode):
+    """mode: channels | fallback (WriteVoxels ohne Kanaele, auch nach fehlgeschlagenem WriteVoxelChannels)."""
+    exp_solid, exp_liquid = reference.expected_voxels(world, mode)
     calls = build["terrain"]
-    writes = [c for c in calls if c["m"] == "WriteVoxels"]
+    names = [c["m"] for c in calls]
     check(area, "Build fehlerfrei", build["ok"], str(build.get("err"))[:600])
     if not build["ok"]:
         return
-    names = [c["m"] for c in calls]
-    check(area, "Terrain:Clear() genau einmal, vor dem ersten WriteVoxels", names.count("Clear") == 1 and names.index("Clear") < names.index("WriteVoxels"), str(names[:6]))
-    # Regionen: 16x16-Spalten, Raster, Auflösung
-    ok = all(c["dims"][0] == 16 and c["dims"][2] == 16 and (c["min"][0] - (-HALF)) % 64 == 0 and (c["min"][2] - (-HALF)) % 64 == 0 for c in writes)
-    check(area, "Region3: 64x64 Studs am Raster, Y-Hoehe = dims[2]*4 (Mock prueft Array-Masse [x][y][z])", ok)
-    ok = all(abs((c["max"][1] - c["min"][1]) - c["dims"][1] * 4) < 1e-9 for c in writes)
-    check(area, "Region3-Y-Groesse passt zur Array-Hoehe", ok)
-    keyset = {(c["min"][0], c["min"][2]) for c in writes}
-    check(area, "keine doppelt geschriebenen Bloecke", len(keyset) == len(writes))
-    act, bad_air, bad_zero = voxel_dict(calls)
-    dups = act.pop("__dup__", [])
+    writes = [c for c in calls if c["m"] in ("WriteVoxels", "WriteVoxelChannels")]
+    first_write = min(i for i, n in enumerate(names) if n in ("WriteVoxels", "WriteVoxelChannels", "WriteVoxelChannelsFail"))
+    check(area, "Terrain:Clear() genau einmal und VOR SetMaterialColor, Wasser-Eigenschaften und dem ersten Schreiben",
+          names.count("Clear") == 1 and names.index("Clear") == 0 and all(i > 0 for i, n in enumerate(names) if n in ("SetMaterialColor", "SetProp")), str(names[:6]))
+    if mode == "channels":
+        check(area, "Schreiben nur ueber WriteVoxelChannels (Kanaele SolidMaterial, SolidOccupancy, LiquidOccupancy), kein WriteVoxels",
+              names.count("WriteVoxels") == 0 and writes and all(sorted(c["keys"]) == ["LiquidOccupancy", "SolidMaterial", "SolidOccupancy"] for c in writes))
+    else:
+        check(area, "Rueckfall: nur WriteVoxels" + (", WriteVoxelChannels nur ein einziges Mal versucht (dauerhafter Rueckfall)" if "WriteVoxelChannelsFail" in names else ""),
+              names.count("WriteVoxelChannels") == 0 and names.count("WriteVoxelChannelsFail") <= 1 and writes
+              and (names.count("WriteVoxelChannelsFail") == 0 or names.index("WriteVoxelChannelsFail") < first_write + 1),
+              f"{names.count('WriteVoxelChannelsFail')} Versuche")
+    ok = all(c["dims"][0] == 16 and c["dims"][2] == 16 and (c["min"][0] + HALF) % 64 == 0 and (c["min"][2] + HALF) % 64 == 0 for c in writes)
+    check(area, "Region3: 64x64 Studs am Raster (Mock prueft Array-Masse [x][y][z] fuer alle Kanaele)", ok)
+    check(area, "Region3-Y-Groesse passt zur Array-Hoehe", all(abs((c["max"][1] - c["min"][1]) - c["dims"][1] * 4) < 1e-9 for c in writes))
+    check(area, "keine doppelt geschriebenen Bloecke", len({(c["min"][0], c["min"][2]) for c in writes}) == len(writes))
+    solid, liquid, bad_air, bad_zero, dups = collect(calls)
     check(area, "keine Voxel doppelt belegt", not dups, str(dups[:3]))
-    check(area, "Belegung: Feststoff/Wasser nie mit Belegung 0", bad_zero == 0, f"solid0={bad_zero}")
-    n_air_cols = int(((world.mat & 31) == 0)[(world.h > VOID) & ((world.mat & 32) == 0)].sum())
-    INFO.append(f"[{area}] Air-Voxel mit Belegung>0 geschrieben: {bad_air} (erwartet aus {n_air_cols} Spalte(n) mit Material-Index 0 ohne Schicht-Flag; die Weltdaten sollten das nie enthalten)")
-    vw = set(void_water)
-    act_f = {k: v for k, v in act.items() if (k[0], k[2]) not in vw}
-    exp_f = {k: v for k, v in exp_vox.items() if (k[0], k[2]) not in vw}
-    missing = [k for k in exp_f if k not in act_f]
-    extra = [k for k in act_f if k not in exp_f]
-    wrong_mat = [k for k in exp_f if k in act_f and act_f[k][0] != exp_f[k][0]]
-    wrong_occ = [k for k in exp_f if k in act_f and abs(act_f[k][1] - exp_f[k][1]) > 1e-9]
-    check(area, f"Voxel vollstaendig ({len(exp_f)} erwartet, {len(act_f)} geschrieben)", not missing and not extra,
-          f"fehlen {len(missing)} {missing[:3]}; zuviel {len(extra)} {extra[:3]}")
-    check(area, "Voxel-Material (Deckschicht/Unterboden/Grundgestein/Schichtbaender/Wasser)", not wrong_mat,
-          f"{len(wrong_mat)} falsch, z.B. {[(k, act_f[k][0], exp_f[k][0]) for k in wrong_mat[:3]]}")
-    check(area, "Voxel-Belegung (Viertel-Studs, Wasserstand)", not wrong_occ,
-          f"{len(wrong_occ)} falsch, z.B. {[(k, act_f[k][1], exp_f[k][1]) for k in wrong_occ[:3]]}")
+    check(area, "Belegung: Feststoff nie mit Belegung 0, Air nie mit Belegung>0", bad_zero == 0 and bad_air == 0, f"solid0={bad_zero} airOcc={bad_air}")
+    ms, es, ws = diff_dict(solid, exp_solid)
+    check(area, f"Feste Voxel vollstaendig ({len(exp_solid)} erwartet, {len(solid)} geschrieben)", not ms and not es,
+          f"fehlen {len(ms)} {ms[:3]}; zuviel {len(es)} {es[:3]}")
+    wm = [k for k in ws if solid[k][0] != exp_solid[k][0]]
+    wo = [k for k in ws if k not in wm]
+    check(area, "Voxel-Material (Deckschicht/Unterboden/Grundgestein/Schichtbaender" + ("/Wasser im Rueckfall" if mode == "fallback" else "") + ")", not wm,
+          f"{len(wm)} falsch, z.B. {[(k, solid[k][0], exp_solid[k][0]) for k in wm[:3]]}")
+    check(area, "Voxel-Belegung (Viertel-Studs" + (", Wasser" if mode == "fallback" else "") + ")", not wo,
+          f"{len(wo)} falsch, z.B. {[(k, solid[k][1], exp_solid[k][1]) for k in wo[:3]]}")
+    if mode == "channels":
+        check(area, "SolidMaterial enthaelt nie Water (Mock wirft sonst)", not any(m == "Water" for m, _ in solid.values()))
+        ml, el, wl_ = diff_dict(liquid, exp_liquid)
+        check(area, f"LiquidOccupancy (nur Spalten mit Terrain und Stand > Oberkante; {len(exp_liquid)} erwartet, {len(liquid)} geschrieben)", not ml and not el and not wl_,
+              f"fehlen {len(ml)} {ml[:2]}; zuviel {len(el)} {el[:3]}; falscher Wert {len(wl_)} {[(k, liquid[k], exp_liquid[k]) for k in wl_[:2]]}")
     kinds = {}
-    for k, (m, o) in exp_f.items():
+    for k, (m, o) in solid.items():
         kinds[m] = kinds.get(m, 0) + 1
-    INFO.append(f"[{area}] Materialien in Erwartung: " + ", ".join(f"{m}:{n}" for m, n in sorted(kinds.items())))
-    # Wasser ueber VOID: Beobachtung (README definiert nichts)
-    for (vx, vz), lvl in void_water.items():
-        col = [(k, v) for k, v in act.items() if (k[0], k[2]) == (vx, vz)]
-        if len(void_water) < 10:
-            ys = sorted(k[1] for k, _ in col)
-            INFO.append(f"[{area}] Wasser ueber VOID-Spalte ({vx},{vz}) Stand {lvl}: Luau schrieb {len(col)} Voxel"
-                        + (f" (y-Index {ys[0]}..{ys[-1]}, also {ys[0]*4}..{ys[-1]*4+4} Studs)" if col else " -> Wasser fehlt (Block ohne Terrain wird uebersprungen oder Stand liegt ueber dem Block)"))
+    INFO.append(f"[{area}] feste Voxel nach Material: " + ", ".join(f"{m}:{n}" for m, n in sorted(kinds.items())) + (f"; Fluessigkeits-Voxel: {len(liquid)}" if mode == "channels" else ""))
     # Zusatzformen
     exp_ops = []
     for op in world.terrain_ops:
@@ -266,7 +289,7 @@ def compare_terrain(area, build, world, exp_vox, void_water):
     tp = build["terrainProps"]["props"]
     ok = all(k in tp for k in world.meta["water"]) and close(tp["WaterColor"], [v / 255 for v in world.meta["water"]["WaterColor"]], 1e-9) and tp["WaterTransparency"] == 0.9
     check(area, "Terrain-Wassereigenschaften gesetzt", ok, str(tp))
-    return act
+    return solid
 
 
 def compare_props(area, build, world):
@@ -370,7 +393,9 @@ def compare_lighting(area, build, world, skybox=None):
     warns = [l["m"] for l in build["logs"] if l["k"] == "warn"]
     check(area, "keine Warnungen beim Setzen von Eigenschaften", not [w for w in warns if "nicht gesetzt" in w], str(warns[:3]))
     bk = {k["name"] for k in (build["backup"] or {"kids": []})["kids"]}
-    check(area, "alte Sky/Atmosphere/Bloom nach ServerStorage.WorldBuilderBackup gesichert, fremde Kinder bleiben", {"OldSky", "OldAtmosphere", "OldBloom"} <= bk and "KeepMe" in kids, str(bk))
+    check(area, "fremde alte Effekte (OldSky, OldAtmosphere, OldBloom, WorldMine ohne Attribut) im Backup, fremde Kinder (KeepMe) bleiben", bk == {"OldSky", "OldAtmosphere", "OldBloom", "WorldMine"} and "KeepMe" in kids and "WorldMine" not in kids, str(bk))
+    check(area, "Rest eines frueheren Builds (WorldOld mit Attribut) zerstoert, nicht gesichert; neue World*-Kinder tragen das Attribut",
+          "WorldOld" not in kids and "WorldOld" not in bk and all(kids[n]["attrs"].get("WorldBuilder") is True for n in kids if n.startswith("World")), str(sorted(kids)))
     if skybox:
         sky = kids["WorldSky"]["props"]
         got = {k: sky.get("Skybox" + k) for k in skybox}
@@ -409,11 +434,20 @@ def main():
 
     print("1) Test-Welt bauen ...")
     world = make_world.build_world()
-    exp_vox, void_water = reference.expected_voxels(world)
-    print(f"   {len(exp_vox)} erwartete Voxel, {len(world.placements)} Platzierungen")
+    n_void_water = int(((world.water > 0) & (world.h <= VOID)).sum())
+    n_mat0 = int(((world.mat == 0) & (world.h > VOID)).sum())
 
     print("2) Exportieren ...")
-    wb, stats = export_world(world, "world", args.builder, args.settings)
+    import contextlib, io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        wb, stats = export_world(world, "world", args.builder, args.settings)   # der Exporter bereinigt die Welt (Wasser ueber VOID, Index 0)
+    warn_text = buf.getvalue()
+    check("Exporter", f"Wasser ueber VOID ({n_void_water} Spalten) wird mit WARNUNG entfernt", n_void_water > 0 and "WARNUNG" in warn_text and not ((world.water > 0) & (world.h <= VOID)).any(), warn_text[:200])
+    check("Exporter", f"Material-Index 0 ohne Schicht-Flag ({n_mat0} Spalten) wird mit WARNUNG zu Ground", n_mat0 > 0 and "Index 0" in warn_text and not ((world.mat == 0) & (world.h > VOID)).any(), warn_text[:200])
+    exp_solid, exp_liquid = reference.expected_voxels(world, "channels")
+    exp_fb, _ = reference.expected_voxels(world, "fallback")
+    print(f"   {len(exp_solid)} feste + {len(exp_liquid)} Fluessigkeits-Voxel erwartet, {len(world.placements)} Platzierungen")
     wb_chunks, stats2 = export_world(world, "world_chunks", args.builder, args.settings, chunk_chars=20)
     nchunks = json.loads("{}") or None
     meta_chunks = {n: len(list((wb_chunks / "Data" / "Terrain").glob(f"{n}_*.luau"))) for n in "HMWSD"}
@@ -437,21 +471,21 @@ def main():
               str(r_full.get("error") or [b["err"] for b in r_full["builds"] if not b["ok"]])[:800])
         if r_full["builds"] and r_full["builds"][0]["ok"]:
             b1 = r_full["builds"][0]
-            compare_terrain("init.luau/Terrain", b1, world, exp_vox, void_water)
+            compare_terrain("init.luau/Terrain (WriteVoxelChannels)", b1, world, "channels")
             compare_props("init.luau/Deko", b1, world)
             compare_lighting("init.luau/Licht", b1, world)
             compare_misc("init.luau/Sonstiges", b1, world)
             if len(r_full["builds"]) > 1:
                 b2 = r_full["builds"][1]
-                a1, _, _ = voxel_dict(b1["terrain"])
-                a2, _, _ = voxel_dict(b2["terrain"])
-                a1.pop("__dup__", None); a2.pop("__dup__", None)
-                check("init.luau/Neubau", "zweiter Build() liefert dieselben Voxel", b2["ok"] and a1 == a2)
+                a1, a2 = collect(b1["terrain"]), collect(b2["terrain"])
+                check("init.luau/Neubau", "zweiter Build() liefert dieselben Voxel (fest und fluessig)", b2["ok"] and a1[0] == a2[0] and a1[1] == a2[1])
                 check("init.luau/Neubau", "zweiter Build(): weiterhin genau ein Island1, Lighting ohne doppelte Effekte",
                       b2["ok"] and len(b2["islands"]) == 1 and sorted(k["name"] for k in b2["lighting"]["kids"]) == sorted(k["name"] for k in b1["lighting"]["kids"]),
                       str([k["name"] for k in b2["lighting"]["kids"]]))
                 n1 = len(b1["backup"]["kids"]); n2 = len((b2["backup"] or {"kids": []})["kids"])
-                INFO.append(f"Backup-Ordner: nach Build 1: {n1} Kinder, nach Build 2: {n2} (eigene alte World*-Effekte werden mit weggesichert)")
+                check("init.luau/Neubau", f"Backup waechst nicht mehr (nach Build 1: {n1}, nach Build 2: {n2}); eigene Effekte werden zerstoert, nicht gesichert",
+                      n1 == n2 == 4 and sorted(k["name"] for k in b2["backup"]["kids"]) == ["OldAtmosphere", "OldBloom", "OldSky", "WorldMine"],
+                      str([k["name"] for k in (b2["backup"] or {"kids": []})["kids"]]))
             for n in r_full["notes"]:
                 INFO.append("Mock-Notiz: " + n)
     # Terrain mit kleinen Base64-Stuecken
@@ -460,13 +494,12 @@ def main():
     if r_ch is None:
         check("Base64-Stuecke", "Lune-Lauf", False, "")
     else:
-        a = voxel_dict(r_ch["builds"][0]["terrain"])[0] if r_ch["builds"] and r_ch["builds"][0]["ok"] else None
+        a = collect(r_ch["builds"][0]["terrain"]) if r_ch["builds"] and r_ch["builds"][0]["ok"] else None
         if a is not None:
-            a.pop("__dup__", None)
-            vw = set(void_water)
-            af = {k: v for k, v in a.items() if (k[0], k[2]) not in vw}
-            ef = {k: v for k, v in exp_vox.items() if (k[0], k[2]) not in vw}
-            check("Base64-Stuecke", "Terrain identisch bei 20-Zeichen-Stuecken (viele Stueck-Grenzen, Padding im letzten Stueck)", af == ef, f"{len(af)} vs {len(ef)}")
+            ms, es, ws = diff_dict(a[0], exp_solid)
+            ml, el, wl_ = diff_dict(a[1], exp_liquid)
+            check("Base64-Stuecke", "Terrain identisch bei 20-Zeichen-Stuecken (viele Stueck-Grenzen, Padding im letzten Stueck)",
+                  not (ms or es or ws), f"fest: fehlen {len(ms)} zuviel {len(es)} falsch {len(ws)}; fluessig: {len(ml)}/{len(el)}/{len(wl_)} (Flüssigkeits-Abweichungen koennen vom Befund 'Stand unter Oberkante' kommen)")
         else:
             check("Base64-Stuecke", "Build fehlerfrei", False, str(r_ch["builds"][0]["err"] if r_ch["builds"] else r_ch.get("error"))[:500])
     # Optionen
@@ -474,17 +507,29 @@ def main():
     if r_t and r_t["builds"] and r_t["builds"][0]["ok"]:
         b = r_t["builds"][0]
         check("Optionen", "Build{terrain=false, lighting=false}: kein Terrain-Aufruf, Deko da, Licht unberuehrt",
-              not b["terrain"] and len(b["islands"]) == 1 and b["islands"][0]["kids"] and not any(k["name"].startswith("World") for k in b["lighting"]["kids"]))
+              not b["terrain"] and len(b["islands"]) == 1 and b["islands"][0]["kids"]
+              and sorted(k["name"] for k in b["lighting"]["kids"]) == ["KeepMe", "OldAtmosphere", "OldBloom", "OldSky", "WorldMine", "WorldOld"] and b.get("backup") is None,
+              str([k["name"] for k in b["lighting"]["kids"]]))
     else:
         check("Optionen", "terrain=false lief", False, str(r_t and (r_t.get("error") or r_t["builds"][0]["err"]))[:400])
     r_p, _ = lune_scenario("init", wb, "init_props_off", "props_off")
     if r_p and r_p["builds"] and r_p["builds"][0]["ok"]:
         b = r_p["builds"][0]
         check("Optionen", "Build{props=false, hideBaseplate=false}: Terrain da, alter Island1 unberuehrt, Baseplate sichtbar",
-              any(c["m"] == "WriteVoxels" for c in b["terrain"]) and len(b["islands"]) == 1 and b["islands"][0]["kids"][0]["name"] == "AlterInhalt")
+              any(c["m"] in ("WriteVoxels", "WriteVoxelChannels") for c in b["terrain"]) and len(b["islands"]) == 1 and b["islands"][0]["kids"][0]["name"] == "AlterInhalt")
         compare_misc("Optionen", b, world, hidden=False)
     else:
         check("Optionen", "props=false lief", False, str(r_p and (r_p.get("error") or r_p["builds"][0]["err"]))[:400])
+    # WriteVoxelChannels fehlt / wirft: Rueckfall auf WriteVoxels
+    for chan, label in (("nochannels", "Methode fehlt"), ("failchannels", "Methode wirft beim ersten Aufruf")):
+        r_n, secs = lune_scenario("init", wb, f"init_{chan}", "terrain_only", chan)
+        INFO.append(f"init_{chan}: {secs:.1f} s")
+        if r_n and r_n["builds"] and r_n["builds"][0]["ok"]:
+            compare_terrain(f"Rueckfall ({label})", r_n["builds"][0], world, "fallback")
+            lg = [l["m"] for l in r_n["builds"][0]["logs"]]
+            check(f"Rueckfall ({label})", "Hinweis 'WriteVoxelChannels fehlgeschlagen' geloggt", any("WriteVoxelChannels fehlgeschlagen" in m for m in lg), str(lg[:3]))
+        else:
+            check(f"Rueckfall ({label})", "Build lief", False, str(r_n and (r_n.get("error") or r_n["builds"][0]["err"]))[:500])
     r_s, _ = lune_scenario("init", wb_sky, "init_sky", "lighting_only")
     if r_s and r_s["builds"] and r_s["builds"][0]["ok"]:
         compare_lighting("Skybox", r_s["builds"][0], world, skybox=sky_ids)
@@ -506,7 +551,7 @@ def main():
             check(area, "kein Laufzeitfehler", r.get("error") is None and r["builds"] and all(b["ok"] for b in r["builds"]), str(r.get("error") or [b["err"] for b in r["builds"] if not b["ok"]])[:800])
             if r["builds"] and r["builds"][0]["ok"]:
                 b1 = r["builds"][0]
-                compare_terrain(area + "/Terrain", b1, world, exp_vox, void_water)
+                compare_terrain(area + "/Terrain", b1, world, "channels")
                 compare_props(area + "/Deko", b1, world)
                 compare_lighting(area + "/Licht", b1, world)
                 compare_misc(area + "/Sonstiges", b1, world)

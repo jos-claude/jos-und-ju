@@ -46,7 +46,7 @@ def export(world: World, out_dir: Path):
                     "shape": p.shape, "size": list(map(float, p.size)), "pos": list(map(float, p.pos)),
                     "rot": [float(x) for x in np.asarray(p.rot).ravel()], "role": p.role, "material": p.material,
                     "transparency": p.transparency, "reflectance": p.reflectance,
-                    "castShadow": p.cast_shadow, "light": p.light,
+                    "castShadow": p.cast_shadow, "light": p.light, "particles": getattr(p, "particles", None),
                 }
                 for p in t.parts
             ],
@@ -62,5 +62,6 @@ def export(world: World, out_dir: Path):
         "terrainOps": _plain(world.terrain_ops),
         "templates": templates,
         "placements": placements,
+        "preview": _plain(getattr(world, "preview", {})),
     }
     (out_dir / "scene.json").write_text(json.dumps(scene))

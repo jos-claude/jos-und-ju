@@ -351,7 +351,7 @@ local function buildTerrain(meta: any)
 									materials[ix][iy][iz] = m
 									occupancy[ix][iy][iz] = occ
 								end
-								if yb < waterLevel and yb + cell > h then
+								if waterLevel > h and yb < waterLevel and yb + cell > h then
 									liquid[ix][iy][iz] = math.min(1, (waterLevel - yb) / cell)
 								end
 							end
@@ -364,7 +364,8 @@ local function buildTerrain(meta: any)
 				)
 				local written = false
 				if useChannels then
-					written = pcall(function()
+					local err
+					written, err = pcall(function()
 						terrain:WriteVoxelChannels(region, cell, {
 							SolidMaterial = materials,
 							SolidOccupancy = occupancy,
@@ -373,7 +374,7 @@ local function buildTerrain(meta: any)
 					end)
 					if not written then
 						useChannels = false
-						log("WriteVoxelChannels nicht verfuegbar, nutze WriteVoxels.")
+						log("WriteVoxelChannels fehlgeschlagen (" .. tostring(err) .. "), nutze WriteVoxels.")
 					end
 				end
 				if not written then
