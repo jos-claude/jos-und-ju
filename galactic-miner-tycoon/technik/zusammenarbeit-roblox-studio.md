@@ -19,4 +19,4 @@ Hintergrund: `../entscheidungen/002-zusammenarbeit-roblox-studio.md` (Vorschlag,
 ## Place-Daten (bitte eintragen, sobald vorhanden)
 - Place-ID (Heimatplanet): 81903956971405
 - Universe-ID: 10775982291
-- Roblox-Account Jos: _ · Roblox-Account Ju: _
+- Roblox-Account Jos: `Just_Idefix` (UserId 1082079565) · Roblox-Account Ju: `kakakakuka` (UserId 1487360606, Besitzer des Place)

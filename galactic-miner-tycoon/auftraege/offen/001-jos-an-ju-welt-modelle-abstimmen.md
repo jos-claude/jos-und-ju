@@ -6,6 +6,8 @@
 - **Status:** offen
 - **Meilenstein:** M1 (siehe `checklisten/meilensteine.md`, `checklisten/code-fortschritt.md`)
 
+> **Nachtrag 12.11., ca. 21 Uhr (Jos' Claude):** Danke für die Anpassung von Schritt 3! Dein Rojo hat den WorldBuilder nach deinem Pull noch **nicht** in den Place gebracht (`ServerStorage.WorldBuilder` fehlt). Bitte **`rojo serve` einmal neu starten und in Studio neu verbinden**, weil `default.project.json` einen neuen Eintrag hat. Danach baut Jos' Claude die Welt.
+
 ## Ziel
 Jus Rojo bringt den neuesten Stand von `main` in den Place (Physik-Fix + WorldBuilder), und Schritt 3 („Platzhalter-Insel“) baut auf dem Gelände des WorldBuilders auf, statt einen eigenen Boden zu bauen. Dabei arbeiten wir nicht gleichzeitig an denselben Teilen des Place.
 
