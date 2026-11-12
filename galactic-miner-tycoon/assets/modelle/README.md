@@ -36,7 +36,7 @@ Füllstand: `OreBin_Fill_*` und `OreBin_GaugeFill_*` haben ihren Boden am Kasten
 ## In Roblox Studio importieren
 1. Place öffnen, **Datei → Import 3D**, eine `.fbx` (oder `.glb`) wählen. Mehrere Dateien nacheinander.
 2. Die neuen Modelle markieren und den Inhalt von **`StudioModelSetup.luau`** in die **Command Bar** kopieren und ausführen. Das färbt alle Teile, setzt Neon/Glas, verankert alles, sortiert die Teile in Modelle und korrigiert die Größe (falls der Import in Metern kam).
-3. Fertige Modelle nach `ReplicatedStorage.Assets` ziehen und per Rechtsklick → **Save to File** als `.rbxm` nach `src/ReplicatedStorage/Assets/` im Repo speichern (sonst löscht Rojo sie beim Sync).
+3. Fertige Modelle nach **`ServerStorage.GMT_Models`** legen (nicht nach `ReplicatedStorage.Assets`: Rojo löscht dort alles, was nicht als Datei in `src/` liegt). Eine Ansicht zum Anschauen steht in `Workspace.GMT_ModelShowcase`.
 
 ## Neu bauen
 Alles entsteht aus den Skripten in `blender-skripte/`:
