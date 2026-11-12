@@ -12,7 +12,7 @@ Wie mehrere Spieler im selben Server zusammenspielen.
 - **Vorschlag:** Jeder Spieler hat eine eigene Basis (Plot), Planeten können gemeinsam besucht werden.
 
 ## Hinweis (Entscheidung 014, Vorschlag)
-Jos und Ju wollen eine Lobby als Raumschiff mit Spielständen (Welten), Freunde einladen und gemeinsam bauen. Details in `../entscheidungen/014-lobby-und-spielstaende.md`.
+Beschlossen (Entscheidung 014): Lobby als Raumschiff mit Spielstand-Pad, 2 Spielstände pro Spieler, bis zu 4 Spieler pro Welt, Beitritt nur auf Einladung. Rechte und Stats pro Welt: siehe `../entscheidungen/014-lobby-und-spielstaende.md`.
 
 ## Offene Fragen
 - [ ] Gemeinsame Basis (Koop) oder jeder für sich?

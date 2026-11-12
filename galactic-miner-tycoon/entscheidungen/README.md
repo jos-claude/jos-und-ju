@@ -22,4 +22,4 @@ Regeln:
 | 011 | [Mindestradius und Spawn nach Fortschritt](011-vorkommen-radius-und-fortschritt.md) | Beschlossen | 11.11.2026 |
 | 012 | [Bänder zusammenführen später, Bohrer aufwertbar, 6 Räume](012-baender-spaeter-bohrer-upgrades-raeume.md) | Beschlossen | 11.11.2026 |
 | 013 | [Inseln als Level, Rakete als Ziel, Stil bestätigt](013-inseln-als-level-und-stil.md) | Beschlossen | 11.11.2026 |
-| 014 | [Lobby-Raumschiff und Spielstände (Welten) mit Koop](014-lobby-und-spielstaende.md) | Vorschlag | 12.11.2026 |
+| 014 | [Lobby-Raumschiff und Spielstände (Welten) mit Koop](014-lobby-und-spielstaende.md) | Beschlossen (Punkt 1 offen) | 12.11.2026 |

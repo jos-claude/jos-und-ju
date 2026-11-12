@@ -1,6 +1,6 @@
 # Entscheidung 014: Lobby-Raumschiff und Spielstände (Welten) mit Koop
 
-- **Status:** Vorschlag (Wunsch von Jos und Ju, Details noch offen)
+- **Status:** Beschlossen (12.11.2026, Ju) für die Punkte 2 bis 6. Punkt 1 (Zeitpunkt) wartet auf Bestätigung.
 - **Datum:** 12.11.2026
 - **Von:** Jos und Ju (aufgeschrieben von Claude)
 - **Betrifft:** 005, 008 (dort stand „Koop später“), `../spiel/13-multiplayer.md`
@@ -25,14 +25,15 @@
 - **Sicherheit (Zielgruppe 8 bis 16):** Kontakt mit Fremden braucht klare Regeln (siehe Fragen).
 - **Zerstören durch Mitspieler:** Es braucht Rechte, damit niemand fremde Basen kaputt macht.
 
-## Offene Fragen (mit Empfehlung)
-1. **Wann bauen?** Empfehlung: M1 zuerst als einzelne Welt ohne Lobby, aber die Daten **schon pro Welt** anlegen. Die Lobby wird danach ein eigener Meilenstein.
-2. **Wie viele Spielstände pro Spieler?** Empfehlung: 3.
-3. **Wie viele Spieler pro Welt?** Empfehlung: bis 4.
-4. **Rechte:** Empfehlung: Besitzer lädt ein und kann Mitglieder entfernen. Alle Mitglieder dürfen bauen und kaufen, das Lager ist gemeinsam. Nur der Besitzer startet die Rakete.
-5. **Spieler-Upgrades (Stärke, Geschwindigkeit):** pro Spieler oder pro Welt? Empfehlung: pro Spieler, sie reisen mit.
-6. **Fremde:** Empfehlung: Beitritt nur auf Einladung des Besitzers, Chat nur der gefilterte Roblox-Standardchat, Meldefunktion von Roblox nutzen.
+## Festlegungen (Ju, 12.11.2026)
+1. **Zeitpunkt:** Vorschlag (noch nicht bestätigt): M1 zuerst ohne Lobby, aber alle Daten schon als „Welt mit ID“ speichern. Die Lobby wird danach ein eigener Meilenstein.
+2. **Spielstände:** **2 pro Spieler.** Weitere Plätze kann man später **mit Robux kaufen** (Monetarisierung, noch nicht gebaut, siehe `../spiel/12-monetarisierung.md`).
+3. **Spieler pro Welt:** **bis zu 4.**
+4. **Rechte:** Der Besitzer lädt ein und kann Mitglieder entfernen. Alle Mitglieder dürfen bauen und kaufen, das Lager ist gemeinsam. Nur der Besitzer startet die Rakete.
+5. **Stärke, Geschwindigkeit und ähnliche Stats** (durch Upgrades und Loot): Sie **gehören zum Spielstand**, nicht zum Spieler überhaupt. Wer eine neue Welt startet, beginnt wieder bei null. Geht man zurück in die alte Welt, sind die Stats dort wieder da. Annahme von Claude: Die Stats gelten über alle Inseln derselben Welt.
+6. **Fremde:** Beitritt **nur auf Einladung** des Besitzers. Chat ist der gefilterte Roblox-Standardchat.
 
 ## Folgen (wenn bestätigt)
-- `../spiel/13-multiplayer.md`, `../spiel/01-spielablauf.md`, `../technik/datenspeicherung.md` (Daten pro Welt), `../technik/architektur.md`, `../checklisten/meilensteine.md`.
+- `../spiel/13-multiplayer.md`, `../spiel/01-spielablauf.md`, `../technik/datenspeicherung.md` (Daten pro Welt und pro Spieler in der Welt), `../technik/architektur.md`, `../checklisten/meilensteine.md`.
 - 008 („Koop später“) wird ersetzt: Koop ist ein Kernmerkmal.
+- Entscheidung 013: Die Annahme „Spieler-Upgrades bleiben auf Insel 2“ gilt nur innerhalb derselben Welt.
