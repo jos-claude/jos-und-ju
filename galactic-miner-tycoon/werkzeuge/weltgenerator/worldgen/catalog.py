@@ -208,8 +208,10 @@ def noodle(rng, k):
     return Template(f"Noodle_{k}", "Flora", parts, variants)
 
 
-def _prism(base, d, b, L, role, mat="Glass", tr=0.3, collide=False, light=None, core=False):
-    """Kristall-Prisma: Glas-Block + Dachfirst-Spitze (45 Grad gedrehter Block), optional Neon-Kern."""
+def _prism(base, d, b, L, role, mat="Glass", tr=0.0, collide=False, light=None, core=False, tip_mat=None):
+    """Kristall-Prisma: Glas-Block + Dachfirst-Spitze (45 Grad gedrehter Block, hellere Farbe), optional Neon-Kern.
+    Handy-Budget: nur Riesen-/Landmarken-Kristalle sind durchsichtig (tr > 0) und haben einen Neon-Kern; kleine und
+    mittlere sind undurchsichtiges Glas (Transparency 0 = guenstig), Leitwirkung ueber hellere Spitzen."""
     R = basis_y(d)
     spin = rot_axis(d, 0.6)
     R = spin @ R
@@ -218,8 +220,9 @@ def _prism(base, d, b, L, role, mat="Glass", tr=0.3, collide=False, light=None, 
                  cast_shadow=False, reflectance=0.08 if mat == "Glass" else 0.0)
     tipR = R @ angles(math.pi / 4, 0, 0)
     tc = np.asarray(base, float) + d * L
-    tip = block(tc, (b, b * 0.72, b * 0.72), role, tipR, mat, transparency=tr, cast_shadow=False,
-                reflectance=0.08 if mat == "Glass" else 0.0)
+    tm = tip_mat or mat
+    tip = block(tc, (b, b * 0.72, b * 0.72), role + "_tip", tipR, tm, transparency=tr if tm != "Neon" else 0.0,
+                cast_shadow=False, reflectance=0.08 if tm == "Glass" else 0.0)
     out = [body, tip]
     if core:
         out.append(block(np.asarray(base, float) + d * L * 0.45, (b * 0.45, L * 0.8, b * 0.45), "core", R, "Neon",
@@ -249,8 +252,11 @@ def crystal(rng, k, size="small", lit=False):
         light = None
         if lit and i == 0:
             light = {"range": 22 if size != "giant" else 55, "brightness": 1.2 if size != "giant" else 1.5, "role": "core"}
-        parts += _prism(base, d, bi, Li, "c1" if i % 2 == 0 else "c2", tr=0.3 if size == "small" else 0.35,
-                        collide=(size != "small" and i == 0), light=light, core=(size != "small" and i == 0))
+        giant = size == "giant"
+        # Lit-Kristalle (mittel): Spitze des Hauptprismas aus Neon -> Bloom nur dort; sonst undurchsichtiges Glas
+        parts += _prism(base, d, bi, Li, "c1" if i % 2 == 0 else "c2", tr=0.35 if giant else 0.0,
+                        collide=(size != "small" and i == 0), light=light, core=(giant and i == 0),
+                        tip_mat="Neon" if (lit and not giant and i == 0) else None)
     # 1-2 Fussbrocken in Gesteinsfarbe: der Kristall waechst aus dem Fels
     for j in range(1 + k % 2):
         a = az0 + 2.5 + j * 2.0
@@ -258,7 +264,8 @@ def crystal(rng, k, size="small", lit=False):
         fs = b * rng.uniform(1.2, 1.8)
         parts.append(block((math.cos(a) * rr, fs * 0.2, math.sin(a) * rr), (fs, fs * 0.7, fs * 0.9), "foot",
                            angles(rng.uniform(-0.4, 0.4), rng.uniform(0, 3), rng.uniform(-0.4, 0.4)), "Rock"))
-    variants = [{"c1": a, "c2": bb, "core": lighter(a, 0.15), "foot": C("#B8908A")} for a, bb in CRYSTAL]
+    variants = [{"c1": a, "c2": bb, "c1_tip": lighter(a, 0.3), "c2_tip": lighter(bb, 0.3), "core": lighter(a, 0.15),
+                 "foot": C("#B8908A")} for a, bb in CRYSTAL]
     name = {"small": "CrystalS", "medium": "CrystalM", "giant": "CrystalG"}[size] + ("Lit" if lit else "") + f"_{k}"
     return Template(name, "Crystal", parts, variants)
 
@@ -271,10 +278,11 @@ def crystal_titan(rng, k):
     for i in range(4):
         d = tilt_dir(az0 + i * 1.7, math.radians(5 if i == 0 else rng.uniform(15, 30)))
         bi, Li = (b, L) if i == 0 else (b * 0.7, L * rng.uniform(0.5, 0.75))
-        for p in _prism(np.array([0, -0.1 * Li, 0]), d, bi, Li, "c1" if i % 2 == 0 else "c2", mat="Glass", tr=0.2, collide=i == 0):
+        for p in _prism(np.array([0, -0.1 * Li, 0]), d, bi, Li, "c1" if i % 2 == 0 else "c2", mat="Glass", tr=0.0, collide=i == 0):
             p.reflectance = 0.15
             parts.append(p)
-    variants = [{"c1": C("#C7D3E8"), "c2": C("#E4ECF8")}, {"c1": C("#BFE6F5"), "c2": C("#E2F5FC")}]
+    variants = [{"c1": C("#C7D3E8"), "c2": C("#E4ECF8"), "c1_tip": C("#EEF3FB"), "c2_tip": C("#F4F8FD")},
+                {"c1": C("#BFE6F5"), "c2": C("#E2F5FC"), "c1_tip": C("#E8F7FC"), "c2_tip": C("#F2FBFE")}]
     return Template(f"CrystalTitan_{k}", "Crystal", parts, variants)
 
 

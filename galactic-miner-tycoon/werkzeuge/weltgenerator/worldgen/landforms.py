@@ -206,9 +206,16 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
         th = np.arctan2(z - cz, x - cx)
         per = 2 * math.pi * R * (1 + aspect) / 2
         k = max(5, int(round(per / (rng.uniform(13, 19) if rough else rng.uniform(20, 35)))))
-        cosv = np.maximum(0.0, np.cos(k * th + rng.uniform(0, 6.3) + 0.8 * c.nz.fbm("gul", x, z, 80, 2)))
-        g = cosv ** (4 if rough else 8)
-        gw = cosv ** 2                       # breite, flache Schuttkegel unter den Rinnen
+        # unregelmaessige Abstaende (starke Phasen-Verzerrung), je Rinne eigene Tiefe; ~20 % fallen aus, nur jede
+        # zweite bekommt einen Schuttkegel/Faecher -> kein Strahlenkranz
+        ph = k * th + rng.uniform(0, 6.3) + 2.2 * c.nz.fbm("gul", x, z, 70, 2)
+        gi = np.mod(np.floor(ph / (2 * math.pi) + 0.5), k)
+        hs = np.mod(np.sin(gi * 12.9898 + cx * 0.0137 + cz * 0.0071) * 43758.5453, 1.0)   # ohne rng (Reihenfolge bleibt)
+        keep = (hs > 0.2).astype(float)
+        has_fan = (np.mod(hs * 7.31, 1.0) < 0.5).astype(float)
+        cosv = np.maximum(0.0, np.cos(ph))
+        g = cosv ** (4 if rough else 8) * keep * (0.55 + 0.6 * np.mod(hs * 3.7, 1.0))
+        gw = cosv ** 2 * keep * has_fan      # breite, flache Schuttkegel nur unter einem Teil der Rinnen
         rmin0 = R / math.sqrt(aspect)
         g = g * ss(0.3 * rmin0, 0.65 * rmin0, np.hypot(x - cx, z - cz))   # Rinnen nur am Rand, keine Loecher oben
         gd = rng.uniform(3.0, 4.5) if rough else rng.uniform(3.0, 6.0)
@@ -251,7 +258,7 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     L1, L2 = 1.25 * T, 0.18 * T / TAN(3.0)
     tal_l = L1 + L2
     qa = L1 / tal_l
-    gfan = gfan_of(g)
+    gfan = gfan_of(g) * (gw > 0)
     gs = 0.5 + 0.5 * c.nz.fbm("talcone", x, z, 80, 2)
     # Kegel unter den Rinnen breit und flach (sonst entstehen radiale Grate, die den flachen Fuss zerschneiden)
     tl = tal_l * (1.0 + 0.06 * gs + 0.14 * gw)

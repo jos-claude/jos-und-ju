@@ -13,7 +13,7 @@
    local c = game.ServerStorage.BuildIsland1:Clone(); c.Parent = game.ServerStorage; require(c).Build(); c:Destroy()
    ```
    Wird der Code ohne `script` ausgeführt (z. B. per `loadstring`), baut er sofort.
-3. Dauert ca. 6 s. Danach den Place speichern. `Lighting.Technology` einmal von Hand setzen (z. B. ShadowMap), Skripte dürfen das nicht.
+3. Dauert ca. 6 s. Danach den Place speichern. `Lighting.Technology` einmal von Hand setzen (z. B. ShadowMap), Skripte dürfen das nicht. Falls kein Gras wächst: `Workspace.Terrain.Decoration` einschalten.
 
 Mehrfach ausführen ist ungefährlich (idempotent):
 
@@ -33,22 +33,28 @@ Mehrfach ausführen ist ungefährlich (idempotent):
 - Die Start-Halle von Ju liegt bei x ≈ 0, z 30–58 und bleibt frei.
 - Höhen: Ebenen −30 bis +60, Tafelberge bis ca. 140, Regenbogen-Kämme bis ca. 210, Randgebirge bis ca. 320.
 - Ringe (passend zu den Erzen): A Pfirsichebene 0–250, B Tafelberge und Felsnadeln 250–600, C Lava/Dünen 600–1100, D Regenbogenland 1100–1600, E Silberhochland 1600–2000.
-- Umfang: ca. 12 Mio. Terrain-Zellen, ca. 1 000 Terrain-Zusatzformen, ca. 7 700 Deko-Objekte mit ca. 24 200 Teilen, 45 PointLights.
+- Umfang: ca. 12 Mio. Terrain-Zellen, ca. 1 000 Terrain-Zusatzformen, ca. 22 350 Deko-Teile, 44 PointLights, nur 66 durchsichtige Glas-Teile (Handy-freundlich).
 - Bauzonen (eben, frei, erreichbar) für den Erz-Spawn: `WorldBuilder.IsBuildZone(x, z)` und `WorldBuilder.GetBuildZoneCells(minR, maxR)`.
 
-## Farben (Terrain-Materialien)
+## Farben (Terrain-Materialien, eine gemeinsame Geologie)
+Nach der Review `../referenz/welt-review-insel-1.md`: Boden, Schutt, Sand und Felsbänder stammen sichtbar aus denselben Gesteinen. Der Boden ist ihre Mischfarbe, die Berge wachsen aus einem Korall-Sockel. Die Gesteinsbänder sind 13 Bänder in 4 warmen Farbfamilien (ohne Mint und Weiß).
+
 | Material | Verwendung | Farbe |
 |---|---|---|
-| Ground | Hauptboden | #F2A07C |
-| Sand | Trockenflussbetten, Dünen, Fächer | #F6CF96 |
-| Mud | Schutthalden, feuchte Mulden | #D9795F |
-| Sandstone / Limestone / Slate / Rock / Salt / Concrete | Gesteinsbänder (Rosa, Butter-Gelb, Lavendel, Mauve, Creme, Mint) | #F4A9C4 / #F9E7A3 / #B3A9DE / #C48BBE / #FCEFEA / #A9E5D2 |
-| Basalt / CrackedLava | Lavaströme am Vulkan | #3B3245 / #FFB07A |
-| Grass / LeafyGrass | Wiesen in Hainen und Oasen | #9BE06B / #4FC9B0 |
-| Snow / Ice / Glacier | Ring E und Gipfel | #F2F6FF / #BFE6F5 / #A9D8E8 |
+| Ground | Hauptboden | #F8B68C |
+| Sand | Flussbetten, Dünen, Fächer, Windfahnen | #F7D5A6 |
+| Mud | Korall-Sockel der Berge, Bodenflecken | #EC8E74 |
+| Rock | Schutthalden | #CDA49E |
+| Sandstone / Limestone / Slate | Gesteinsbänder (Rosa, Butter, Mauve) | #EEA0A2 / #F1CF94 / #D2AACE |
+| Salt / Concrete | Sinterterrassen, Geoden | #F8ECE2 / #B2E0D0 |
+| Basalt / CrackedLava | Lavaströme am Vulkan | #4A3D50 / #FFB07A |
+| Grass / LeafyGrass | Wiesen und Moos (animiertes Terrain-Gras) | #B2D08E / #86C2A6 |
+| Snow / Ice / Glacier | Ring E und Gipfel | #F6F0F2 / #CFE6EE / #A9D8E8 |
 | Wasser | Teiche, Terrassen | #5FE3D6 (Transparenz 0,35) |
 
-Licht: ewige goldene Stunde (ClockTime 16,45, GeographicLatitude 42 → Sonne Azimut 250°, Höhe 22°), Atmosphere Density 0,32 / Haze 2,0 (leichter Nebel) plus flacher Bodennebel in Mulden.
+Deko: kein SmoothPlastic mehr. Kronen sind matt und wolkig mit kühlerer Unterseite, die Stämme aus dunklem Holz. Kristalle aus Glas, nur die Riesen-Kristalle sind durchsichtig. Kiesel und Brocken bekommen Material und Farbe des Felses, von dem sie stammen.
+
+Licht: goldene Stunde mit Sonne auf Azimut 250°, Höhe 30° (ClockTime 15,8956, GeographicLatitude 40,73), passend zur Skybox. Leichter Dunst in Staubfarbe (Atmosphere Density 0,28, Haze 1,5, Farbe #F2BFA6) plus flacher Bodennebel in Mulden und Becken.
 
 ## Himmel
 Die 6 Skybox-Bilder liegen in `../assets/himmel/`. Hochladen und die IDs im Block `MODULES["Settings"]` ganz oben in `BuildIsland1.luau` eintragen (bzw. in `src/ServerStorage/WorldBuilder/Settings.luau`), dann `Build({ terrain = false, props = false })`. Schritte: `../assets/himmel/README.md`.

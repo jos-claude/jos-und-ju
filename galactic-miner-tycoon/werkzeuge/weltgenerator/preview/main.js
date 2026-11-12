@@ -624,7 +624,7 @@ async function main() {
     for (const g of groups.values()) {
       let mat;
       if (g.neon) mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: g.tr > 0, opacity: 1 - g.tr * (g.tr > 0.5 ? 1.0 : 0.85), depthWrite: g.tr < 0.5 });
-      else if (g.glass) mat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: Math.max(0.15, 1 - g.tr), roughness: 0.12, metalness: 0.05, envMapIntensity: 0.35 });
+      else if (g.glass) mat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: g.tr > 0, opacity: Math.max(0.15, 1 - g.tr), roughness: 0.12, metalness: 0.05, envMapIntensity: 0.35 });
       else if (g.cls === 'P') mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.32, metalness: 0.0, envMapIntensity: 0.35, transparent: g.tr > 0, opacity: 1 - g.tr, depthWrite: g.tr < 0.5 });
       else {
         // matte Roblox-Materialien (Plaster, Sand, Wood, Grass, Gestein): kein Glanz, Koernung wie die Textur
