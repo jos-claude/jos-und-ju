@@ -8,7 +8,7 @@ Zweck: Wenn ein Chat mitten in der Arbeit abbricht (Usage-Limit), steht hier, **
 ## Schritte (kleine Scheiben, in dieser Reihenfolge)
 | # | Schritt | Status | Commit | Beweis |
 |---|---|---|---|---|
-| 1 | Config als Luau aus `../daten/` (Erze, Kästen, Bohrer, Räume, Spitzhacke, Rucksack), alte Credits-Config entfernen | offen | – | – |
+| 1 | Config als Luau aus `../daten/` (Erze, Kästen, Bohrer, Räume, Spitzhacke, Rucksack), alte Credits-Config entfernen | in Arbeit | – | – |
 | 2 | Daten pro Welt (Welt-ID), Standard-Welt, Speichern/Laden mit Mock im Studio | offen | – | – |
 | 3 | Platzhalter-Insel (Greybox): flacher Boden, Start-Halle, Lager mit Eisen-Kasten, Eisen-Vorkommen mit Ring | offen | – | – |
 | 4 | Handabbau mit Spitzhacke (Tragevorrat 10), Erz in den Kasten legen | offen | – | – |
@@ -25,3 +25,5 @@ Status: offen / in Arbeit / fertig (mit Beweis).
 
 ## Notizen des letzten Chats
 _(hier trägt der Chat Besonderheiten, Probleme und offene Fragen ein)_
+
+- 12.11.2026 (Ju-Chat): Schritt 1 Dateien geschrieben (`Config/Ores, Bins, Drills, Rooms, Pickaxe, Backpack`, `Types/ConfigTypes`, `Resources` um Kohle/Titan ergänzt, `Currencies` gelöscht); Studio-Prüfung noch offen.

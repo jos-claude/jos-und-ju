@@ -1,5 +1,7 @@
 --!strict
--- Ressourcen und Rezepte. Platzhalter – muss zu daten/ressourcen.md passen.
+-- Ressourcen und Rezepte. Muss zu daten/ressourcen.md passen.
+-- Rohstoffe sind die Währung (Entscheidung 006). Ringe, Spawn-Regeln und Härte der Erze von
+-- Insel 1 stehen in Ores.luau. Die Rezepte sind noch Vorschläge (Verarbeitung kommt später).
 
 export type ResourceDef = {
 	id: string,
@@ -12,7 +14,9 @@ export type ResourceDef = {
 local Resources: { [string]: ResourceDef } = {
 	iron_ore = { id = "iron_ore", displayName = "Eisenerz", kind = "raw", origin = "home" },
 	copper_ore = { id = "copper_ore", displayName = "Kupfererz", kind = "raw", origin = "home" },
+	coal = { id = "coal", displayName = "Kohle", kind = "raw", origin = "home" },
 	crystal = { id = "crystal", displayName = "Kristall", kind = "raw", origin = "home" },
+	titanium_ore = { id = "titanium_ore", displayName = "Titanerz", kind = "raw", origin = "home" },
 	obsidian = { id = "obsidian", displayName = "Obsidian", kind = "raw", origin = "lava" },
 	ice_crystal = { id = "ice_crystal", displayName = "Eiskristall", kind = "raw", origin = "ice" },
 	bio_fiber = { id = "bio_fiber", displayName = "Biofaser", kind = "raw", origin = "jungle" },
