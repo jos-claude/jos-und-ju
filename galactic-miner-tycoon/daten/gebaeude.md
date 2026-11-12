@@ -41,6 +41,12 @@ Beispiel: 80 Studs Band sind 20 Segmente = 40 Eisen.
 | 5 | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Forschungslabor |
 | 6 | 400 Kupfer + 200 Kohle + 80 Kristall + 20 Titan | Raketenstartplatz |
 
+## Rover und Garage (Idee von Ju, bestätigt 12.11.2026; Zahlen offen)
+| ID | Name | Kosten | Wirkung |
+|---|---|---|---|
+| `garage` | Garage (Raum, noch festzulegen welcher) | _ | schaltet das Mondauto frei |
+| `rover` | Mondauto (Rover) | _ | fahrbar, ca. 60 Studs/s, damit man weite Erze schneller erreicht; Upgrades möglich |
+
 ## Später
 | ID | Name | Kosten | Wirkung |
 |---|---|---|---|

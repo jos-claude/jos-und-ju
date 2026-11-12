@@ -13,7 +13,7 @@
 
 ## Offen
 - **Spielfläche (beschlossen, Ju, 12.11.2026): flache große Plattform** mit Planeten-Rand und Weltraum-Himmel, keine echte Kugel (keine Kugel-Schwerkraft nötig).
-- Größe der Insel in Studs (Vorschlag: Radius 500, siehe `../daten/ressourcen.md`).
+- **Größe (beschlossen, Ju, 12.11.2026): Radius 2000 Studs.** Mindestradien der Erze: Eisen 10, Kupfer 250, Kohle 600, Kristall 1100, Titan 1600 (siehe `../daten/ressourcen.md`).
 
 ## Folgen
 `../spiel/15-optik-und-audio.md`, `../spiel/06-planeten.md`, `../referenz/bild-prompts.md`
