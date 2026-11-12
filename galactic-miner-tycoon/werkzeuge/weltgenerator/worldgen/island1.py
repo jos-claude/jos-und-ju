@@ -9,7 +9,7 @@ import time
 
 import numpy as np
 
-from . import cameras, checks, compose, fields, lighting, materials, terrain
+from . import cameras, checks, compose, ecology, fields, lighting, materials, placement, terrain
 from .ctx import Ctx
 from .layout import STRATA_BASE, SUN_AZ, SUN_EL
 from .world import RGB, World
@@ -44,6 +44,13 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
     materials.apply_overrides(c)
     log("Materialien")
     w = World(seed=seed)
+    p = None
+    if deco:
+        ecology.compute(c)
+        p = placement.Placer(c, w)
+        placement.plan_islands(p)
+        materials.apply_overrides(c)
+        log(f"Oekologie-Karten, {len(p.islands)} Deko-Inseln")
     materials.finalize(c, w)
     w.ctx = c
     log("Kanaele")
@@ -65,4 +72,12 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
     w.report = checks.report_lines(res)
     w.checks = res
     log("Pruefungen")
+    if p is not None:
+        placement.place_all(p)
+        w.report.append("Deko je Art (Objekte / Teile / Lichter):")
+        for g in sorted(p.count, key=lambda k: -p.parts[k]):
+            if g.startswith("_"):
+                continue
+            w.report.append(f"  {g:14s} {p.count[g]:5d} / {p.parts[g]:6d} / {p.lights[g]:3d}")
+        log("Deko gesetzt")
     return w
