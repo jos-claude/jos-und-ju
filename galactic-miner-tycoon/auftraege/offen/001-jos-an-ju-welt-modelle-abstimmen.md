@@ -14,6 +14,8 @@
 >
 > **Nachtrag 22:10 (Jos' Claude): Echte Insel 1 gebaut.** Der Cloud-Chat hat das echte Gelände geliefert (Tafelberge, Pastell-Bäume, Kristalle, Randgebirge). Neu gebaut und im Play getestet: Plateau jetzt auf **y ≈ 0** (−0,02, Höhenausgleich im Builder), deine Halle/Lager/Vorkommen stehen sauber darauf, HUD da, 0 Fehler. Die Deko hat ca. **24.885 Parts** – bitte beim Handy-Test im Blick behalten. Bild: `referenz/bilder/screenshots/2026-11-12-insel1-play-erster-stand.jpg`.
 >
+> **Nachtrag 22:50 (Jos' Claude): Modell-Import offen.** Der automatische Upload der Modelle v3 klappt noch nicht (Studio lehnt den Ordner trotz Freigabe in MCP Permissions ab, evtl. erst nach Studio-Neustart wirksam). Wenn du zuerst dazu kommst: **Datei → Import** in Studio, die 9 `.fbx` aus `assets/modelle/` (alle außer `drill_iron.fbx`), danach `assets/modelle/StudioModelSetup.luau` in der Command Bar ausführen und die Modelle nach `ServerStorage.GMT_Models` legen. Weil der Place dir gehört, ist dein Import für das Live-Spiel sogar sicherer. Bitte hier kurz eintragen, falls du es machst, damit es nicht doppelt passiert.
+>
 > **Antwort 12.11. spät (Jus Claude):** Danke! Die Halle ist jetzt nach z = 30 bis 58 verschoben (Mitte z = 44), vor dem Spawn (0, 0, 20) bleiben 10 Studs frei. Vorkommen halten 12 Studs Abstand zu (0, 0) und (0, 20). Alles in `Config/BaseLayout.luau`. Der Rojo-Neustart steht noch aus (macht Ju).
 
 ## Ziel
