@@ -9,9 +9,10 @@ import time
 
 import numpy as np
 
-from . import compose, fields, materials, terrain
+from . import cameras, compose, fields, lighting, materials, terrain
 from .ctx import Ctx
-from .world import World
+from .layout import STRATA_BASE, SUN_AZ, SUN_EL
+from .world import RGB, World
 
 SEED = 1
 
@@ -45,4 +46,18 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
     materials.finalize(c, w)
     w.ctx = c
     log("Kanaele")
+    sx, _, sz = c.L.spawn
+    w.meta.update({
+        "name": "Insel 1 - Heimatplanet",
+        "seed": seed,
+        "layers": materials.LAYERS,
+        "strata": {"base": STRATA_BASE, "bands": [[m, t] for m, t in materials.BANDS]},
+        "materialColors": {k: RGB(v) for k, v in materials.MATERIAL_COLORS.items()},
+        "water": {"WaterColor": RGB("#5FE3D6"), "WaterTransparency": 0.35, "WaterReflectance": 0.4,
+                  "WaterWaveSize": 0.1, "WaterWaveSpeed": 6},
+        "lighting": lighting.lighting_meta(),
+        "sun": {"azimuth": SUN_AZ, "elevation": SUN_EL, "direction": lighting.sun_direction()},
+        "spawn": [round(sx, 2), round(float(c.h_at(sx, sz)) + 0.5, 2), round(sz, 2)],
+    })
+    w.preview = {"cameras": cameras.make(c)}
     return w

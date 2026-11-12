@@ -208,8 +208,7 @@ def spire(c: Ctx, cx, cz, base_d, tip_d, height, base=None):
     pad = rb * 2.2 + 6
     sl = c.win(cx, cz, pad)
     x, z = c.local(sl)
-    th = np.arctan2(z - cz, x - cx)
-    rho = np.hypot(x - cx, z - cz) * (1 + 0.15 * c.nz.fbm("spire", cx + 20 * np.cos(th), cz + 20 * np.sin(th), 12, 2))
+    rho = np.hypot(x - cx, z - cz) * (1 + 0.12 * c.nz.fbm("spire", x, z, 9, 2))
     Hl = c.H[sl]
     if base is None:
         base = float(Hl[rho < rb].min()) if (rho < rb).any() else float(c.h_at(cx, cz))
@@ -303,8 +302,9 @@ def ridge(c: Ctx, p0, p1, bend, peaks, base=None, front=1, dip_deg=34.0, face_de
     T = 0.22 * crest
     Ltal = T / TAN(30) + 4
     q = np.clip((au - foot_u + 0.35 * Ltal) / Ltal, 0, 1)
-    tal = np.where(u < 0, T * (1 - q) ** 1.5, -1e9)
+    tal = np.where((u < 0) & (q < 1), T * (1 - q) ** 1.5, -1e9)
     hrel = np.maximum(hr, tal)
+    hrel = np.where(hrel > -0.5, hrel, -1e9)
     if width_cap is not None:
         hrel = np.minimum(hrel, crest * np.clip(1 - (au - width_cap) / 40, 0, 1) + 0 * au)
     hnew = base + hrel
@@ -351,7 +351,9 @@ def fin(c: Ctx, p0, p1, thick, height, base=None, windows=1, win_size=(8.0, 12.0
     side = np.clip(1 - (np.abs(u + wob) - half) / (thick * 0.9), 0, 1)
     hf = base + topn * side ** 0.35
     # breiter Fuss mit Schutt
-    foot = base + height * 0.18 * np.clip(1 - (np.abs(u + wob) - half) / (thick * 1.6 + 6), 0, 1) ** 1.5 * end
+    fq = np.clip(1 - (np.abs(u + wob) - half) / (thick * 1.6 + 6), 0, 1)
+    foot = np.where((fq > 0) & (end > 0.02), base + height * 0.18 * fq ** 1.5 * end, -1e9)
+    hf = np.where((side > 0) & (end > 0.02), hf, -1e9)
     hnew = np.maximum(hf, foot)
     new = np.maximum(Hl, hnew)
     body = (hf >= foot) & (hf > Hl + 1.0)
@@ -416,7 +418,8 @@ def hoodoo(c: Ctx, x0, z0, total, base=None):
     q = np.clip(rho / (rf * 1.5), 0, 1)
     prof = np.where(rho < rf * 0.55, 1.0, (1 - np.clip((rho - rf * 0.55) / (rf * 0.95), 0, 1)) ** 1.6)
     hfoot = base + hf * prof
-    tal = base + rf * 0.35 * (1 - q) ** 1.4
+    tal = np.where(q < 1, base + rf * 0.35 * (1 - q) ** 1.4, -1e9)
+    hfoot = np.where(rho < rf * 1.5, hfoot, -1e9)
     hn = np.maximum(hfoot, tal)
     c.H[sl] = np.maximum(Hl, hn)
     c.mask("hoodoo_foot")[sl] |= (hfoot >= tal) & (hfoot > Hl + 0.5)

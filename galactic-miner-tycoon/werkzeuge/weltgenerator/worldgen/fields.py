@@ -34,7 +34,7 @@ def volcano(c: Ctx, cx, cz, top, crater_d, west_az=None, name="volcano", small=F
     cone = base + Hv * (1 - q) ** 1.3
     # Radiale Erosionsrinnen
     rills = nz.ridged(name + "rill", ang * 6.0, rho * 0.02, 14, 2, sharp=2.0)
-    cone = cone - rills * 4.0 * ss(0.05, 0.4, q) * (1 - ss(0.75, 1.0, q))
+    cone = cone - rills * (4.0 if not small else 1.2) * ss(0.05, 0.4, q) * (1 - ss(0.75, 1.0, q))
     # Krater (Innenneigung <= 25 Grad, flacher Boden)
     dep = 18.0
     wall = dep / TAN(24.0)
@@ -45,6 +45,7 @@ def volcano(c: Ctx, cx, cz, top, crater_d, west_az=None, name="volcano", small=F
         notch = ss(12, 4, np.abs(ang_diff(ang, west_az)))
         rimbump = rimbump - notch * 5.0 * np.exp(-((rho - Rc) / 14.0) ** 2)
     hv = np.where(rho < Rc, crater, cone) + rimbump
+    hv = np.where(q < 0.999, hv, -1e9)
     Hl = c.H[sl]
     new = np.maximum(Hl, hv)
     c.H[sl] = new
@@ -104,24 +105,24 @@ def lava_fields(c: Ctx):
     """Ring C Nordost: ~30 % Lavafeld (Basaltsaeulen-Zellen + Risse), Rest Asche-Ebene."""
     x, z = c.x, c.z
     zone = (c.wNE > 0.5) & (c.rw > 660) & (c.rw < 1060) & ~c.mask("claimed") & (c.wash_dist > 25)
-    f = c.nz.fbm("lavazone", x, z, 260, 3) + 0.35 * c.nz.fbm("lavazone2", x, z, 90, 2)
-    field = zone & (f > 0.07)
+    f = c.nz.fbm("lavazone", x, z, 230, 3) + 0.35 * c.nz.fbm("lavazone2", x, z, 80, 2)
+    field = zone & (f > 0.13)
     # Oasen ausschneiden (werden spaeter bepflanzt)
     for o in c.feat.get("oasis_c", []):
         field &= np.hypot(x - o["x"], z - o["z"]) > o["R"] + 10
     f1, f2, cid = c.nz.voronoi("basaltcells", x, z, 15)
     off = ((cid % 7) / 6.0) * 2.6
     edge = ss(0.0, 3.0, f2 - f1)
-    soft = ss(0.07, 0.16, f)
+    soft = ss(0.13, 0.2, f)
     c.H = np.where(field, c.H + off * soft * (0.45 + 0.55 * edge), c.H)
     cf1, cf2, _ = c.nz.voronoi("lavacrack", x, z, 46)
-    crack = field & ((cf2 - cf1) < 3.0) & (f > 0.12)
+    crack = field & ((cf2 - cf1) < 3.0) & (f > 0.17)
     c.H = np.where(crack, c.H - 0.8, c.H)
     sl = (slice(None), slice(None))
     set_mat(c, sl, field, "Basalt")
     set_mat(c, sl, crack, "CrackedLava")
     c.mask("basalt_cells")[:] |= field
-    c.obstacle |= field & (f > 0.10)
+    c.obstacle |= field
     c.lava_field = field
 
 

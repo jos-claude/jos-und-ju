@@ -1,0 +1,53 @@
+// Screenshots der Vorschau (Playwright + SwiftShader).
+//   node preview/shoot.js                 # alle Kamera-Presets -> out/shots/<name>.png
+//   node preview/shoot.js hero spawn_040  # nur diese
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { chromium } = require('playwright');
+
+const ROOT = path.resolve(__dirname, '..');
+const OUT = path.join(ROOT, 'out', 'shots');
+const W = 1600, H = 900;
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.bin': 'application/octet-stream', '.png': 'image/png' };
+
+function serve() {
+  return new Promise((resolve) => {
+    const srv = http.createServer((req, res) => {
+      const u = decodeURIComponent(req.url.split('?')[0]);
+      const f = path.join(ROOT, u);
+      if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); res.end(); return; }
+      res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+      if (req.method === 'HEAD') { res.end(); return; }
+      fs.createReadStream(f).pipe(res);
+    });
+    srv.listen(0, '127.0.0.1', () => resolve(srv));
+  });
+}
+
+(async () => {
+  fs.mkdirSync(OUT, { recursive: true });
+  const srv = await serve();
+  const port = srv.address().port;
+  const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] });
+  const page = await browser.newPage({ viewport: { width: W, height: H } });
+  page.setDefaultTimeout(900000);
+  page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log('[browser]', m.text().slice(0, 400)); });
+  page.on('pageerror', (e) => console.log('[pageerror]', e.message));
+  const t0 = Date.now();
+  await page.goto(`http://127.0.0.1:${port}/preview/index.html?w=${W}&h=${H}&shot=none`, { timeout: 0 }).catch(() => {});
+  await page.waitForFunction(() => window.__ready || window.__error || (window.presets && false), null, { timeout: 600000, polling: 500 }).catch(() => {});
+  const err = await page.evaluate(() => window.__error);
+  if (err) { console.error(err); }
+  const all = await page.evaluate(() => window.presets || []);
+  const want = process.argv.slice(2).length ? process.argv.slice(2) : all;
+  console.log(`geladen in ${((Date.now() - t0) / 1000).toFixed(1)} s, Stats:`, await page.evaluate(() => window.stats));
+  for (const name of want) {
+    const t = Date.now();
+    const ms = await page.evaluate((n) => window.shot(n), name);
+    await page.screenshot({ path: path.join(OUT, name + '.png'), timeout: 600000 });
+    console.log(`  ${name}.png (Render ${(ms / 1000).toFixed(1)} s, gesamt ${((Date.now() - t) / 1000).toFixed(1)} s)`);
+  }
+  await browser.close();
+  srv.close();
+})();

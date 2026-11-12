@@ -528,7 +528,11 @@ class Saturn:
 
     # -- Zeichnen ----------------------------------------------------------
     def cone(self):
-        return self.c, math.atan(self.R * self.ring_out * 1.02) + math.radians(0.4)
+        # groesster Winkelabstand des Ringaussenrands von der Mitte (nahe Seite erscheint perspektivisch groesser)
+        phi = np.linspace(0.0, 2.0 * np.pi, 1441)
+        q = np.stack([np.cos(phi), np.sin(phi), np.zeros_like(phi)], 1) * (self.ring_out * self.R)
+        w = normalize(q @ self.M + self.c)
+        return self.c, float(np.arccos(np.clip(w @ self.c, -1, 1)).max()) + math.radians(0.3)
 
     def shade(self, d):
         n = len(d)
@@ -629,7 +633,7 @@ class RockyMoon:
         self.maria = maria
         self.crater_depth = crater_depth
         cc = normalize(rng.normal(size=(craters, 3)))
-        rad = np.radians(rng.uniform(3.0, 16.0, craters) * rng.choice([1.0, 1.0, 1.0, 1.6], craters))
+        rad = np.radians(2.5 + 9.0 * rng.random(craters) ** 2.2)  # viele kleine, wenige grosse
         self.cr_c, self.cr_r = cc, rad
         self.cr_alb = rng.uniform(-0.06, 0.10, craters)
 
@@ -656,7 +660,7 @@ class RockyMoon:
         pert = np.zeros_like(nrm)
         for c, r, al in zip(self.cr_c, self.cr_r, self.cr_alb):
             cosd = nrm @ c
-            near = cosd > math.cos(r * 1.5)
+            near = cosd > math.cos(r * 1.6)
             if not near.any():
                 continue
             nn = nrm[near]
@@ -664,10 +668,12 @@ class RockyMoon:
             x = ang / r
             tvec = c[None, :] - cosd[near][:, None] * nn
             tvec = tvec / np.maximum(np.linalg.norm(tvec, axis=1, keepdims=True), 1e-9)
-            slope = np.where(x < 1.0, 1.2 * x, -1.4 * np.exp(-(((x - 1.0) / 0.22) ** 2)) * (x - 1.0) / 0.22)
-            slope *= self.crater_depth
-            pert[near] += slope[:, None] * tvec * 0.55
-            alb[near] *= 1.0 + al * (x < 1.0) + 0.06 * np.exp(-(((x - 1.0) / 0.12) ** 2))
+            # Hoehenprofil h(x) = -exp(-(x/0.75)^4) + 0.3 exp(-((x-1)/0.25)^2): flacher Boden, weicher Wall
+            g1 = np.exp(-((x / 0.75) ** 4))
+            g2 = np.exp(-(((x - 1.0) / 0.25) ** 2))
+            dh = g1 * 4.0 * x ** 3 / 0.75 ** 4 - 0.3 * g2 * 2.0 * (x - 1.0) / 0.25 ** 2
+            pert[near] += (0.16 * self.crater_depth * dh)[:, None] * tvec
+            alb[near] *= 1.0 + al * g1 + 0.05 * g2
         ns = normalize(nrm + pert)
         mu0 = ns @ self.L
         mu0_geo = nrm @ self.L
@@ -832,6 +838,7 @@ class SkyModel:
                                craters=12, maria=0.10, crater_depth=0.6)
         self.ice = IceGiant(dir_from_az_el(*spec.ice_giant[:2]), spec.ice_giant[2], self.sun_dir, seed + 400)
         self.bodies = [self.sun, self.saturn, self.moon1, self.moon2, self.ice]
+        self.cones = [b.cone() for b in self.bodies]
 
         self._make_filaments(rng)
         self._make_stars(rng)
@@ -992,7 +999,7 @@ class SkyModel:
         cc = dir_from_az_el(sp.cluster[0], sp.cluster[1])
         r0, u0 = _screen_frame(cc)
         uu = rng.random(sp.n_cluster) * 0.93
-        rr = 1.05 / np.sqrt(uu ** (-2.0 / 3.0) - 1.0)
+        rr = 1.35 / np.sqrt(uu ** (-2.0 / 3.0) - 1.0)
         rr = np.minimum(rr, sp.cluster[2] / 2.0 * 1.15)
         th = rng.uniform(0, 2 * np.pi, sp.n_cluster)
         ox = np.radians(rr) * np.cos(th) * 1.25
@@ -1041,8 +1048,12 @@ class SkyModel:
         s = np.clip(np.sin(np.radians(np.maximum(el, 0.0))), 0, 1)
         t = (1.0 - s) ** 1.9
         up = zen[None, :] * (1 - t[:, None]) + hor[None, :] * t[:, None]
-        tb = smoothstep(0.0, -9.0, el)
-        low = hor[None, :] * (1 - tb[:, None]) + bel[None, :] * tb[:, None]
+        # unter dem Horizont: Tuerkis -> Daemmerblau -> Violett (direkt gemischt wuerde es grau)
+        mid = hex_rgb("#22364E")
+        t1 = smoothstep(0.0, -5.0, el)
+        t2 = smoothstep(-3.0, -13.0, el)
+        low = hor[None, :] * (1 - t1[:, None]) + mid[None, :] * t1[:, None]
+        low = low * (1 - t2[:, None]) + bel[None, :] * t2[:, None]
         low *= (1.0 - 0.28 * smoothstep(-12.0, -70.0, el))[:, None]
         col = np.where((el >= 0)[:, None], up, low)
         return srgb_to_linear(col), el
@@ -1095,16 +1106,14 @@ class SkyModel:
     # -- Himmelskoerper ----------------------------------------------------
     def bodies_mask(self, d, fp):
         m = np.zeros(len(d), dtype=bool)
-        for b in self.bodies:
-            c, r = b.cone()
+        for c, r in self.cones:
             m |= d @ c > np.cos(r + 2.0 * fp)
         return m
 
     def bodies_shade(self, d):
         rgb = np.zeros((len(d), 3))
         a = np.zeros(len(d))
-        for b in self.bodies:
-            c, r = b.cone()
+        for b, (c, r) in zip(self.bodies, self.cones):
             sel = d @ c > math.cos(r)
             if sel.any():
                 cr, ca = b.shade(d[sel])

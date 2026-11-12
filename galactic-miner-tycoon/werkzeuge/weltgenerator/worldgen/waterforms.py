@@ -79,7 +79,8 @@ def terraces(c: Ctx, cx, cz, n_basins, width, length, down_az, name="terr", sour
     # Unterlage: sanfter Hang (10 Grad) von oben (a=-L/2) nach unten (a=+L/2), seitlich ausgeblendet
     hill_top = top_y + slope * length * 0.5
     hill = hill_top - slope * (a + length / 2)
-    side = ss(width * 0.5 + 60, width * 0.5, np.abs(b)) * ss(length * 0.5 + 70, length * 0.5, np.abs(a)) * ss(-length * 0.5 - 90, -length * 0.5, a)
+    qq = np.hypot(b / (width * 0.62), a / (length * 0.62)) * (1 + 0.16 * c.nz.fbm(name + "o", x, z, 70, 2))
+    side = ss(1.35, 0.95, qq) * (1.0 - ss(0.0, length * 0.75, a - length * 0.45))
     under = Hl * (1 - side) + np.maximum(Hl, hill - 3.0) * side
     # Becken in Reihen
     rows = 3 if n_basins <= 9 else 4
@@ -103,8 +104,8 @@ def terraces(c: Ctx, cx, cz, n_basins, width, length, down_az, name="terr", sour
     wl = np.full(x.shape, np.nan)
     salt = np.zeros(x.shape, bool)
     for i, (aj, br, rx, rz) in enumerate(basins):
-        hill_here = hill_top - slope * (aj + length / 2)
-        F = snap4_down(hill_here - 1.0)
+        hill_here = hill_top - slope * (aj - rz * 0.6 + length / 2)
+        F = snap4_down(hill_here - 2.6)
         dep = rng.uniform(1.5, 2.4)
         W = F + dep
         rim = W + 0.6
@@ -130,7 +131,7 @@ def terraces(c: Ctx, cx, cz, n_basins, width, length, down_az, name="terr", sour
     c.H[sl] = hn
     c.wl[sl] = np.where(~np.isnan(wl), wl, c.wl[sl])
     area = (hmax > -1e8) & top_cover
-    set_mat(c, sl, area | ((side > 0.5) & (np.abs(a) < length * 0.55)), "Salt")
+    set_mat(c, sl, area | ((side > 0.6) & (c.nz.fbm(name + "sa", x, z, 25, 2) > -0.25 + 0.5 * (1 - side))), "Salt")
     set_mat(c, sl, area & ~salt & np.isnan(wl), "Limestone")
     c.mask("terrace")[sl] |= area | (side > 0.3)
     c.obstacle[sl] |= area

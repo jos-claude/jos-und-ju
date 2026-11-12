@@ -22,6 +22,13 @@ def sight_block(az, r):
     return False
 
 
+def gate_axis(c: Ctx):
+    """Azimut (von der Basis) der Sichtachse Spawn -> Vulkan durch das Saturn-Tor."""
+    sx, _, sz = c.L.spawn
+    vx, vz = c.L.slots["L5"].xz
+    return math.degrees(math.atan2(vx - sx, -(vz - sz))) % 360
+
+
 def wash_az_at(c: Ctx, k, r):
     rs, az = c.wash_lines[k]
     return float(az[min(len(az) - 1, int(r / 4))])
@@ -45,7 +52,11 @@ def setup_washes(c: Ctx):
     terrain.wash_lines(c)
     # Wash 0 (Az 40) laeuft im Bogen oestlich um den Vulkan herum
     rs, az = c.wash_lines[0]
-    vr = c.L.slots["L5"].r
+    s5 = c.L.slots["L5"]
+    vr = s5.r
+    gate_az = gate_axis(c)
+    w = ss(130, 220, rs) * (1 - ss(430, 560, rs))
+    az = az + ang_diff(gate_az, az) * w
     bump = 360.0 * np.exp(-((rs - vr) / 330.0) ** 2)
     c.wash_lines[0] = (rs, az + np.degrees(bump / np.maximum(rs, 50)))
     # Wash 1 (Az 100) und Hauptkamm: Wash bleibt gerade (Durchbruch durch den Kamm)
@@ -60,13 +71,17 @@ def landmarks(c: Ctx):
     S = c.L.slots
     rng = c.rng
     # L1 Saturn-Tor: zwei Mesas links/rechts vom Wash 0
+    ga = gate_axis(c)
+    sx, _, sz = c.L.spawn
+    gdx, gdz = math.sin(math.radians(ga)), -math.cos(math.radians(ga))
     for key, side in (("L1a", -1), ("L1b", 1)):
         sl_ = S[key]
-        a_w = wash_az_at(c, 0, sl_.r)
         R = sl_.data["diam"] / 2
-        lat = side * (46.0 + R)
-        az = a_w + math.degrees(lat / sl_.r)
-        x, z = pol(az, sl_.r)
+        lat = side * (45.0 + R)
+        along = sl_.r - 40
+        x = sx + gdx * along - gdz * lat * -1
+        z = sz + gdz * along + gdx * lat * -1
+        az = math.degrees(math.atan2(x, -z)) % 360
         lf.mesa(c, x, z, sl_.data["diam"], sl_.data["top"] - float(c.h_at(x, z)), stage="mesa", aspect=1.18,
                 rot=math.radians(az), nsteps=6 if side < 0 else 5, talus=0.7, top_patch="Grass" if side < 0 else None)
         c.feat["landmark"].append({"key": key, "x": x, "z": z})
@@ -138,29 +153,31 @@ def hoodoo_garden(c: Ctx):
     rng = c.rng
     a0 = nudge(c, s3.az, s3.r, 10, 6)
     # Plateau-Rest am Aussenrand, davor Finnen, dann Hoodoo-Gruppen
-    px, pz = pol(a0 + 3, 660)
-    lf.mesa(c, px, pz, 170, 44, stage="mesa", aspect=1.6, rot=math.radians(a0 + 90), nsteps=3, talus=0.6)
+    px, pz = pol(a0 + 2, 690)
+    lf.mesa(c, px, pz, 170, 44, stage="mesa", aspect=1.6, rot=math.radians(a0 + 90), nsteps=3, talus=0.45)
     fins = 0
-    for k in range(5):
-        fa = a0 + (k - 2) * 4.2 + rng.uniform(-1, 1)
-        fr = 575 + rng.uniform(-15, 10)
-        L = rng.uniform(45, 110)
+    for k in range(7):
+        fa = a0 + (k - 3) * 3.6 + rng.uniform(-0.8, 0.8)
+        fr = 585 + rng.uniform(-12, 8)
+        L = rng.uniform(45, 100)
         p0 = pol(fa, fr - L / 2)
         p1 = pol(fa + rng.uniform(-2, 2), fr + L / 2)
-        if not lf.is_free(c, (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, 8, wash_margin=15):
+        if c.wash_dist[c.idx((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2)] < 25:
             continue
+        if fins >= 12:
+            break
         lf.fin(c, p0, p1, rng.uniform(7, 10), rng.uniform(24, 52), windows=int(rng.integers(1, 3)), name="fin%d" % k)
         fins += 1
     groups = []
     tries = 0
-    while len(groups) < 6 and tries < 300:
+    while len(groups) < 6 and tries < 2000:
         tries += 1
-        ga = a0 + rng.uniform(-13, 13)
-        gr = rng.uniform(400, 545)
+        ga = a0 + rng.uniform(-26, 24)
+        gr = rng.uniform(390, 590)
         gx, gz = pol(ga, gr)
-        if any(math.hypot(gx - q[0], gz - q[1]) < 125 for q in groups):
+        if any(math.hypot(gx - q[0], gz - q[1]) < 120 for q in groups):
             continue
-        if not lf.is_free(c, gx, gz, 30, wash_margin=20):
+        if not lf.is_free(c, gx, gz, 26, wash_margin=10):
             continue
         groups.append((gx, gz, rng.uniform(32, 58)))
     count = 0
@@ -175,7 +192,7 @@ def hoodoo_garden(c: Ctx):
             hx, hz = gx + rr * math.cos(ang), gz + rr * math.sin(ang)
             if any(math.hypot(hx - p[0], hz - p[1]) < rng.uniform(18, 26) for p in pts):
                 continue
-            if c.wash_dist[c.idx(hx, hz)] < 18 or c.mask("claimed")[c.idx(hx, hz)]:
+            if c.wash_dist[c.idx(hx, hz)] < 10 or c.mask("claimed")[c.idx(hx, hz)]:
                 continue
             pts.append((hx, hz))
         for k, (hx, hz) in enumerate(pts):
@@ -194,7 +211,7 @@ def hoodoo_garden(c: Ctx):
 # ------------------------------------------------------------------ Tafelberg-Gruppen je Ring
 RING_SPEC = {
     # n Berge, r-Bereich, Leit-Durchmesser, Hoehe ueber Umland
-    "A": dict(n=5, r=(198, 262), lead=(55, 95), h=(22, 50)),
+    "A": dict(n=6, r=(205, 300), lead=(50, 90), h=(22, 52)),
     "B": dict(n=24, r=(300, 590), lead=(70, 170), h=(40, 105)),
     "C": dict(n=12, r=(640, 1070), lead=(70, 150), h=(30, 85)),
     "D": dict(n=20, r=(1150, 1520), lead=(70, 170), h=(50, 125)),
@@ -218,7 +235,7 @@ def mesa_groups(c: Ctx, ring, sector=None):
             continue
         gx, gz = pol(a, r)
         lead_d = rng.uniform(*spec["lead"]) * (0.7 if rng.uniform() < 0.4 else 1.0)
-        if not lf.is_free(c, gx, gz, lead_d * 0.75 + 22, wash_margin=28):
+        if not lf.is_free(c, gx, gz, lead_d * 0.62 + 14, wash_margin=18):
             continue
         hgt = rng.uniform(*spec["h"])
         lf.mesa(c, gx, gz, lead_d, hgt, stage="mesa", top_patch=_patch(c, ring))
@@ -238,7 +255,7 @@ def mesa_groups(c: Ctx, ring, sector=None):
                 ba = math.degrees(math.atan2(bx, -bz)) % 360
                 if br < r0 - 20 or br > r1 + 40 or sight_block(ba, br) or (sector and not sector(ba, br)):
                     continue
-                if not lf.is_free(c, bx, bz, d * 0.8 + 18, wash_margin=26):
+                if not lf.is_free(c, bx, bz, d * 0.7 + 12, wash_margin=16):
                     continue
                 if spire_:
                     lf.spire(c, bx, bz, d, rng.uniform(3, 6), rng.uniform(34, 95) * (0.7 if ring == "A" else 1.0))
@@ -360,7 +377,7 @@ def tunnels(c: Ctx, n=4):
 # ------------------------------------------------------------------ Massive mit Canyons
 def massifs(c: Ctx):
     rng = c.rng
-    specs = [(78.0, 455.0, 250.0, 46.0), (128.0, 1240.0, 300.0, 70.0), (292.0, 1440.0, 260.0, 62.0)]
+    specs = [(76.0, 465.0, 300.0, 48.0), (130.0, 1250.0, 360.0, 74.0), (293.0, 1430.0, 320.0, 64.0)]
     canyons = 0
     for k, (a, r, d, h) in enumerate(specs):
         a = nudge(c, a + rng.uniform(-4, 4), r, d / 2 + 30, 10)
@@ -370,12 +387,11 @@ def massifs(c: Ctx):
         lf.mesa(c, x, z, d, h, stage="mesa", aspect=1.25, nsteps=3, talus=0.5, top_patch="Sand")
         # 2 Durchgangs-Canyons + 1 kurzer Seitencanyon mit Oase am Ende
         base = c.feat["mesa"][-1]["base"]
-        for j in range(2):
-            ang = rng.uniform(0, math.pi) + j * math.pi / 2
-            _canyon(c, x, z, ang, d * 1.4, rng.uniform(40, 56), base, name="cyn%d_%d" % (k, j), offset=rng.uniform(-30, 30))
-            canyons += 1
-        ang = rng.uniform(0, 2 * math.pi)
-        ex, ez = x + math.cos(ang) * d * 0.25, z + math.sin(ang) * d * 0.25
+        ang = rng.uniform(0, math.pi)
+        _canyon(c, x, z, ang, d * 1.5, rng.uniform(40, 52), base, name="cyn%d" % k, offset=rng.uniform(-25, 25))
+        canyons += 1
+        ang = ang + math.pi / 2 * (1 if rng.uniform() < 0.5 else -1)
+        ex, ez = x + math.cos(ang) * d * 0.28, z + math.sin(ang) * d * 0.28
         _canyon(c, (x + ex) / 2 + math.cos(ang) * d * 0.25, (z + ez) / 2 + math.sin(ang) * d * 0.25, ang, d * 0.55,
                 40, base, name="side%d" % k, offset=0, bowl=(ex, ez))
         c.feat["oasis_canyon"].append({"x": ex, "z": ez, "R": 26, "y": base})
@@ -391,11 +407,11 @@ def _canyon(c: Ctx, cx, cz, ang, length, width, floor, name, offset=0.0, bowl=No
     x, z = c.local(sl)
     a = (x - cx) * tx + (z - cz) * tz
     u = (x - cx) * nx + (z - cz) * nz_
-    u = u + 14 * c.nz.fbm(name, x, z, 80, 2)
+    u = u + 26 * c.nz.fbm(name, x, z, 140, 2) + 5 * c.nz.fbm(name + "s", x, z, 30, 2)
     hw = width / 2
     wall = np.maximum(0, np.abs(u) - hw)
     # Waende steil, oben breiter (Stufe)
-    prof = floor + 0.5 + wall * math.tan(math.radians(72)) - np.maximum(0, wall - 12) * 1.6
+    prof = floor + 0.5 + wall * math.tan(math.radians(76)) - np.maximum(0, wall - 16) * 2.2
     endf = ss(length / 2, length / 2 - 20, np.abs(a))
     if bowl is not None:
         bx, bz = bowl
@@ -513,7 +529,7 @@ def ring_de_landmarks(c: Ctx):
     lx, lz = c.local(sl)
     rho = np.hypot(lx - x, lz - z)
     mound = g + 14 * np.exp(-(rho / 34) ** 2) + 4 * np.exp(-((rho - 40) / 10) ** 2)
-    c.H[sl] = np.maximum(c.H[sl], mound)
+    c.H[sl] = np.where(rho < 60, np.maximum(c.H[sl], mound), c.H[sl])
     c.mask("outcrop")[sl] |= rho < 40
     c.obstacle[sl] |= rho < 50
     lf.claim(c, sl, rho < 75)
@@ -531,7 +547,7 @@ def ring_de_landmarks(c: Ctx):
     # Radius in Abhaengigkeit der Hoehe: 35 unten -> 10 oben, Sockel mit Schutt
     t = np.clip(1 - (rho - 10) / 25.0, 0, 1)
     tower = np.where(rho < 35, g + hgt * t ** 1.6, -1e9)
-    tal = g + 12 * np.clip(1 - (rho - 30) / 26, 0, 1) ** 1.4
+    tal = np.where(rho < 56, g + 12 * np.clip(1 - (rho - 30) / 26, 0, 1) ** 1.4, -1e9)
     hn = np.maximum(c.H[sl], np.maximum(tower, tal))
     c.H[sl] = hn
     body = tower >= tal
@@ -619,16 +635,16 @@ def build_landforms(c: Ctx):
     carve(c)
     fields.highland(c)
     landmarks(c)
+    n_hd, n_fin = hoodoo_garden(c)
     waters(c)
-    oases_c(c)
-    hollows(c)
-    small_cones(c)
-    fields.wave(c, *pol(212 + c.u(-3, 3), 775), rx=170, rz=80, rot_deg=c.u(0, 180))
     ridges(c)
     ring_de_landmarks(c)
-    faults(c)
-    n_hd, n_fin = hoodoo_garden(c)
+    fields.wave(c, *pol(212 + c.u(-3, 3), 775), rx=170, rz=80, rot_deg=c.u(0, 180))
     n_cyn = massifs(c)
+    oases_c(c)
+    faults(c)
+    hollows(c)
+    small_cones(c)
     n_tun = tunnels(c)
     counts = {"hoodoos": n_hd, "fins": n_fin, "canyons": n_cyn, "tunnels": n_tun}
     for ring in ("A", "B", "D", "E"):
