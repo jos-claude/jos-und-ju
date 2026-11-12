@@ -466,7 +466,11 @@ local function addParticles(part: BasePart, cfg: any, scale: number)
 	emitter.Rotation = NumberRange.new(0, 360)
 	emitter.RotSpeed = NumberRange.new(-15, 15)
 	emitter.EmissionDirection = Enum.NormalId.Top
-	if cfg.kind == "steam" then
+	if cfg.kind == "mist" then
+		emitter.LightInfluence = 1
+		emitter.RotSpeed = NumberRange.new(-4, 4)
+	end
+	if cfg.kind == "steam" or cfg.kind == "mist" then
 		pcall(function()
 			emitter.Texture = "rbxasset://textures/particles/smoke_main.dds"
 		end)
