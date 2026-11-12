@@ -7,13 +7,14 @@
 
 ## Idee der Nutzer
 - Beim Betreten des Spiels landet man in einer **Lobby**: ein großes interstellares **Raumschiff**.
-- Dort gibt es einen **Computer/Terminal**, an dem man **Spielstände (Welten) erstellen und laden** kann.
+- Statt eines Computers gibt es ein **begehbares Feld (Pad) wie in klassischen Roblox-Spielen**: Man geht hinein und kann dort **Spielstände (Welten) erstellen und laden**. (Korrektur 12.11.2026, Jos und Ju)
 - In einer Welt kann man **Freunde einladen** und **gemeinsam an einer Basis** bauen.
 - Aus der Welt kommt man jederzeit **zurück zum Raumschiff** (teleportieren oder hinfliegen).
 - In der Lobby kann man **mit Fremden schreiben** und sich **gegenseitig zu seiner Welt einladen**, um zusammen zu bauen.
 
 ## Vorschlag zur Umsetzung (technisch, nicht bestätigt)
 - **Lobby = eigener Place** (passt zu 005). Jede Insel bleibt ein eigener Place.
+- **Spielstand-Pad:** Beim Betreten des Felds öffnet sich ein Menü mit den Spielständen (Neu erstellen, Laden, Freunde einladen). Das passt zu Handy und Controller, weil man nur hineinläuft. Mehrere Pads sind möglich (z. B. eins pro Spielstand-Platz).
 - **Eine Welt = ein Spielstand** mit eigener ID, Besitzer, Mitgliederliste, Insel-Fortschritt, Basis-Daten und Karten-Seed. Gespeichert wird **pro Welt**, nicht mehr pro Spieler. Das ändert den `DataService`.
 - **Zugang:** Pro Welt und Insel ein privater Server (Roblox „Reserved Server“). Der Besitzer lädt ein, Mitglieder kommen per Teleport hinein.
 - **Chat in der Lobby:** Roblox-Standardchat (automatisch gefiltert). Einladen über einen Knopf, nicht über freie Links.
