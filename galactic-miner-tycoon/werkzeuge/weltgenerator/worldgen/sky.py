@@ -98,9 +98,12 @@ def solve_roblox_sun(az_deg: float, el_deg: float) -> tuple[float, float]:
     return (12.0 + h / (2.0 * math.pi) * 24.0) % 24.0, math.degrees(tilt) + 23.5
 
 
-# Empfohlene Lighting-Werte (gerundet) -> Azimut 250,0 Grad, Elevation 22,0 Grad
-LIGHTING_CLOCK_TIME = 16.45
-LIGHTING_LATITUDE = 42.0
+# Ziel-Sonnenrichtung (Review: Sonne hoeher fuer helleren Boden; vorher Elevation 22 Grad)
+SUN_TARGET_AZ = 250.0
+SUN_TARGET_EL = 30.0
+# Empfohlene Lighting-Werte -> Azimut 250,00 Grad, Elevation 30,00 Grad (TimeOfDay 15:53:44)
+LIGHTING_CLOCK_TIME = 15.8956
+LIGHTING_LATITUDE = 40.73
 
 
 # ---------------------------------------------------------------------------
