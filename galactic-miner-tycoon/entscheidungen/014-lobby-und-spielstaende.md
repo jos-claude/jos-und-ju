@@ -32,7 +32,7 @@
 2. **Spielstände:** **2 pro Spieler.** Weitere Plätze kann man später **mit Robux kaufen** (Monetarisierung, noch nicht gebaut, siehe `../spiel/12-monetarisierung.md`).
 3. **Spieler pro Welt:** **bis zu 4.**
 4. **Rechte:** Der Besitzer lädt ein und kann Mitglieder entfernen. Alle Mitglieder dürfen bauen und kaufen, das Lager ist gemeinsam. Nur der Besitzer startet die Rakete.
-5. **Stärke, Geschwindigkeit und ähnliche Stats** (durch Upgrades und Loot): Sie **gehören zum Spielstand**, nicht zum Spieler überhaupt. Wer eine neue Welt startet, beginnt wieder bei null. Geht man zurück in die alte Welt, sind die Stats dort wieder da. Annahme von Claude: Die Stats gelten über alle Inseln derselben Welt.
+5. **Rucksack, Spitzhacke und ähnliche Stats (früher: Stärke, Geschwindigkeit, siehe 018)** (durch Upgrades und Loot): Sie **gehören zum Spielstand**, nicht zum Spieler überhaupt. Wer eine neue Welt startet, beginnt wieder bei null. Geht man zurück in die alte Welt, sind die Stats dort wieder da. Annahme von Claude: Die Stats gelten über alle Inseln derselben Welt.
 6. **Fremde:** Beitritt **nur auf Einladung** des Besitzers. Chat ist der gefilterte Roblox-Standardchat.
 
 ## Folgen (wenn bestätigt)

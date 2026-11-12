@@ -31,8 +31,8 @@ Beliebig viele, solange Vorkommen da sind und man bezahlen kann.
 
 Beispiel: 80 Studs Band sind 20 Segmente = 40 Eisen.
 
-## Räume (feste Kosten, Entscheidung 016)
-Kupfer-Vorkommen erscheinen mit Raum 2, Kohle mit 3, **Kristall mit 4 (Garage)**, Titan mit 5.
+## Räume (feste Kosten, Entscheidungen 016 und 018)
+Kupfer-Vorkommen erscheinen mit Raum 2, Kohle mit 3, **Kristall mit 4 (Garage)**, Titan mit 5 (Forschungslabor).
 
 | Raum | Name | Kosten | Was man dort tut |
 |---|---|---|---|
@@ -40,9 +40,8 @@ Kupfer-Vorkommen erscheinen mit Raum 2, Kohle mit 3, **Kristall mit 4 (Garage)**
 | 2 | Schmiede | 50 Eisen | Spitzhacke und Rucksack verbessern, Teleportfeld zur Lobby |
 | 3 | Maschinenhalle | 100 Eisen + 15 Kupfer | Förderbänder kaufen, Bohrer aufwerten |
 | 4 | **Garage** | 150 Eisen + 60 Kupfer + 20 Kohle | Rover kaufen und verbessern |
-| 5 | Trainingsraum | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Geschwindigkeit (weitere Spielerwerte später) |
-| 6 | Forschungslabor | 400 Kupfer + 200 Kohle + 80 Kristall + 20 Titan | Techbaum: bessere Bohrer, Bänder, größere Lager |
-| 7 | Raketen-Hangar | 800 Kupfer + 400 Kohle + 200 Kristall + 100 Titan | Rakete bauen und betreten |
+| 5 | Forschungslabor | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Techbaum: bessere Bohrer, Bänder, größere Lager |
+| 6 | Raketen-Hangar | 600 Kupfer + 300 Kohle + 150 Kristall + 50 Titan | Rakete bauen und betreten (die Rakete selbst kostet extra) |
 
 Die Garage kostet absichtlich **kein Kristall**, weil Kristall erst mit ihr erscheint.
 

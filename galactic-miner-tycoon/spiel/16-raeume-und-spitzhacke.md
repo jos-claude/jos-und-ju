@@ -12,7 +12,7 @@
 ## Die Schleife in einem Satz
 Ich hacke Erz, kaufe damit Bohrer und neue Räume, die Bohrer liefern mehr Erz, mit dem ich weiter hinaus komme, bis ich genug für die Rakete habe.
 
-## Die 7 Räume (Vorschlag)
+## Die 6 Räume (Entscheidung 018: Trainingsraum entfällt)
 Die Raumnummern bestimmen, wann neue Erze auftauchen (siehe `../daten/ressourcen.md`).
 
 | Raum | Name | Kosten | Was man dort tut | Neu freigeschaltet |
@@ -21,9 +21,8 @@ Die Raumnummern bestimmen, wann neue Erze auftauchen (siehe `../daten/ressourcen
 | 2 | Schmiede | 50 Eisen | Spitzhacke und **Rucksack** verbessern, **Teleportfeld zur Lobby** | Kupfer-Vorkommen |
 | 3 | Maschinenhalle | 100 Eisen + 15 Kupfer | Förderbänder kaufen, Bohrer aufwerten | Kohle-Vorkommen |
 | 4 | Garage | 150 Eisen + 60 Kupfer + 20 Kohle | Rover kaufen und verbessern | Kristall-Vorkommen |
-| 5 | Trainingsraum | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Geschwindigkeit | Titan-Vorkommen |
-| 6 | Forschungslabor | 400 Kupfer + 200 Kohle + 80 Kristall + 20 Titan | Techbaum: bessere Bohrer, Bänder, größere Lager | – |
-| 7 | Raketen-Hangar | 800 Kupfer + 400 Kohle + 200 Kristall + 100 Titan | Rakete bauen und betreten, danach nächste Insel | – |
+| 5 | Forschungslabor | 250 Eisen + 120 Kupfer + 60 Kohle + 20 Kristall | Techbaum: bessere Bohrer, Bänder, größere Lager | – |
+| 6 | Raketen-Hangar | 600 Kupfer + 300 Kohle + 150 Kristall + 50 Titan | Rakete bauen und betreten, danach nächste Insel | – |
 
 Die Garage kommt bewusst **vor dem Kristall**: Kristall liegt ab 1100 Studs und ist zu Fuß schon anstrengend (Änderung von Ju). Sie kostet deshalb kein Kristall. Titan liegt ab 1600 Studs und erscheint mit Raum 5. Raum 7 ersetzt Werft und Startplatz (vorher 6 Räume).
 
@@ -67,7 +66,7 @@ Rover-Lackierungen wären später ein kosmetischer Kauf (`12-monetarisierung.md`
 Dauer etwa 2 bis 3 Minuten, passend zu Entscheidung 014.
 
 ## Fragen (alle beantwortet)
-1. **7 Räume:** bestätigt.
+1. **Räume:** zuerst 7 bestätigt, durch Entscheidung 018 jetzt 6.
 2. **Härte-System:** bestätigt.
 3. **Vorkommen unendlich beim Handabbau:** bestätigt.
 4. **Teleportfeld in der Schmiede (Raum 2):** bestätigt.

@@ -40,13 +40,6 @@ Ohne Rucksack trägt man **10** Erz in den Händen. Den Rucksack baut man in der
 
 ID im Code: `backpack`. Der Rover-Laderaum (Garage) kommt zusätzlich dazu.
 
-## Geschwindigkeit (Trainingsraum, Raum 5)
-Bezahlt mit Erzen.
-
-| ID | Name | Wirkung | Stufen | Kosten (Basis) |
-|---|---|---|---|---|
-| `walk_speed` | Geschwindigkeit | läuft schneller (+2 Studs/s je Stufe) | 5 | 30 Eisen + 5 Kupfer, Preis ×1,15 je Stufe |
-
 ## Bohrer-Upgrades (abgestimmt für M1; Entscheidung 012)
 Gilt je Bohrer, Level 1 bis 5. Jedes Level: +50 % der Grundrate und größerer Puffer.
 

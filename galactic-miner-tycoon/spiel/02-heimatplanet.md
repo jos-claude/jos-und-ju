@@ -10,7 +10,7 @@ Der Startplanet. Der Spieler baut wie in Satisfactory eine immer größere Basis
 ## Beschlossen
 - Jeder Spieler hat seine eigene Basis (008). Der Heimatplanet ist ein eigener Place (005).
 - **Auf dem Heimatplaneten gibt es keine Gefahren** (010).
-- Die Basis besteht aus **Räumen**, die Erze kosten. In den Räumen gibt es Upgrades (Raumschiff, Geschwindigkeit, Rucksack u. a.).
+- Die Basis besteht aus **Räumen**, die Erze kosten. In den Räumen gibt es Upgrades (Raumschiff, Rucksack, Spitzhacke u. a.).
 - Zur Basis gehört ein **Lager** mit einem Kasten pro Erz (Glaswand, Füllstand sichtbar). Die Kästen sind das Inventar (010).
 - **Erzvorkommen** liegen verteilt auf der Karte. Man platziert Bohrer darauf (010).
 
@@ -30,7 +30,7 @@ Der Startplanet. Der Spieler baut wie in Satisfactory eine immer größere Basis
 - Bohrer sind aufwertbar.
 
 ## Vorschlag zu Räumen und Spitzhacke
-7 Räume, Spitzhacke und Garage sind in `16-raeume-und-spitzhacke.md` und Entscheidung 016 festgelegt.
+6 Räume, Spitzhacke, Rucksack und Garage sind in `16-raeume-und-spitzhacke.md` und den Entscheidungen 016 bis 018 festgelegt.
 
 ## Offene Fragen
 - [ ] Wie viele Vorkommen pro Erz?
