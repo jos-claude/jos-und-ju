@@ -116,6 +116,7 @@ local function hookControls()
 	end
 	originalMove = controls.moveFunction
 	controls.moveFunction = smoothMove
+	print("[MovementController] Trägheit und Schwung aktiv")
 end
 
 local function getGroundHit(character: Model, root: BasePart): RaycastResult?
