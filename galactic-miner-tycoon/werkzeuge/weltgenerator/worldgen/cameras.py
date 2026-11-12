@@ -153,10 +153,21 @@ def make(c):
                                     shadow=(oa["x"], oa["z"], 320))
     fb = c.feat.get("fogbasin", [])
     if fb:
-        f = fb[0]
-        cpos = _ahead(f["x"], f["z"], 70, f["R"] + 110)
-        cams["ring_e_fog"] = _cam((cpos[0], H(*cpos) + 16, cpos[1]), (f["x"], H(f["x"], f["z"]) + 4, f["z"]), fov=70,
-                                  shadow=(f["x"], f["z"], 350))
+        # Nebelbecken im Gegenlicht: Kamera auf der sonnenabgewandten Seite, auf Beckenhoehe, nicht im Randgebirge
+        best = None
+        for f in fb:
+            hb = H(f["x"], f["z"])
+            for da in (0, -25, 25, -50, 50, -80, 80):
+                for dist in (f["R"] * 0.9 + 60, f["R"] * 0.9 + 100):
+                    cx_, cz_ = _ahead(f["x"], f["z"], 70 + da, dist)
+                    if math.hypot(cx_, cz_) > 1860:
+                        continue
+                    score = abs(H(cx_, cz_) - hb) + abs(da) * 0.15
+                    if best is None or score < best[0]:
+                        best = (score, cx_, cz_, f, hb)
+        if best:
+            _, cx_, cz_, f, hb = best
+            cams["ring_e_fog"] = _cam((cx_, H(cx_, cz_) + 9, cz_), (f["x"], hb + 5, f["z"]), fov=70, shadow=(f["x"], f["z"], 350))
     l9 = lm.get("L9")
     if l9:
         cpos = _ahead(l9["x"], l9["z"], 200, 420)
