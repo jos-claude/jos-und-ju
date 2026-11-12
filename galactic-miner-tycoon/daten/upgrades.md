@@ -54,7 +54,7 @@ Gilt je Bohrer, Level 1 bis 5. Jedes Level: +50 % der Grundrate und größerer P
 Bei den anderen Erzen gilt dieselbe Staffel: Kosten = Kaufpreis des Bohrers × 1,25 / 2,5 / 5 / 10 (Stufe 2 bis 5), ab Level 3 zusätzlich eine Kleinigkeit vom nächsten Erz.
 
 ## Spitzhacke (Schmiede, Raum 2, Entscheidung 016)
-Abbau von Hand. Hartes Erz braucht eine bessere Spitzhacke und liefert weniger pro Schlag: **Härte-Malus** auf Erz pro Schlag (Eisen ×1,0, Kupfer ×0,8, Kohle ×0,6, Kristall ×0,4). **Titan kann man nur mit Bohrern gewinnen**, nicht von Hand. Vorkommen werden durch Handabbau nicht leer (Entscheidung 019).
+Abbau von Hand. Hartes Erz braucht eine bessere Spitzhacke und liefert weniger pro Schlag: **Härte-Malus** auf Erz pro Schlag (Eisen ×1,0, Kupfer ×0,8, Kohle ×0,6, Kristall ×0,4). **Titan kann man nur mit Bohrern gewinnen**, nicht von Hand. Vorkommen werden durch Handabbau nicht leer (Entscheidung 020).
 
 | Stufe | Name | Erz pro Schlag | Schlagtempo | Kosten | Kann abbauen |
 |---|---|---|---|---|---|

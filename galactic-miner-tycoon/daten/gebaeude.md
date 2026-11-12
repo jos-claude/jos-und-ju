@@ -14,7 +14,7 @@ Status: **abgestimmt für M1 (11.11.2026, Ju), Zahlen dürfen später angepasst 
 **Kapazitäts-Upgrade (je Kasten):** Stufe 2 / 3 / 4 / 5 = Kapazität 250 / 500 / 1000 / 2500. Kosten: das Erz des Kastens selbst, 50 / 100 / 200 / 400.
 
 ## Bohrer (werden auf Vorkommen platziert)
-Pro Vorkommen steht **ein Bohrer** (Entscheidung 019). Hat man 6 Eisen-Vorkommen, kann man 6 Eisen-Bohrer bauen.
+Pro Vorkommen steht **ein Bohrer** (Entscheidung 020). Hat man 6 Eisen-Vorkommen, kann man 6 Eisen-Bohrer bauen.
 
 | ID | Name | Kosten (Basis) | Wirkung | Voraussetzung |
 |---|---|---|---|---|
@@ -67,4 +67,4 @@ Die Garage kostet absichtlich **kein Kristall**, weil Kristall erst mit ihr ersc
 ## Rakete (Ziel der Insel, Entscheidung 013)
 | ID | Name | Kosten | Wirkung |
 |---|---|---|---|
-| `rocket` | Rakete | 1750 Eisen + 1600 Kupfer + 1150 Kohle + 600 Kristall + 150 Titan (Entscheidung 019, per Simulation für ca. 50 bis 58 Minuten; muss im Spieltest bestätigt werden) | Betreten bringt zur nächsten Insel |
+| `rocket` | Rakete | 1750 Eisen + 1600 Kupfer + 1150 Kohle + 600 Kristall + 150 Titan (Entscheidung 020, per Simulation für ca. 50 bis 58 Minuten; muss im Spieltest bestätigt werden) | Betreten bringt zur nächsten Insel |

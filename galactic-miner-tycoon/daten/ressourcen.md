@@ -3,7 +3,7 @@
 Status: **abgestimmt für M1 (11.11.2026, Ju), Zahlen dürfen später angepasst werden**. Namen sind frei erfunden und änderbar. Regeln: Entscheidungen 010 und 011.
 
 ## Rohstoffe auf dem Heimatplaneten
-Planeten-Radius: **2000 Studs**. Jedes Erz hat einen Ring (Mindest- und Maximalradius, Entscheidung 019) (flache Plattform, Entscheidung 015). Vorkommen sind zufällig verteilt, ungefährlich und haben einen **Mindestradius** um die Basis. Sie erscheinen erst mit dem Fortschritt des Spielers.
+Planeten-Radius: **2000 Studs**. Jedes Erz hat einen Ring (Mindest- und Maximalradius, Entscheidung 020) (flache Plattform, Entscheidung 015). Vorkommen sind zufällig verteilt, ungefährlich und haben einen **Mindestradius** um die Basis. Sie erscheinen erst mit dem Fortschritt des Spielers.
 
 | ID | Name | Mindestradius (Studs) | Maximalradius (Studs) | Stufe |
 |---|---|---|---|---|
@@ -24,7 +24,7 @@ Der **Auslöser** ist der Fortschritt des Spielers, nicht die Uhrzeit allein.
 | Kristall | Raum 4 (Garage) freigeschaltet | 1 sofort, dann +1 alle 10 Minuten bis 5 |
 | Titan | Raum 5 freigeschaltet | 1 sofort, dann +1 alle 10 Minuten bis 4 |
 
-Ein neues Vorkommen erscheint zufällig im erlaubten Ring (zwischen Mindest- und Maximalradius, Entscheidung 019) und nicht auf einem anderen Vorkommen. Es wird im Spielstand gespeichert.
+Ein neues Vorkommen erscheint zufällig im erlaubten Ring (zwischen Mindest- und Maximalradius, Entscheidung 020) und nicht auf einem anderen Vorkommen. Es wird im Spielstand gespeichert.
 
 ## Rohstoffe anderer Planeten
 | ID | Name | Herkunft | Stufe |

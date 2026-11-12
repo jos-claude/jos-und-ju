@@ -1,4 +1,4 @@
-# Entscheidung 019: Balancing Insel 1 (Ringe, Härte-Malus, Titan nur mit Bohrern, Rakete)
+# Entscheidung 020: Balancing Insel 1 (Ringe, Härte-Malus, Titan nur mit Bohrern, Rakete)
 
 - **Status:** Beschlossen (Ju, 12.11.2026). Zahlen sind Schätzungen aus einer Simulation und müssen im Spieltest bestätigt werden.
 - **Datum:** 12.11.2026
