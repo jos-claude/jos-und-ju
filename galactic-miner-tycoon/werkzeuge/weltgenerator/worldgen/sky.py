@@ -773,7 +773,7 @@ class SkySpec:
     saturn_ring_opening: float = 20.0
     saturn_roll: float = 14.0  # rechte Seite hoeher (Vorgabe "Roll -14 Grad, rechte Seite hoeher")
     # Saturn-Licht (Stil): Phasenwinkel 30,5 Grad = 93 % beleuchtet, Licht von links (Positionswinkel
-    # auf dem Bild: 0 = rechts, 90 = oben). Die echte Sonne steht von Saturn aus gesehen 69 Grad ueber
+    # auf dem Bild: 0 = rechts, 90 = oben). Die echte Sonne steht von Saturn aus gesehen 76 Grad ueber
     # der Ringebene -> es gaebe weder Ring- noch Planetenschatten. None = physikalisch.
     saturn_phase: float | None = 30.5
     saturn_light_pa: float | None = 185.0
