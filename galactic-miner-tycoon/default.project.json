@@ -7,6 +7,10 @@
       "Shared": { "$path": "src/ReplicatedStorage/Shared" },
       "Assets": { "$path": "src/ReplicatedStorage/Assets" }
     },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "WorldBuilder": { "$path": "src/ServerStorage/WorldBuilder" }
+    },
     "ServerScriptService": {
       "$className": "ServerScriptService",
       "Server": { "$path": "src/ServerScriptService/Server" }
