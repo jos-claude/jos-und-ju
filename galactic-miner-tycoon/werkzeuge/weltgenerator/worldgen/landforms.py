@@ -12,6 +12,21 @@ from .noise import smoothstep as ss
 from .world import angles, rot_y
 
 TAN = lambda deg: math.tan(math.radians(deg))  # noqa: E731
+MIN_OP_R = 4.0      # Zusatzformen duenner als Durchmesser 8 werden bei 4-Stud-Voxeln klumpig oder verschwinden
+MIN_HAT_R = 6.0
+
+
+def check_ops(ops):
+    """Warnungen fuer zu duenne Terrain-Zusatzformen (Radius < 4 bzw. Block-Kante < 8, Luft ausgenommen)."""
+    thin = []
+    for o in ops:
+        if o["material"] == "Air":
+            continue
+        if o["op"] in ("Ball", "Cylinder") and o["r"] < MIN_OP_R - 1e-6:
+            thin.append(o)
+        elif o["op"] in ("Block", "Wedge") and min(o["size"]) < 2 * MIN_OP_R - 1e-6:
+            thin.append(o)
+    return thin
 
 
 # ------------------------------------------------------------------ Hilfen
@@ -96,12 +111,12 @@ def poly_sdf(x, z, vx, vz):
     return np.where(inside, -dmin, dmin)
 
 
-def make_poly(c: Ctx, cx, cz, R, aspect, rot, nv=None):
+def make_poly(c: Ctx, cx, cz, R, aspect, rot, nv=None, jitter=0.07):
     rng = c.rng
     nv = int(nv or rng.integers(7, 10))
-    ang = np.linspace(0, 2 * math.pi, nv, endpoint=False) + rng.uniform(-0.18, 0.18, nv) + rng.uniform(0, 6.3)
+    ang = np.linspace(0, 2 * math.pi, nv, endpoint=False) + rng.uniform(-0.18, 0.18, nv) * (1 + 2 * jitter) + rng.uniform(0, 6.3)
     ang = np.sort(ang)
-    rad = R * (1.0 + rng.uniform(-0.07, 0.07, nv))
+    rad = R * (1.0 + rng.uniform(-jitter, jitter, nv))
     sx, sz = math.sqrt(aspect), 1.0 / math.sqrt(aspect)
     px, pz = rad * np.cos(ang) * sx, rad * np.sin(ang) * sz
     cr, sr = math.cos(rot), math.sin(rot)
@@ -122,7 +137,7 @@ def flat_s(c: Ctx, sl, sel, sval):
 
 
 def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nsteps=None, talus=1.0,
-         top_patch=None, base=None, record=True, gully=True, nv=None):
+         top_patch=None, base=None, record=True, gully=True, nv=None, rough=None):
     """Geschichteter Tafelberg wie im Referenzbild: gestapelte Stufen mit flachen Baenken und fast senkrechten
     Waenden, jede Stufenkante ein abgerundetes Polygon. Stufen liegen auf Bandgrenzen (je Stufe 1-2 Streifen)."""
     rng = c.rng
@@ -133,19 +148,22 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     pad = R * math.sqrt(aspect) + tal_l * 1.6 + 16
     sl = c.win(cx, cz, pad)
     x, z = c.local(sl)
-    rr = min(R * 0.22, 12.0)
-    vx, vz = make_poly(c, cx, cz, max(R - rr, R * 0.5), aspect, rot, nv=nv)
+    # kleine Formen (Buttes, kleine Mesas): unregelmaessiger Grundriss mit senkrechten Rippen und Rinnen
+    small = stage == "butte" or R < 50
+    if rough is None:
+        rough = small
+    rr = min(R * (0.12 if rough else 0.22), 6.0 if rough else 12.0)
+    vx, vz = make_poly(c, cx, cz, max(R - rr, R * 0.5), aspect, rot, nv=nv or (int(rng.integers(6, 9)) if rough else None),
+                       jitter=0.17 if rough else 0.07)
     d = poly_sdf(x, z, vx, vz) - rr
-    d = d + c.nz.fbm("mesaedge", x, z, 70, 2) * 1.3
+    d = d + c.nz.fbm("mesaedge", x, z, 70, 2) * 1.3 + (c.nz.fbm("mesaedge2", x, z, 22, 2) * 2.2 if rough else 0.0)
     Hl = c.H[sl]
     if base is None:
         foot = d < 0
         base = float(np.percentile(Hl[foot], 35)) if foot.any() else float(c.h_at(cx, cz))
     sc = float(s_smooth(c, np.array(cx), np.array(cz)))
     if nsteps is None:
-        nsteps = int(rng.integers(2, 5)) if stage == "mesa" else int(rng.integers(1, 3))
-    if stage == "butte":
-        gully = False
+        nsteps = (int(rng.integers(2, 5)) if R >= 50 else int(rng.integers(2, 4))) if stage == "mesa" else int(rng.integers(1, 3))
     bounds = band_boundaries(base + height * 0.6, base + height * 1.15, sc, min_band=4)
     top = min(bounds, key=lambda b: abs(b[0] - (base + height)))[0] if bounds else base + height
     # aufeinanderfolgende Bandgrenzen von unten nach oben; Stufen < 7 Studs zusammenlegen
@@ -161,13 +179,13 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
         levels.pop(int(np.argmin(gaps)) if len(levels) > 2 else 0)
     levels = levels + [top]
     s = -d
-    big = stage == "mesa" and R > 42 and gully
+    big = (stage == "mesa" and R > 42 and gully) or rough
     if big:
         th = np.arctan2(z - cz, x - cx)
         per = 2 * math.pi * R * (1 + aspect) / 2
-        k = max(5, int(round(per / rng.uniform(22, 30))))
-        g = np.maximum(0.0, np.cos(k * th + rng.uniform(0, 6.3) + 0.8 * c.nz.fbm("gul", x, z, 80, 2))) ** 8
-        gd = rng.uniform(2.0, 3.5)
+        k = max(5, int(round(per / (rng.uniform(13, 19) if rough else rng.uniform(22, 30)))))
+        g = np.maximum(0.0, np.cos(k * th + rng.uniform(0, 6.3) + 0.8 * c.nz.fbm("gul", x, z, 80, 2))) ** (4 if rough else 8)
+        gd = rng.uniform(3.0, 4.5) if rough else rng.uniform(2.0, 3.5)
     else:
         g = np.zeros_like(s)
         gd = 0.0
@@ -176,9 +194,16 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     prev = base
     insvar = 1.0 + 0.15 * c.nz.fbm("insv", x, z, 90, 2)
     rmin = R / math.sqrt(aspect)
-    wws = [max(1.6, (lv - p) * TAN(6) + 0.8) for lv, p in zip(levels, [base] + levels[:-1])]
-    inss = [rng.uniform(9, 16) if stage == "mesa" else rng.uniform(2, 5) for _ in levels[:-1]]
-    budget = (0.62 if stage == "mesa" else 0.42) * rmin - sum(wws)
+    wws = [max(1.2, (lv - p) * TAN(8)) for lv, p in zip(levels, [base] + levels[:-1])]     # Waende >= 82 Grad
+    if stage == "mesa" and not small:
+        inss = [rng.uniform(9, 16) for _ in levels[:-1]]
+        budget = 0.62 * rmin - sum(wws)
+    elif stage == "mesa":
+        inss = [rng.uniform(4, 8) for _ in levels[:-1]]
+        budget = 0.4 * rmin - sum(wws)
+    else:
+        inss = [rng.uniform(2, 4) for _ in levels[:-1]]
+        budget = 0.3 * rmin - sum(wws)
     if inss and sum(inss) > budget:                # Oberseite bleibt breit (keine Spitze)
         f = max(budget, 0.0) / sum(inss)
         inss = [v * f for v in inss]
@@ -437,8 +462,8 @@ def hoodoo(c: Ctx, x0, z0, total, base=None):
     from .layout import STRATA_BASE
     from .world import TERRAIN_MATERIALS
     rng = c.rng
-    rf = rng.uniform(5.5, 7.5)
-    hf = rng.uniform(5, 9) * min(1.0, total / 40 + 0.5)
+    rf = rng.uniform(8.0, 10.5)
+    hf = rng.uniform(6, 11) * min(1.0, total / 45 + 0.5)
     sl = c.win(x0, z0, rf * 2.4)
     x, z = c.local(sl)
     rho = np.hypot(x - x0, z - z0) * (1 + 0.1 * c.nz.fbm("hdf", x, z, 8, 1))
@@ -455,10 +480,10 @@ def hoodoo(c: Ctx, x0, z0, total, base=None):
     c.mask("talus")[sl] |= (tal > hfoot) & (tal > Hl + 0.3)
     c.obstacle[sl] |= rho < rf * 1.3
     s_here = int(round(float(s_smooth(c, np.array(x0), np.array(z0))))) % STRATA_PERIOD
-    hat_h = rng.uniform(2.6, 4.0)
+    hat_h = rng.uniform(3.5, 5.0)
     y0 = base + hf - 1.0
     y1 = base + total - hat_h
-    r0 = rng.uniform(3.0, 4.3)
+    r0 = rng.uniform(4.8, 6.0)                 # Roblox-Voxel 4 Studs: Hals mindestens Durchmesser 8
     nb = rng.choice([1.0, 1.5, 2.0])
     ph = rng.uniform(0, 2 * math.pi)
     seg_h = rng.uniform(4.5, 6.0)
@@ -470,16 +495,17 @@ def hoodoo(c: Ctx, x0, z0, total, base=None):
     rad = r0
     for i in range(nseg):
         tt = (i + 0.5) / nseg
-        rad = r0 * (0.88 + 0.16 * math.sin(2 * math.pi * nb * tt + ph)) * (1.0 - 0.14 * tt)
-        rad = max(rad, 2.3)
+        rad = r0 * (0.88 + 0.16 * math.sin(2 * math.pi * nb * tt + ph)) * (1.0 - 0.12 * tt)
+        rad = max(rad, MIN_OP_R)
         yc = y0 + (i + 0.5) * hseg
         cx += lx * hseg
         cz += lz * hseg
         m = TERRAIN_MATERIALS[int(BAND_LUT[int(math.floor(yc + s_here + STRATA_BASE)) % STRATA_PERIOD])]
         op_cyl(c, cx, yc, cz, hseg + 0.8, rad, m)
-    hat_r = rad + rng.uniform(1.0, 1.8)
+    hat_r = max(MIN_HAT_R, rad + rng.uniform(1.5, 2.5))
     op_cyl(c, cx, y1 + hat_h / 2, cz, hat_h, hat_r, "Limestone")
-    op_ball(c, cx, y1 + hat_h - hat_r * 0.5 + 1.0, cz, hat_r * 0.5, "Limestone")
+    rb = max(MIN_OP_R, hat_r * 0.6)
+    op_ball(c, cx, y1 + hat_h - rb + 1.4, cz, rb, "Limestone")
     top = y1 + hat_h + 1.0
     c.feat["hoodoo"].append({"x": x0, "z": z0, "base": base, "top": top, "hat_r": hat_r, "foot_r": rf})
     return top

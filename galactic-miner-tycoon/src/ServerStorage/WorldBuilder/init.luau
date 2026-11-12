@@ -30,6 +30,14 @@ local function loadData(path: string): any
 	return require(findModule(path) :: ModuleScript)
 end
 
+local function hasData(path: string): boolean
+	local node: Instance? = script
+	for name in string.gmatch(path, "[^/]+") do
+		node = node and node:FindFirstChild(name)
+	end
+	return node ~= nil
+end
+
 local function listData(path: string): { string }
 	local names = {}
 	for _, child in findModule(path):GetChildren() do
@@ -435,7 +443,38 @@ local SHAPES = {
 	Cylinder = Enum.PartType.Cylinder,
 }
 
-local function makePrototype(def: any, colors: any): BasePart
+local function hexColor(value: any): Color3
+	if typeof(value) == "Color3" then
+		return value
+	end
+	local hex = string.gsub(tostring(value), "#", "")
+	return Color3.fromHex(hex)
+end
+
+-- Partikel (z. B. Dampf an Dampfquellen). Groessen werden mit dem Massstab der Platzierung skaliert.
+local function addParticles(part: BasePart, cfg: any, scale: number)
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Name = "Particles"
+	emitter.Rate = cfg.rate or 5
+	emitter.Lifetime = NumberRange.new(cfg.lifetime[1], cfg.lifetime[2])
+	emitter.Speed = NumberRange.new(cfg.speed[1] * scale, cfg.speed[2] * scale)
+	emitter.Size = NumberSequence.new(cfg.size[1] * scale, cfg.size[2] * scale)
+	emitter.Transparency = NumberSequence.new(cfg.transparency[1], cfg.transparency[2])
+	emitter.SpreadAngle = Vector2.new(cfg.spread or 10, cfg.spread or 10)
+	emitter.Color = ColorSequence.new(hexColor(cfg.color or "#FFFFFF"))
+	emitter.LightInfluence = 0.6
+	emitter.Rotation = NumberRange.new(0, 360)
+	emitter.RotSpeed = NumberRange.new(-15, 15)
+	emitter.EmissionDirection = Enum.NormalId.Top
+	if cfg.kind == "steam" then
+		pcall(function()
+			emitter.Texture = "rbxasset://textures/particles/smoke_main.dds"
+		end)
+	end
+	emitter.Parent = part
+end
+
+local function makePrototype(def: any, colors: any, category: string): BasePart
 	local part: BasePart
 	if def.shape == "Wedge" then
 		part = Instance.new("WedgePart")
@@ -452,9 +491,10 @@ local function makePrototype(def: any, colors: any): BasePart
 	end
 	part.Anchored = true
 	part.CanCollide = def.collide == true
-	part.CanQuery = def.collide == true
+	-- Unsichtbare Randwand: blockiert Spieler, aber keine Raycasts (Bau-/Spawn-Code soll durch sie hindurch sehen)
+	part.CanQuery = def.collide == true and category ~= "Barrier"
 	part.CanTouch = false
-	part.CastShadow = def.castShadow ~= false
+	part.CastShadow = def.castShadow ~= false and category ~= "Barrier"
 	part.TopSurface = Enum.SurfaceType.Smooth
 	part.BottomSurface = Enum.SurfaceType.Smooth
 	part.Material = (Enum.Material :: any)[def.material] or Enum.Material.SmoothPlastic
@@ -481,7 +521,10 @@ local function buildProps(): number
 	end
 	local world = Instance.new("Folder")
 	world.Name = WORLD_FOLDER
+	-- Ordnung: Island1/<Kategorie>/Chunk_<x>_<z> (200 x 200 Studs), damit Streaming und Auswahl in Studio handlich bleiben
+	local CHUNK_SIZE = 200
 	local folders: { [string]: Folder } = {}
+	local chunks: { [string]: Model } = {}
 	local function folderFor(category: string): Folder
 		local f = folders[category]
 		if not f then
@@ -491,6 +534,22 @@ local function buildProps(): number
 			folders[category] = f
 		end
 		return f
+	end
+	local function chunkFor(category: string, x: number, z: number): Model
+		local cx = math.floor(x / CHUNK_SIZE)
+		local cz = math.floor(z / CHUNK_SIZE)
+		local key = string.format("%s/%d/%d", category, cx, cz)
+		local chunk = chunks[key]
+		if not chunk then
+			chunk = Instance.new("Model")
+			chunk.Name = string.format("Chunk_%d_%d", cx, cz)
+			pcall(function()
+				(chunk :: any).LevelOfDetail = Enum.ModelLevelOfDetail.StreamingMesh
+			end)
+			chunk.Parent = folderFor(category)
+			chunks[key] = chunk
+		end
+		return chunk
 	end
 
 	-- Prototypen je Vorlage und Farbvariante
@@ -507,7 +566,7 @@ local function buildProps(): number
 			local colors = t.variants[variant] or t.variants[1]
 			list = {}
 			for i, def in t.parts do
-				list[i] = makePrototype(def, colors)
+				list[i] = makePrototype(def, colors, t.category)
 			end
 			byVariant[variant] = list
 		end
@@ -524,7 +583,6 @@ local function buildProps(): number
 				warn("[WorldBuilder] Unbekannte Vorlage: " .. tostring(group.template))
 				continue
 			end
-			local parent = folderFor(t.category)
 			local items = group.items
 			for i = 1, #items, 8 do
 				local x, y, z = items[i], items[i + 1], items[i + 2]
@@ -550,10 +608,13 @@ local function buildProps(): number
 					if light then
 						light.Range = math.min(60, light.Range * s)
 					end
+					if def.particles then
+						addParticles(p, def.particles, s)
+					end
 					p.Parent = model
 				end
 				model.WorldPivot = place
-				model.Parent = parent
+				model.Parent = chunkFor(t.category, x, z)
 				count += 1
 				if os.clock() - lastYield > 0.25 then
 					lastYield = os.clock()
@@ -652,6 +713,85 @@ local function applyLighting(meta: any)
 	end
 end
 
+-- Vergleicht die Roblox-Sonne mit der Sonne, auf die die Skybox gerendert ist.
+local function checkSun(meta: any)
+	local sun = meta.sun
+	if not sun or not sun.direction then
+		return
+	end
+	local ok, dir = pcall(function()
+		return Lighting:GetSunDirection()
+	end)
+	if not ok then
+		return
+	end
+	local want = Vector3.new(sun.direction[1], sun.direction[2], sun.direction[3]).Unit
+	local angle = math.deg(math.acos(math.clamp(dir.Unit:Dot(want), -1, 1)))
+	if angle > 2 then
+		warn(
+			string.format(
+				"[WorldBuilder] Sonne weicht %.1f Grad von der Skybox-Sonne ab (Roblox %s, Soll %s). ClockTime/GeographicLatitude pruefen.",
+				angle,
+				tostring(dir),
+				tostring(want)
+			)
+		)
+	else
+		log(string.format("Sonne passt zur Skybox (Abweichung %.1f Grad).", angle))
+	end
+end
+
+----------------------------------------------------------------------
+-- Bauzonen (fuer den Erz-Spawn): ebene, freie, erreichbare Flaechen
+----------------------------------------------------------------------
+
+local buildZones: any = nil
+
+-- Liefert { cell, n, origin, maxRadius, rows } oder nil, wenn die Daten fehlen.
+function WorldBuilder.GetBuildZones(): any
+	if buildZones == nil then
+		buildZones = if hasData("Data/BuildZones") then loadData("Data/BuildZones") else false
+	end
+	return if buildZones then buildZones else nil
+end
+
+-- true, wenn (x, z) in einer Bauzonen-Zelle liegt.
+function WorldBuilder.IsBuildZone(x: number, z: number): boolean
+	local zones = WorldBuilder.GetBuildZones()
+	if not zones then
+		return false
+	end
+	local ix = math.floor((x - zones.origin) / zones.cell) + 1
+	local iz = math.floor((z - zones.origin) / zones.cell) + 1
+	local row = zones.rows[iz]
+	if row == nil or ix < 1 or ix > #row then
+		return false
+	end
+	return string.byte(row, ix) == 49 -- "1"
+end
+
+-- Mittelpunkte aller Bauzonen-Zellen im Ring minRadius..maxRadius als Vector2 (x, z). Hoehe per Raycast holen.
+function WorldBuilder.GetBuildZoneCells(minRadius: number, maxRadius: number): { Vector2 }
+	local zones = WorldBuilder.GetBuildZones()
+	local cells = {}
+	if not zones then
+		return cells
+	end
+	for iz, row in zones.rows do
+		local z = zones.origin + (iz - 0.5) * zones.cell
+		for ix = 1, #row do
+			if string.byte(row, ix) == 49 then
+				local x = zones.origin + (ix - 0.5) * zones.cell
+				local r = math.sqrt(x * x + z * z)
+				if r >= minRadius and r <= maxRadius then
+					table.insert(cells, Vector2.new(x, z))
+				end
+			end
+		end
+	end
+	return cells
+end
+
 ----------------------------------------------------------------------
 -- Oeffentliche Funktion
 ----------------------------------------------------------------------
@@ -686,6 +826,7 @@ function WorldBuilder.Build(options: Options?)
 	end
 	if opts.lighting ~= false then
 		applyLighting(meta)
+		checkSun(meta)
 	end
 	local spawn = meta.spawn
 	if spawn then

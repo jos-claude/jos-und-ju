@@ -36,7 +36,7 @@ def volcano(c: Ctx, cx, cz, top, crater_d, west_az=None, name="volcano", small=F
     rills = nz.ridged(name + "rill", ang * 6.0, rho * 0.02, 14, 2, sharp=2.0)
     cone = cone - rills * (4.0 if not small else 1.2) * ss(0.05, 0.4, q) * (1 - ss(0.75, 1.0, q))
     # Krater (Innenneigung <= 25 Grad, flacher Boden)
-    dep = 18.0
+    dep = 18.0 if not small else min(5.0, 0.2 * Hv)
     wall = dep / TAN(24.0)
     rf = max(Rc - wall, Rc * 0.25)
     crater = top - dep * (1 - ss(rf, Rc, rho))
@@ -259,7 +259,7 @@ def outcrops(c: Ctx, zone, amount=0.08, height=(2.5, 5.0), name="outcrop"):
     c.obstacle |= m
 
 
-def low_floating_stones(c: Ctx, n=50):
+def low_floating_stones(c: Ctx, n=30):
     """Lufteinsprengsel (Ring D/E): kleine schwebende Felsen als Zusatzformen, >= 15 ueber Boden, >= 25 ueber Wegen."""
     placed = 0
     tries = 0
@@ -271,7 +271,7 @@ def low_floating_stones(c: Ctx, n=50):
         if c.void[c.idx(px, pz)]:
             continue
         cl = c.mask("claimed")[c.idx(px, pz)]
-        R = c.u(6, 15)
+        R = c.u(10, 17)
         g = float(c.h_at(px, pz))
         sl = c.win(px, pz, R + 6)
         gmax = float(c.H[sl].max())
@@ -280,10 +280,22 @@ def low_floating_stones(c: Ctx, n=50):
         y = max(gmax + 15, g + hov)
         if any(math.hypot(px - f["x"], pz - f["z"]) < 40 for f in c.feat["lowfloat"]):
             continue
-        # Form: Moosdeckel, Fels-Kegel nach unten, Spitze
-        op_cyl(c, px, y, pz, 2.4, R, "Grass")
-        op_cyl(c, px, y - 0.25 * R - 1.0, pz, 0.5 * R, R * 0.92, "Slate" if r > 1600 else "Sandstone")
-        op_cyl(c, px, y - 0.62 * R - 1.0, pz, 0.35 * R, R * 0.62, "Rock")
-        op_ball(c, px, y - 0.9 * R - 1.0, pz, R * 0.38, "Rock")
-        c.feat["lowfloat"].append({"x": px, "z": pz, "y": y + 1.2, "R": R})
+        # in kleinen Gruppen (Archipele), nicht gleichmaessig verstreut
+        if c.feat["lowfloat"] and placed % 5 != 0:
+            last = c.feat["lowfloat"][-1]
+            ang = c.u(0, 6.28)
+            px, pz = last["x"] + math.cos(ang) * c.u(45, 90), last["z"] + math.sin(ang) * c.u(45, 90)
+            if c.void[c.idx(px, pz)] or math.hypot(px, pz) > 1860:
+                continue
+            g = float(c.h_at(px, pz))
+            sl = c.win(px, pz, R + 6)
+            gmax = float(c.H[sl].max())
+            y = max(gmax + 15, g + hov)
+        # Form: duenner Moosdeckel, darunter ein runder Fels-Kegel aus Kugeln (Roblox-Voxel runden das weich ab)
+        body = "Slate" if r > 1600 else "Sandstone"
+        op_cyl(c, px, y - 1.0, pz, 3.0, R * 0.92, "Grass")
+        op_ball(c, px, y - 0.86 * R, pz, 0.82 * R, body)
+        op_ball(c, px, y - 1.35 * R, pz, max(4.0, 0.55 * R), "Rock")
+        op_ball(c, px, y - 1.75 * R, pz, max(4.0, 0.32 * R), "Rock")
+        c.feat["lowfloat"].append({"x": px, "z": pz, "y": y + 0.5, "R": R})
         placed += 1

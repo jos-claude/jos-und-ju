@@ -109,7 +109,7 @@ def base_terrain(c: Ctx):
     amp = amp * (1.0 - 0.4 * ss(1200, 1260, rw) * (1.0 - ss(1430, 1470, rw)))  # D-Becken x0.6
     amp = amp * ss(150, 215, c.r)                       # Plateau eben
     micro = nz.fbm("plateau", x, z, 40, 2) * 0.45 * (1.0 - ss(150, 215, c.r))
-    micro = micro + (nz.fbm("microw", x, z, 52, 2) * 1.5 + nz.fbm("microw2", x, z, 20, 1) * 0.3) * ss(140, 190, c.r) * (1.0 - ss(380, 520, c.r))
+    micro = micro + (nz.fbm("microw", x, z, 85, 2) * 1.6 + nz.fbm("microw2", x, z, 34, 1) * 0.3) * ss(140, 190, c.r) * (1.0 - ss(380, 520, c.r))
     c.H = h + n * amp + micro
     c.base_smooth = h  # ohne Rauschen (fuer Washes)
 

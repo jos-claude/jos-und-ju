@@ -91,11 +91,14 @@ def landmarks(c: Ctx):
             lf.mesa(c, x, z, diam, top_y - g, stage="mesa", aspect=1.5, rot=math.radians(az + 90), nsteps=6, talus=0.6,
                     top_patch="Grass", nv=8)
         else:
-            t = lf.mesa(c, x, z, diam, top_y - g, stage="butte", aspect=1.08, nsteps=3, talus=0.55, gully=False, nv=8)
+            t = lf.mesa(c, x, z, diam, top_y - g, stage="butte", aspect=1.3, nsteps=2, talus=0.5, nv=6, rough=True)
             m = c.feat["mesa"][-1]
-            rtop = max(6.0, m["Rmin"] - m["top_inset"] - 2)
-            lf.op_cyl(c, x, t + 2.2, z, 5.0, rtop + 3.0, "Limestone")
-            lf.op_cyl(c, x, t + 5.4, z, 2.0, rtop + 1.0, "Limestone")
+            rtop = max(8.0, m["Rmin"] - m["top_inset"] - 3)
+            # leicht ueberstehende, unregelmaessige Kalk-Kappe aus drei versetzten Scheiben
+            for k in range(3):
+                a = c.u(0, 2 * math.pi)
+                off = c.u(1.5, 3.5)
+                lf.op_cyl(c, x + math.cos(a) * off, t + 1.8 + k * 0.6, z + math.sin(a) * off, 4.5, rtop + c.u(0.5, 2.5), "Limestone")
         c.feat["landmark"].append({"key": key, "x": x, "z": z})
     # L2 Zwillingstuerme
     s2 = S["L2"]
@@ -198,7 +201,7 @@ def hoodoo_garden(c: Ctx):
     count = 0
     area = sum(g[2] ** 2 for g in groups) or 1.0
     for gi, (gx, gz, grad) in enumerate(groups):
-        n = int(round(108 * grad ** 2 / area)) + int(rng.integers(-2, 3))
+        n = int(round(96 * grad ** 2 / area)) + int(rng.integers(-2, 3))
         pts = []
         for _ in range(n * 30):
             if len(pts) >= n:
@@ -206,15 +209,15 @@ def hoodoo_garden(c: Ctx):
             ang = rng.uniform(0, 2 * math.pi)
             rr = (grad + 8) * math.sqrt(rng.uniform(0, 1))
             hx, hz = gx + rr * math.cos(ang), gz + rr * math.sin(ang)
-            if any(math.hypot(hx - p[0], hz - p[1]) < rng.uniform(16, 24) for p in pts):
+            if any(math.hypot(hx - p[0], hz - p[1]) < rng.uniform(22, 30) for p in pts):
                 continue
             if c.wash_dist[c.idx(hx, hz)] < 10 or c.mask("claimed")[c.idx(hx, hz)]:
                 continue
             pts.append((hx, hz))
         for k, (hx, hz) in enumerate(pts):
-            tall = rng.uniform(22, 60) if rng.uniform() > 0.1 else rng.uniform(70, 88)
+            tall = rng.uniform(30, 68) if rng.uniform() > 0.12 else rng.uniform(72, 90)
             if k == 0:
-                tall = rng.uniform(62, 88)
+                tall = rng.uniform(70, 90)
             lf.hoodoo(c, hx, hz, tall)
             count += 1
         sl, circ = _circle(c, gx, gz, grad + 14)
@@ -245,7 +248,7 @@ RING_SPEC = {
     # n Berge, r-Bereich, Leit-Durchmesser, Hoehe ueber Umland
     "A": dict(n=4, r=(215, 300), lead=(70, 105), h=(26, 52)),
     "B": dict(n=10, r=(310, 590), lead=(90, 170), h=(45, 105)),
-    "C": dict(n=10, r=(640, 1070), lead=(90, 160), h=(30, 85)),
+    "C": dict(n=8, r=(640, 1070), lead=(90, 160), h=(30, 85)),
     "D": dict(n=14, r=(1150, 1480), lead=(70, 160), h=(50, 120)),
     "E": dict(n=6, r=(1620, 1840), lead=(60, 120), h=(40, 95)),
 }
@@ -453,12 +456,18 @@ def _canyon(c: Ctx, cx, cz, ang, length, width, floor, name, offset=0.0, bowl=No
     prof = floor + 0.5 + wall * math.tan(math.radians(76)) - np.maximum(0, wall - 16) * 2.2
     endf = ss(length / 2, length / 2 - 20, np.abs(a))
     if bowl is not None:
+        # Kastencanyon: zum Massiv-Rand hin offen, innen endet er in einer runden Oasen-Mulde
         bx, bz = bowl
         db = np.hypot(x - bx, z - bz)
-        prof = np.minimum(np.where(a < 0, prof, 1e9), floor + 0.5 + np.maximum(0, db - 26) * math.tan(math.radians(70)))
-        endf = np.where(a < 0, endf, 1.0)
+        a_b = (bx - cx) * tx + (bz - cz) * tz
+        prof = np.minimum(np.where(a >= a_b, prof, 1e9), floor + 0.5 + np.maximum(0, db - 26) * math.tan(math.radians(70)))
+        endf = np.where(a >= a_b, 1.0, 1.0)
     Hl = c.H[sl]
     cut = np.where(endf > 0, prof * endf + 1e4 * (1 - endf), 1e9)
+    # nur durch das Massiv schneiden (kein Graben ins Umland -> keine geschlossene Senke)
+    from scipy import ndimage as ndi
+    rock = ndi.binary_dilation(c.mask("mesa")[sl] | c.mask("talus")[sl], iterations=3)
+    cut = np.where(rock, cut, 1e9)
     hn = np.minimum(Hl, cut)
     changed = hn < Hl - 0.5
     c.H[sl] = hn

@@ -102,6 +102,7 @@ def terraces(c: Ctx, cx, cz, n_basins, width, length, down_az, name="terr", sour
     basins.sort(key=lambda t: t[0])
     # Hoehen von oben nach unten, je Becken eine Stufe (4)
     hmax = np.full(x.shape, -1e9)
+    hcov = np.full(x.shape, -1e9)        # Becken + Rand (dort gilt nur das Becken, nicht der Hang)
     wl = np.full(x.shape, np.nan)
     salt = np.zeros(x.shape, bool)
     for i, (aj, br, rx, rz) in enumerate(basins):
@@ -122,17 +123,18 @@ def terraces(c: Ctx, cx, cz, n_basins, width, length, down_az, name="terr", sour
         cup = np.where(notch, np.minimum(cup, W + 0.15), cup)
         newer = cup > hmax
         hmax = np.where(newer, cup, hmax)
+        hcov = np.where(rr > -3.5, np.maximum(hcov, cup), hcov)
         wl = np.where(newer & (rr > 0), W, np.where(newer, np.nan, wl))
         salt |= (rr > -6) & (rr < 2.5)
         c.feat["basin"].append({"x": cx + dx * aj + px * br, "z": cz + dz * aj + pz * br, "W": W, "rx": rx, "rz": rz,
                                 "group": name})
-    hn = np.maximum(hm, hmax)
-    top_cover = hmax >= hm - 0.01
+    hn = np.where(hcov > -1e8, hcov, np.maximum(hm, hmax))
+    top_cover = (hcov > -1e8) & (hn >= hmax - 0.01)
     wl = np.where(top_cover & (hn < wl - 0.05), wl, np.nan)
     c.H[sl] = hn
     c.wl[sl] = np.where(~np.isnan(wl), wl, c.wl[sl])
     area = (hmax > -1e8) & top_cover
-    set_mat(c, sl, area | ((side > 0.6) & (c.nz.fbm(name + "sa", x, z, 25, 2) > -0.25 + 0.5 * (1 - side))), "Salt")
+    set_mat(c, sl, area | (side > 0.45), "Salt")
     set_mat(c, sl, area & ~salt & np.isnan(wl), "Limestone")
     c.mask("terrace")[sl] |= area | (side > 0.3)
     c.obstacle[sl] |= area

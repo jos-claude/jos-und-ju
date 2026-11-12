@@ -38,8 +38,11 @@ def main():
         print(line)
     export_preview.export(world, PREVIEW_OUT)
     print(f"Vorschau-Daten: {PREVIEW_OUT}")
+    from worldgen import debugmap
+    (HERE / "out" / "shots").mkdir(parents=True, exist_ok=True)
+    debugmap.render_build(world, world.checks["build"], HERE / "out" / "shots" / "karte_bauzonen.png",
+                          getattr(world.ctx, "deco_zone", None))
     if args.debugmap:
-        from worldgen import debugmap
         debugmap.render(world, HERE / "out" / "debug_top.png")
     if not args.no_luau:
         stats = export_luau.export(world, LUAU_OUT)
