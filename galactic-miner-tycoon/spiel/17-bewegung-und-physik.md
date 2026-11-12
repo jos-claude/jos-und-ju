@@ -22,7 +22,7 @@ Wie sich der Spieler auf Insel 1 bewegt. Es soll sich anfühlen wie auf einem fr
 | **Schwung in der Luft** | In der Luft lenkt man nur langsam um. Wer rennend abspringt, fliegt weiter. Loslassen bremst nicht sofort | `MovementController` (Client) |
 | **Landestaub** | Bei einer richtigen Landung pufft eine Staubwolke in der Farbe des Bodens auf. Kleine Stufen stauben nicht | `MovementController` (Client) |
 
-Die Laufgeschwindigkeit bleibt beim Roblox-Standard (16). Die Insel ist groß (Radius 2000), langsamer laufen würde nur nerven. Schneller wird man über das Training (Raum 5) und den Rover.
+Die Laufgeschwindigkeit bleibt beim Roblox-Standard (16). Die Insel ist groß (Radius 2000), langsamer laufen würde nur nerven. Ein Upgrade für die Laufgeschwindigkeit gibt es nicht, schneller ist man mit dem Rover (Entscheidung 018).
 
 Alle Zahlen: `../daten/bewegung.md`. Im Code: `../src/ReplicatedStorage/Shared/Config/Movement.luau`.
 
@@ -39,4 +39,4 @@ Alle Zahlen: `../daten/bewegung.md`. Im Code: `../src/ReplicatedStorage/Shared/C
 - [ ] Sounds für Sprung und Landung (`15-optik-und-audio.md`).
 
 ## Verknüpft mit
-`02-heimatplanet.md`, `16-raeume-und-spitzhacke.md` (Rover, Training), `../entscheidungen/017-leichte-schwerkraft.md`, `../daten/upgrades.md` (`walk_speed`)
+`02-heimatplanet.md`, `16-raeume-und-spitzhacke.md` (Rover), `../entscheidungen/019-leichte-schwerkraft.md`, `../entscheidungen/018-kein-trainingsraum.md`

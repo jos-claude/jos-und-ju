@@ -13,7 +13,7 @@ Jeder Meilenstein ist so geschnitten, dass danach etwas **Spielbares** da ist.
 - [ ] Raum 2 (Schmiede) mit Spitzhacken-Upgrades und Teleportfeld zur Lobby (Entscheidungen 014, 016)
 - [ ] Einfache Lobby (Raumschiff) mit Spielstand-Pad, 2 Plätze; ab dem zweiten Beitritt spawnt man dort
 - [ ] Heimatplanet-Welt in Studio (Boden, Himmel, Bauplatz)
-- [ ] Planeten-Bewegung: leichte Schwerkraft, Sprung, Trägheit, Landestaub (Code fertig, in Studio testen; Entscheidung 017)
+- [ ] Planeten-Bewegung: leichte Schwerkraft, Sprung, Trägheit, Landestaub (Code fertig, in Studio testen; Entscheidung 019)
 - [ ] Kauf-Buttons in der Welt funktionieren (Rohstoffe abziehen, Gebäude erscheint)
 - [ ] Erzvorkommen erscheinen nach Fortschritt, ab Mindestradius; Bohrer lässt sich darauf platzieren und fördert in seinen Puffer
 - [ ] Spieler legt Erz von Hand in den passenden Lager-Kasten (Glaswand, Füllstand)

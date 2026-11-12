@@ -1,6 +1,6 @@
 --!strict
 -- Bewegung und Physik auf Insel 1. Muss zu daten/bewegung.md passen.
--- Konzept: spiel/17-bewegung-und-physik.md · Entscheidung 017.
+-- Konzept: spiel/17-bewegung-und-physik.md · Entscheidung 019.
 -- Roblox-Standard zum Vergleich: Gravity 196,2 · JumpHeight 7,2 · WalkSpeed 16.
 
 export type MovementConfig = {
@@ -23,7 +23,7 @@ local Movement: MovementConfig = {
 	gravity = 60,
 	-- Sprunghöhe in Studs. Mit gravity 60 dauert ein Sprung ca. 1,3 s (Standard 0,54 s).
 	jumpHeight = 12,
-	-- Laufgeschwindigkeit in Studs/s. Training (Raum 5) gibt später +2 je Stufe (daten/upgrades.md).
+	-- Laufgeschwindigkeit in Studs/s. Kein Upgrade dafür, schneller ist man mit dem Rover (Entscheidung 018).
 	walkSpeed = 16,
 
 	-- Trägheit: Sekunden, bis die Bewegung zu ca. 95 % dem Eingabewunsch folgt.

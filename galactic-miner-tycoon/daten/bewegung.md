@@ -1,6 +1,6 @@
 # Bewegung und Physik
 
-Status: **Vorschlag (12.11.2026, Jos)**. Zweite Runde: deutlich stärker, weil Jos die erste Stufe (110 / 9) zu schwach fand. Konzept: `../spiel/17-bewegung-und-physik.md`, Entscheidung 017.
+Status: **Vorschlag (12.11.2026, Jos)**. Zweite Runde: deutlich stärker, weil Jos die erste Stufe (110 / 9) zu schwach fand. Konzept: `../spiel/17-bewegung-und-physik.md`, Entscheidung 019.
 Code-Gegenstück: `../src/ReplicatedStorage/Shared/Config/Movement.luau`
 
 ## Insel 1
@@ -8,7 +8,7 @@ Code-Gegenstück: `../src/ReplicatedStorage/Shared/Config/Movement.luau`
 |---|---|---|---|
 | `gravity` | 60 | 196,2 | Schwerkraft in Studs/s² (Mond wäre 32,7) |
 | `jumpHeight` | 12 | 7,2 | Sprunghöhe in Studs |
-| `walkSpeed` | 16 | 16 | Laufgeschwindigkeit in Studs/s (Training: +2 je Stufe, `upgrades.md`) |
+| `walkSpeed` | 16 | 16 | Laufgeschwindigkeit in Studs/s (kein Upgrade, Entscheidung 018) |
 | `groundAccelTime` | 0,4 s | sofort | Anlaufen am Boden |
 | `groundDecelTime` | 0,55 s | sofort | Abbremsen am Boden (ca. 3 Studs Nachrutschen) |
 | `airControlTime` | 1,6 s | sofort | Umlenken in der Luft |
