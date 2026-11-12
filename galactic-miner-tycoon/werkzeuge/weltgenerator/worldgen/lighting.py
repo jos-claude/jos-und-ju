@@ -7,38 +7,47 @@ from .layout import SUN_AZ, SUN_EL
 from .world import RGB, Enum
 
 
+def roblox_clock_lat(az=SUN_AZ, el=SUN_EL):
+    """ClockTime/GeographicLatitude fuer die Sonnenrichtung (Formel des Himmels-Agenten in sky.py, in Roblox gemessen)."""
+    try:
+        from .sky import solve_roblox_sun
+        ct, lat = solve_roblox_sun(az, el)
+        return round(ct, 4), round(lat, 2)
+    except Exception:  # noqa: BLE001 - sky.py fehlt oder aendert sich: alte Werte
+        return 16.45, 42.0
+
+
 def sun_direction(az=SUN_AZ, el=SUN_EL):
     a, e = math.radians(az), math.radians(el)
     return [round(math.sin(a) * math.cos(e), 5), round(math.sin(e), 5), round(-math.cos(a) * math.cos(e), 5)]
 
 
 def lighting_meta():
+    ct, lat = roblox_clock_lat()
     return {
         "Lighting": {
-            # Vom Himmels-Agenten mit der gemessenen Roblox-Sonnenformel bestimmt: ergibt Azimut 250, Elevation 22
-            "ClockTime": 16.45,
-            "GeographicLatitude": 42,
-            # Review Runde 1: mehr Kontrast -> Sonne waermer/staerker, Umgebungslicht schwaecher, Schattenseite lavendel
+            # Sonne Az 250 / El 30 (Review). Werte aus sky.solve_roblox_sun; der Himmels-Agent liefert ggf. neue.
+            "ClockTime": ct,
+            "GeographicLatitude": lat,
             "Brightness": 3.0,
-            "Ambient": RGB("#4E4466"),
-            "OutdoorAmbient": RGB("#9A8CB4"),
-            "ColorShift_Top": RGB("#FFC890"),
-            "ColorShift_Bottom": RGB("#7468C0"),
-            "EnvironmentDiffuseScale": 0.35,
-            "EnvironmentSpecularScale": 0.3,
-            "ExposureCompensation": 0.1,
+            "Ambient": RGB("#5A4A66"),
+            "OutdoorAmbient": RGB("#AC92AC"),        # Rose-Lavendel: Schatten auf Pfirsich werden mauve-korall
+            "ColorShift_Top": RGB("#FFD8AE"),        # weniger Orange, sonst Rost
+            "ColorShift_Bottom": RGB("#8A74B0"),
+            "EnvironmentDiffuseScale": 0.15,         # dunkle Skybox wuerde Schatten tuerkis-grau ziehen
+            "EnvironmentSpecularScale": 0.08,        # kein Himmels-Spiegel auf Pflanzen
+            "ExposureCompensation": 0.2,
             "GlobalShadows": True,
-            "ShadowSoftness": 0.25,
+            "ShadowSoftness": 0.4,
             "Technology": Enum("Technology", "ShadowMap"),
         },
         "Atmosphere": {
-            # Minimaler Grund-Dunst (Wunsch Jos): etwas dichter, mehr Haze, Farbe pfirsich-lavendel.
-            # Ziel: ~6 % bei 200 Studs, ~20 % bei 500, Zenit/Saturn klar.
-            "Density": 0.32, "Offset": 0.25, "Color": RGB("#EEB8BE"), "Decay": RGB("#8E6FA8"), "Glare": 0.35, "Haze": 2.0,
+            # Dunst in Staubfarbe (Mischung Ground/Sandstone); 500 Studs ~15 %, 1500 ~45 %, Zenit klar
+            "Density": 0.28, "Offset": 0.2, "Color": RGB("#F2BFA6"), "Decay": RGB("#7C6AA0"), "Glare": 0.25, "Haze": 1.5,
         },
-        "Bloom": {"Intensity": 0.45, "Size": 24, "Threshold": 1.4},
-        "ColorCorrection": {"Brightness": 0.02, "Contrast": 0.12, "Saturation": 0.18, "TintColor": RGB("#FFF1E6")},
-        "SunRays": {"Intensity": 0.06, "Spread": 0.8},
+        "Bloom": {"Intensity": 0.35, "Size": 30, "Threshold": 1.5},
+        "ColorCorrection": {"Brightness": 0.0, "Contrast": 0.08, "Saturation": 0.04, "TintColor": RGB("#FFF2E8")},
+        "SunRays": {"Intensity": 0.05, "Spread": 0.6},
         "DepthOfField": {"Enabled": False, "FarIntensity": 0.08, "FocusDistance": 200, "InFocusRadius": 400, "NearIntensity": 0},
         "Sky": {"CelestialBodiesShown": False, "StarCount": 0},  # SkyboxOrientation bleibt Standard (0, 0, 0)
     }

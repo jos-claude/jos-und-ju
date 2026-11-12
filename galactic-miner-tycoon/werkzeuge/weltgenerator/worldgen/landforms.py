@@ -130,6 +130,27 @@ def make_poly(c: Ctx, cx, cz, R, aspect, rot, nv=None, jitter=0.07):
 
 
 # ------------------------------------------------------------------ Tafelberg / Butte
+def apron(q, qa):
+    """Konkaves Schutt-Profil 0..1: steiler oberer Teil (bis qa, ~30-40 Grad), dann langer flacher Fuss (<= ~5 Grad),
+    der in den Boden auslaeuft. q = 0 am Fels, 1 am Fuss."""
+    up = 0.18 + 0.82 * np.clip(1.0 - q / qa, 0, 1) ** 1.4
+    lo = 0.18 * np.clip(1.0 - (q - qa) / (1.0 - qa), 0, 1) ** 1.1
+    return np.where(q < qa, up, lo)
+
+
+def gfan_of(g):
+    """Breiter Schuttkegel unter einer Rinne (g = schmale Rinnen-Funktion 0..1)."""
+    return np.clip(g * 1.6, 0, 1) ** 0.5
+
+
+def set_talus_q(c: Ctx, sl, sel, q):
+    """Relative Lage auf der Halde (0 = oben am Fels, 1 = Fuss) fuer das Zerfasern der Unterkante."""
+    if not hasattr(c, "talus_q"):
+        c.talus_q = np.full(c.H.shape, np.nan, np.float32)
+    v = c.talus_q[sl]
+    v[sel] = q[sel]
+
+
 def flat_s(c: Ctx, sl, sel, sval):
     """Konstanter Schichtversatz in einem Bereich (waagerechte Baender)."""
     c.S_local[sl] = np.where(sel, sval, c.S_local[sl])
@@ -144,7 +165,8 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     R = diam / 2.0
     aspect = aspect if aspect is not None else (rng.uniform(1.0, 1.55) if stage == "mesa" else rng.uniform(1.0, 1.25))
     rot = rot if rot is not None else rng.uniform(0, math.pi)
-    tal_l = talus * height * (rng.uniform(0.17, 0.25) if stage == "mesa" else rng.uniform(0.2, 0.3))
+    # Review: lange, konkave Schutt-Schuerze, Laenge 0,6-0,9 x Wandhoehe, Hoehe 0,25-0,35 x Wandhoehe
+    tal_l = talus * height * rng.uniform(0.5, 0.65)
     pad = R * math.sqrt(aspect) + tal_l * 1.6 + 16
     sl = c.win(cx, cz, pad)
     x, z = c.local(sl)
@@ -183,11 +205,11 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     if big:
         th = np.arctan2(z - cz, x - cx)
         per = 2 * math.pi * R * (1 + aspect) / 2
-        k = max(5, int(round(per / (rng.uniform(13, 19) if rough else rng.uniform(22, 30)))))
+        k = max(5, int(round(per / (rng.uniform(13, 19) if rough else rng.uniform(20, 35)))))
         g = np.maximum(0.0, np.cos(k * th + rng.uniform(0, 6.3) + 0.8 * c.nz.fbm("gul", x, z, 80, 2))) ** (4 if rough else 8)
         rmin0 = R / math.sqrt(aspect)
         g = g * ss(0.3 * rmin0, 0.65 * rmin0, np.hypot(x - cx, z - cz))   # Rinnen nur am Rand, keine Loecher oben
-        gd = rng.uniform(3.0, 4.5) if rough else rng.uniform(2.0, 3.5)
+        gd = rng.uniform(3.0, 4.5) if rough else rng.uniform(3.0, 6.0)
     else:
         g = np.zeros_like(s)
         gd = 0.0
@@ -220,14 +242,18 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     roof = rng.uniform(0.3, 0.9) if stage == "mesa" else 0.2
     h = h + roof * ss(inset, inset + 30, s)
     mesa_h = np.where(s > -1, h, -1e9)
-    # Schutthalde (Mud): glatte Schuerze 28-35 Grad, deckt den Wandfuss (kein gezackter Bandsaum)
-    tal_l = max(tal_l, 9.0)
-    T = max(5.0, tal_l * TAN(32) * 0.78)
+    # Schutt-Schuerze (Rock): oben steil (~32-40 Grad), langer flacher Fuss (<= 5 Grad), Unterkante zerfasert in den
+    # Boden (materials.py). Laenge ~0,6-0,8 x Wandhoehe. Unter jeder Rinne ein Schuttkegel mit Mini-Faecher aus Sand.
+    T = max(4.0, height * rng.uniform(0.14, 0.19) * min(1.0, talus * 1.4))
+    L1, L2 = 1.25 * T, 0.18 * T / TAN(3.0)
+    tal_l = L1 + L2
+    qa = L1 / tal_l
+    gfan = gfan_of(g)
     gs = 0.5 + 0.5 * c.nz.fbm("talcone", x, z, 80, 2)
-    tl = tal_l * (1.0 + 0.18 * gs)
-    Tg = T * (1.0 + 0.12 * gs)
-    q = np.clip((d + 0.25 * tl) / tl, 0, 1)
-    tal = base + Tg * (1 - q) ** 1.35
+    tl = tal_l * (1.0 + 0.12 * gs + 0.3 * gfan)
+    Tg = T * (1.0 + 0.06 * gs + 0.12 * gfan)
+    q = np.clip((d + 0.06 * tl) / tl, 0, 1)
+    tal = base + Tg * apron(q, qa)
     tal = np.where(q < 1, tal, -1e9)
     new = np.maximum(Hl, np.maximum(mesa_h, tal))
     body = (mesa_h >= tal) & (mesa_h > Hl + 0.5)
@@ -235,8 +261,12 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     c.H[sl] = new
     c.mask("mesa")[sl] |= body
     c.mask("talus")[sl] |= tmask
+    set_talus_q(c, sl, tmask, q)
+    c.mask("minifan")[sl] |= tmask & (gfan > 0.45) & (q > qa * 0.8)
     clear_soft(c, sl, body | tmask)
-    c.obstacle[sl] |= body | tmask
+    # Hindernis nur am steilen oberen Teil; der flache Fuss bleibt Bauzone
+    q12 = qa
+    c.obstacle[sl] |= body | (tmask & (q < q12))
     claim(c, sl, d < tal_l + 18)
     if top_patch:
         topsel = body & (s > inset - 2) & (c.nz.fbm("toppatch", x, z, 40, 2) > -0.1)
@@ -334,10 +364,10 @@ def ridge(c: Ctx, p0, p1, bend, peaks, base=None, front=1, dip_deg=13.0, face_de
     for (tp, hp, wp) in peaks:
         crest = np.maximum(crest, hp * np.clip(1 - (np.abs(t - tp) / wp) ** 1.6, 0, 1) ** 0.45)
     crest = crest * ss(-0.04, 0.07, t) * ss(1.04, 0.93, t)
-    zack = c.nz.ridged(name + "zack", s, np.zeros_like(s) + 7.0, 38, 2, sharp=2.4)
-    fine = c.nz.ridged(name + "zack2", s, np.zeros_like(s) + 3.0, 13, 1, sharp=2.0)
+    zack = c.nz.ridged(name + "zack", s, np.zeros_like(s) + 7.0, 38, 2, sharp=1.3)
+    fine = c.nz.ridged(name + "zack2", s, np.zeros_like(s) + 3.0, 13, 1, sharp=1.3)
     cf = np.clip(crest / 50, 0, 1)
-    crest = crest + ((zack - 0.45) * 16.0 + (fine - 0.5) * 4.0) * cf
+    crest = crest + ((zack - 0.45) * 8.0 + (fine - 0.5) * 2.0) * cf
     for (tg, wg, hg) in gaps:
         gw = wg / L
         crest = np.minimum(crest, hg + np.maximum(0, np.abs(t - tg) - gw / 2) * L * TAN(40))
@@ -352,10 +382,12 @@ def ridge(c: Ctx, p0, p1, bend, peaks, base=None, front=1, dip_deg=13.0, face_de
     hr = np.where(u < 0, front_h, back_h)
     # Schutthalde vor der Stirnseite (Mud)
     foot_u = crest / TAN(face_deg)
-    T = 0.17 * crest
-    Ltal = T / TAN(31) + 4
-    q = np.clip((au - foot_u + 0.3 * Ltal) / Ltal, 0, 1)
-    tal = np.where((u < 0) & (q < 1), T * (1 - q) ** 1.5, -1e9)
+    T = np.maximum(0.2 * crest, 1.0)
+    L1, L2 = 1.25 * T, 0.18 * T / TAN(3.0)
+    Ltal = L1 + L2
+    qa_r = L1 / Ltal
+    q = np.clip((au - foot_u + 0.2 * L1) / Ltal, 0, 1)
+    tal = np.where((u < 0) & (q < 1), T * apron(q, qa_r), -1e9)
     hrel = np.maximum(hr, tal)
     hrel = np.where(hrel > -0.5, hrel, -1e9)
     hnew = base + hrel
@@ -365,8 +397,9 @@ def ridge(c: Ctx, p0, p1, bend, peaks, base=None, front=1, dip_deg=13.0, face_de
     c.H[sl] = new
     c.mask("ridge")[sl] |= body
     c.mask("talus")[sl] |= tm
+    set_talus_q(c, sl, tm, q)
     clear_soft(c, sl, body | tm)
-    c.obstacle[sl] |= body | tm
+    c.obstacle[sl] |= body | (tm & (q < qa_r))
     claim(c, sl, (hnew > Hl - 1.0) & (hrel > -6))
     # lokal geneigte Schichten (max. 15 Grad), Fall zur Rueckseite
     sc = float(s_smooth(c, np.array(mid[0]), np.array(mid[1])))
@@ -472,7 +505,7 @@ def hoodoo(c: Ctx, x0, z0, total, base=None):
     Hl = c.H[sl]
     if base is None:
         base = float(Hl[rho < rf].min()) if (rho < rf).any() else float(c.h_at(x0, z0))
-    q = np.clip(rho / (rf * 1.6), 0, 1)
+    q = np.clip(rho / (rf * 1.35), 0, 1)
     prof = np.where(rho < rf * 0.5, 1.0, (1 - np.clip((rho - rf * 0.5) / (rf * 0.9), 0, 1)) ** 1.5)
     hfoot = np.where(rho < rf * 1.4, base + hf * prof, -1e9)
     tal = np.where(q < 1, base + rf * 0.3 * (1 - q) ** 1.5, -1e9)
@@ -480,7 +513,7 @@ def hoodoo(c: Ctx, x0, z0, total, base=None):
     c.H[sl] = np.maximum(Hl, hn)
     c.mask("hoodoo_foot")[sl] |= (hfoot >= tal) & (hfoot > Hl + 0.5)
     c.mask("talus")[sl] |= (tal > hfoot) & (tal > Hl + 0.3)
-    c.obstacle[sl] |= rho < rf * 1.3
+    c.obstacle[sl] |= rho < rf * 1.15
     s_here = int(round(float(s_smooth(c, np.array(x0), np.array(z0))))) % STRATA_PERIOD
     hat_h = rng.uniform(3.5, 5.0)
     y0 = base + hf - 1.0
