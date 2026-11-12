@@ -29,6 +29,9 @@ Der Startplanet. Der Spieler baut wie in Satisfactory eine immer größere Basis
 - Vorerst 6 Räume, später änderbar.
 - Bohrer sind aufwertbar.
 
+## Vorschlag zu Räumen und Spitzhacke
+Ein Vorschlag für 7 Räume, Spitzhacke und Garage steht in `16-raeume-und-spitzhacke.md` (noch nicht abgestimmt).
+
 ## Offene Fragen
 - [ ] Wie viele Vorkommen pro Erz?
 
