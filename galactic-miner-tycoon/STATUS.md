@@ -6,7 +6,7 @@
 | Planeten-Physik (Entscheidung 019) | **im Play gemessen:** Schwerkraft 60, Sprung 12 Studs / 1,23 s, Trägheit (Anlaufen ca. 0,6 s, 2 Studs Nachrutschen), Landestaub | `src/…/MovementService`, `MovementController` |
 | Code M1 (Ju) | Schritt 1 bis 4 fertig (12.11. spät): Greybox-Halle, Lager mit Eisen-Kasten, Eisen-Vorkommen aus dem Seed, Handabbau mit E halten, Abladefeld, HUD. Nächstes: Schritt 5 (erster Bohrer) | `checklisten/code-fortschritt.md` |
 | 3D-Modelle v3 (Förderband, Erzbrocken, Lager-Kasten, Basis) | fertig auf `main`, **Import in Studio offen** (Upload-Ordner muss in Studio freigegeben werden) | `assets/modelle/`, `assets/asset-liste.md` |
-| Welt Insel 1 (WorldBuilder) | Werkzeug auf `main`, Gelände noch **Platzhalter**; Bau im Place wartet darauf, dass Jus Rojo `ServerStorage.WorldBuilder` einspielt | `technik/weltgenerator.md` |
+| Welt Insel 1 (WorldBuilder) | **im Place gebaut (12.11., 21:45)** und im Play getestet – Gelände noch **Platzhalter** (Ebene, eine Mesa), echtes Design baut Jos' Cloud-Chat (Runde 2). Plateau-Oberfläche liegt bei y = 2,0. Himmel-Bilder fertig (`assets/himmel/`), Upload offen. Einspielen ohne Jus Rojo: `rojo serve worldbuilder.project.json` (nur `ServerStorage.WorldBuilder`) | `technik/weltgenerator.md` |
 | Abstimmung Jos ↔ Ju im Place | Auftrag 001 (wer baut was) | `auftraege/offen/001-jos-an-ju-welt-modelle-abstimmen.md` |
 
 (Der Abschnitt darunter ist der ältere Stand vom 11.11.)
