@@ -30,6 +30,13 @@ Beide Wege bauen dasselbe. Das Bauen dauert etwa 1–3 Minuten (Fortschritt in d
 
 Nur Teile neu bauen: `Build({ terrain = false })` (nur Deko + Licht), `Build({ props = false })` (nur Gelände + Licht), `Build({ lighting = false })`.
 
+**Wichtig nach einem Rojo-Update in derselben Studio-Sitzung:** `require` merkt sich ein ModuleScript. Wer den WorldBuilder schon einmal geladen hat, bekommt sonst den **alten** Code und alte Daten (Folge: „Unbekannte Vorlage …“, halb alte Welt). Deshalb immer über eine frische Kopie bauen (getestet in Studio am 12.11.2026):
+```lua
+local c = game.ServerStorage.WorldBuilder:Clone(); c.Parent = game.ServerStorage; require(c).Build(); c:Destroy()
+```
+
+**Gemessen im echten Place (12.11.2026, Stand `4c6274a`):** Bauzeit ca. 6 s, keine Warnungen, Plateau-Oberfläche y ≈ 0, Sonne passt zur Skybox. Ca. 12 Mio. Terrain-Zellen, 7 698 Deko-Objekte mit ca. 24 900 Teilen. Für Handys ist das viel. Wenn die Deko wächst, Teile sparen (siehe Offene Fragen).
+
 ## Himmel (Skybox)
 Die 6 Himmelsbilder liegen in `../assets/himmel/`. Roblox-Skripte können keine Bilder hochladen, deshalb einmal von Hand: Bilder in Studio hochladen und die IDs in `src/ServerStorage/WorldBuilder/Settings.luau` (bzw. im Einstellungs-Block von `BuildIsland1.luau`) eintragen, dann `Build({ terrain = false, props = false })`. Schritte: `../assets/himmel/README.md`.
 
@@ -43,5 +50,6 @@ Die 6 Himmelsbilder liegen in `../assets/himmel/`. Roblox-Skripte können keine 
 **Wichtig:** Die Daten in `src/ServerStorage/WorldBuilder/Data/` und `welt/BuildIsland1.luau` nie von Hand ändern, sie werden überschrieben. Änderungen gehören in den Generator.
 
 ## Offene Fragen
+- [ ] **Teile sparen für Handys (Vorschlag):** häufige Deko (Ballon-Bäume, Kristalle, Gras-Büschel) später als je ein MeshPart statt 5–13 Parts bauen. Oder kleine Deko nur in der Nähe der Basis.
 - [ ] Sollen Erz-Vorkommen später nur auf den „Bauzonen“ des Generators spawnen? (Der Generator kennt sie; ein Export für das Spiel wäre einfach.)
 - [ ] Welt bei jedem Spieler gleich (fester Seed, Vorschlag) oder je Spieler anders (Entscheidung 011 betrifft bisher nur die Erz-Verteilung)?
