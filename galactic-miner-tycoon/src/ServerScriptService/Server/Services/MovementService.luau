@@ -31,6 +31,7 @@ function MovementService.Init()
 	-- Gilt für alles, was nicht verankert ist (Spieler, Erzbrocken, später der Rover).
 	-- Der Wert wird automatisch an alle Clients übertragen.
 	workspace.Gravity = Movement.gravity
+	print(`[MovementService] Planeten-Physik aktiv: Schwerkraft {Movement.gravity}, Sprunghöhe {Movement.jumpHeight}`)
 end
 
 function MovementService.Start()

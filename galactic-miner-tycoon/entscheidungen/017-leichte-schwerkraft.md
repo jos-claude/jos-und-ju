@@ -12,6 +12,7 @@ Wie soll sich der Spieler auf Insel 1 bewegen?
 2. Man springt **etwas langsamer ab** und ist **etwas länger in der Luft**, aber nicht ewig.
 3. Auch das **Laufen passt dazu**: leichte Trägheit am Boden, Schwung in der Luft, Staubwolke bei der Landung.
 4. Die **Laufgeschwindigkeit bleibt beim Standard**, weil die Insel groß ist.
+5. **Nachtrag (Jos, 12.11.2026):** Die Wirkung soll **deutlich spürbar** sein. Die erste Stufe (Schwerkraft 110) war zu schwach, jetzt gilt 60 mit Sprunghöhe 12 (ca. 1,3 s in der Luft).
 
 ## Warum
 Man soll wirklich merken, dass man auf einem anderen Planeten ist (Wunsch von Jos). Mond-Schwerkraft wäre zu extrem und würde das Bauen und Laufen nerven.

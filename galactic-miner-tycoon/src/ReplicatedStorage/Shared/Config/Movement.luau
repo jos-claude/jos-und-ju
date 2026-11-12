@@ -19,17 +19,17 @@ export type MovementConfig = {
 
 local Movement: MovementConfig = {
 	-- Schwerkraft in Studs/s². Erde (Roblox-Standard) 196,2, Mond 32,7.
-	-- 110 ist gut die Hälfte: deutlich leichter als auf der Erde, aber kein Mond.
-	gravity = 110,
-	-- Sprunghöhe in Studs. Mit gravity 110 dauert ein Sprung ca. 0,8 s (Standard 0,54 s).
-	jumpHeight = 9,
+	-- 60 ist knapp ein Drittel: klar spürbar leichter als auf der Erde, aber noch kein Mond.
+	gravity = 60,
+	-- Sprunghöhe in Studs. Mit gravity 60 dauert ein Sprung ca. 1,3 s (Standard 0,54 s).
+	jumpHeight = 12,
 	-- Laufgeschwindigkeit in Studs/s. Training (Raum 5) gibt später +2 je Stufe (daten/upgrades.md).
 	walkSpeed = 16,
 
 	-- Trägheit: Sekunden, bis die Bewegung zu ca. 95 % dem Eingabewunsch folgt.
-	groundAccelTime = 0.25, -- Anlaufen auf dem Boden
-	groundDecelTime = 0.35, -- Abbremsen auf dem Boden (man rutscht ca. 2 Studs nach)
-	airControlTime = 0.9, -- Lenken in der Luft (Schwung bleibt erhalten)
+	groundAccelTime = 0.4, -- Anlaufen auf dem Boden
+	groundDecelTime = 0.55, -- Abbremsen auf dem Boden (man rutscht ca. 3 Studs nach)
+	airControlTime = 1.6, -- Lenken in der Luft (Schwung bleibt erhalten)
 
 	-- Staubwolke bei der Landung (nur für den eigenen Charakter).
 	landingDust = true,
