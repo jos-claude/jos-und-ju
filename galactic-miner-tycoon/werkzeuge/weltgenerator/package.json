@@ -1,0 +1,8 @@
+{
+  "name": "weltgenerator-preview",
+  "private": true,
+  "description": "Vorschau-Renderer fuer den Weltgenerator (nur Entwicklung)",
+  "dependencies": {
+    "three": "0.186.1"
+  }
+}
