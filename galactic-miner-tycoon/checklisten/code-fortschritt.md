@@ -10,7 +10,7 @@ Zweck: Wenn ein Chat mitten in der Arbeit abbricht (Usage-Limit), steht hier, **
 |---|---|---|---|---|
 | 1 | Config als Luau aus `../daten/` (Erze, Kästen, Bohrer, Räume, Spitzhacke, Rucksack), alte Credits-Config entfernen | fertig | `47f2d24` | Studio (Edit): alle 10 Shared-Skripte per Rojo da, Länge gleich (ohne CR); `Currencies` weg; 67 Prüfungen der Config-Werte gegen `daten/` per loadstring: 0 Fehler; keine Fehler im Log. `--!strict` nicht maschinell geprüft (kein luau-analyze installiert) |
 | 2 | Daten pro Welt (Welt-ID), Standard-Welt, Speichern/Laden mit Mock im Studio | in Arbeit (nur Playtest fehlt) | `85ccc9c` + Fix Mock-Prüfung | Studio (Edit): Skripte per Rojo da, Länge gleich; Selbsttest 23/23 (Standard-Welt, Speichern→neu Laden gleiche Werte, 2. Spieler eigene Welt, fehlende Felder ergänzt, neuere Version abgelehnt, Lesefehler → nichts geschrieben, Studio → immer Mock, echter DataStore in Studio verweigert); keine Fehler im Log. Playtest (Welt-ID am Spieler) wartet auf Jus Erlaubnis |
-| 3 | Platzhalter-Insel (Greybox): flacher Boden, Start-Halle, Lager mit Eisen-Kasten, Eisen-Vorkommen mit Ring | offen | – | – |
+| 3 | Spielobjekte auf der Welt von Jos (WorldBuilder, `../technik/weltgenerator.md`): Lager mit Eisen-Kasten (Platzhalter), Eisen-Vorkommen nach Ring mit Seed (ResourceNodeService). Die Welt und ihre Modelle gehören Jos, nicht neu bauen | offen | – | – |
 | 4 | Handabbau mit Spitzhacke (Tragevorrat 10), Erz in den Kasten legen | offen | – | – |
 | 5 | Erster Bohrer kaufen und auf Vorkommen setzen, Puffer, Erz holen | offen | – | – |
 | 6 | Raum 2 (Schmiede) kaufen, Rucksack und Spitzhacke verbessern | offen | – | – |
