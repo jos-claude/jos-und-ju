@@ -1,37 +1,48 @@
-"""Insel 1 (Heimatplanet). PLATZHALTER: nur ein Minimal-Gelaende zum Testen der Pipeline.
+"""Insel 1 (Heimatplanet) nach referenz/welt-design-insel-1.md.
 
-Die echte Welt entsteht nach referenz/welt-design-insel-1.md.
+Ablauf: Grundgelaende -> Washes -> Landmarken/Becken/Felder/Berge -> Hochland + Rand -> Materialien
+-> Pruefungen (Bauzonen, Flood-Fill, Wasser) -> Deko (Oekologie-Karten, Inseln) -> Licht/Meta.
 """
 from __future__ import annotations
 
+import time
+
 import numpy as np
 
-from .noise import Noise, smoothstep
-from .world import MAT, RGB, STRATA_FLAG, Enum, PartDef, Template, World, angles
+from . import compose, fields, materials, terrain
+from .ctx import Ctx
+from .world import World
+
+SEED = 1
 
 
-def build(seed: int) -> World:
+def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
+    t0 = time.time()
+
+    def log(msg):
+        if verbose:
+            print(f"  [{time.time() - t0:5.1f} s] {msg}")
+
+    c = Ctx(seed)
+    terrain.base_terrain(c)
+    log("Grundgelaende")
+    counts = compose.build_landforms(c)
+    log(f"Landformen {counts}")
+    zoneA = (c.rw > 185) & (c.rw < 255) & ~c.mask("claimed") & (c.wash_dist > 5)
+    zoneB = (c.rw > 270) & (c.rw < 600) & ~c.mask("claimed") & (c.wash_dist > 5)
+    zoneD = (c.rw > 1150) & (c.rw < 1560) & ~c.mask("claimed") & (c.wash_dist > 5)
+    fields.outcrops(c, zoneA, 0.08, (2.0, 4.0), "outA")
+    fields.outcrops(c, zoneB, 0.06, (2.5, 5.0), "outB")
+    fields.outcrops(c, zoneD, 0.05, (3.0, 6.0), "outD")
+    fields.low_floating_stones(c, 50)
+    terrain.rim(c)
+    terrain.floating_rocks(c)
+    log("Rand, Balkone, Schwebfelsen")
+    materials.assign(c)
+    materials.apply_overrides(c)
+    log("Materialien")
     w = World(seed=seed)
-    nz = Noise(seed)
-    x, z = World.coords()
-    r = np.hypot(x, z)
-    hills = nz.fbm("hills", x, z, 300, 4) * 12
-    h = hills * smoothstep(180, 320, r)
-    mesa = smoothstep(120, 100, np.hypot(x - 300, z + 300))
-    h = h + np.round(mesa * 60 / 12) * 12
-    w.h = np.where(r < 2100, h, -9999.0)
-    w.mat[:] = MAT["Ground"]
-    w.mat[mesa > 0.05] = STRATA_FLAG
-    w.finalize_depth()
-    w.meta.update({
-        "name": "Insel 1 (Platzhalter)", "seed": seed,
-        "layers": {"topDepth": 5, "subDepth": 14, "bedrock": "Sandstone", "subsoil": {"Ground": "Mud"}},
-        "strata": {"base": 0, "bands": [["Sandstone", 24], ["Limestone", 8], ["Slate", 24]]},
-        "materialColors": {"Ground": RGB("#F2A07C"), "Sandstone": RGB("#F4A9C4"), "Limestone": RGB("#F9E7A3"), "Slate": RGB("#A99BE0"), "Mud": RGB("#D9795F")},
-        "water": {"WaterColor": RGB("#5FE3D6")},
-        "lighting": {"Lighting": {"ClockTime": 16.5, "Technology": Enum("Technology", "ShadowMap")}},
-        "spawn": [0, 0, 20],
-    })
-    w.add_template(Template("TestBall", "Flora", [PartDef("Ball", (6, 6, 6), (0, 3, 0))], [{"main": (63, 208, 208)}]))
-    w.place("TestBall", 20, float(w.height_at(20, 20)), 20)
+    materials.finalize(c, w)
+    w.ctx = c
+    log("Kanaele")
     return w
