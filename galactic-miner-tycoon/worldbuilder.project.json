@@ -1,0 +1,10 @@
+{
+  "name": "GMT_WorldBuilderOnly",
+  "tree": {
+    "$className": "DataModel",
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "WorldBuilder": { "$path": "src/ServerStorage/WorldBuilder" }
+    }
+  }
+}

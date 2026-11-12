@@ -34,11 +34,12 @@ Die **Welt** (Heimatplanet, Planeten, Rakete) und **UI-Layouts** werden in Studi
 | `ToolService` | Werkzeuge beim Abbau | `spiel/07` |
 | `ResearchService` | Techbaum und Forschung | `spiel/08` |
 | `HazardService` | Gefahren auf Planeten | `spiel/09` |
+| `MovementService` | Schwerkraft, Sprunghöhe, Laufgeschwindigkeit (**fertig**) | `spiel/17` |
 
 Ein Service ist ein ModuleScript mit `Init()` und `Start()` (siehe `Services/DataService.luau` als Vorlage). Der Server-Start lädt alle Services automatisch.
 
 ## Geplante Client-Controller (`Client/Controllers/`)
-`HudController` (Credits/Gems anzeigen), `BuildController` (Kauf-Buttons), `ShipController`, `ToolController`, `TravelController` (Planetenauswahl), `AudioController`.
+`HudController` (Credits/Gems anzeigen), `BuildController` (Kauf-Buttons), `ShipController`, `ToolController`, `TravelController` (Planetenauswahl), `AudioController`, `MovementController` (Trägheit, Schwung in der Luft, Landestaub; **fertig**, `spiel/17`).
 
 ## Datenfluss (Beispiel: Bohrer kaufen)
 1. Spieler drückt Kauf-Button in der Welt → Client schickt Wunsch `BuyBuilding("drill_basic")` per RemoteEvent.
