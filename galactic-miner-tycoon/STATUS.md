@@ -1,5 +1,16 @@
 # Status – Galactic Miner Tycoon
 
+## Stand 12.11.2026, abends (Nachtrag von Jos' Claude)
+| Bereich | Stand | Wo |
+|---|---|---|
+| Planeten-Physik (Entscheidung 019) | **im Play gemessen:** Schwerkraft 60, Sprung 12 Studs / 1,23 s, Trägheit (Anlaufen ca. 0,6 s, 2 Studs Nachrutschen), Landestaub | `src/…/MovementService`, `MovementController` |
+| Code M1 (Ju) | Schritt 1 + 2 fertig, Schritt 3 an die WorldBuilder-Welt angepasst | `checklisten/code-fortschritt.md` |
+| 3D-Modelle v3 (Förderband, Erzbrocken, Lager-Kasten, Basis) | fertig auf `main`, **Import in Studio offen** (Upload-Ordner muss in Studio freigegeben werden) | `assets/modelle/`, `assets/asset-liste.md` |
+| Welt Insel 1 (WorldBuilder) | Werkzeug auf `main`, Gelände noch **Platzhalter**; Bau im Place wartet darauf, dass Jus Rojo `ServerStorage.WorldBuilder` einspielt | `technik/weltgenerator.md` |
+| Abstimmung Jos ↔ Ju im Place | Auftrag 001 (wer baut was) | `auftraege/offen/001-jos-an-ju-welt-modelle-abstimmen.md` |
+
+(Der Abschnitt darunter ist der ältere Stand vom 11.11.)
+
 **Stand:** 11.11.2026 · **Phase:** 0 – Fundament (Struktur & Vision)
 
 ## Wo stehen wir?
