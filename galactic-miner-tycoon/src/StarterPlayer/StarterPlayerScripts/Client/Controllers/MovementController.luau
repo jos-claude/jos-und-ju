@@ -9,6 +9,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local StarterPlayer = game:GetService("StarterPlayer")
 
 local Movement = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Movement"))
 
@@ -101,15 +102,44 @@ local function smoothMove(plr: Player, moveVector: Vector3, cameraRelative: bool
 	move(plr, smoothedMove, false)
 end
 
-local function hookControls()
+-- Sucht das laufende Steuermodul von Roblox. Es gibt zwei Bauarten:
+-- Neu (Studio 2026): Roblox legt das PlayerModule zur Laufzeit direkt unter StarterPlayer ab.
+--   Dessen ControlModule liefert das laufende Steuer-Objekt (mit moveFunction).
+-- Alt: PlayerScripts.PlayerModule mit :GetControls().
+local FIND_CONTROLS_TIMEOUT = 10
+
+local function findControls(): any
 	local playerScripts = player:WaitForChild("PlayerScripts")
-	local playerModuleScript = playerScripts:WaitForChild("PlayerModule", 10)
-	if not playerModuleScript then
+	local deadline = os.clock() + FIND_CONTROLS_TIMEOUT
+	while os.clock() < deadline do
+		local newModule = StarterPlayer:FindFirstChild("PlayerModule")
+		local controlScript = newModule and newModule:FindFirstChild("ControlModule")
+		if controlScript and controlScript:IsA("ModuleScript") then
+			local ok, controls = pcall(require, controlScript)
+			if ok and type(controls) == "table" then
+				return controls
+			end
+		end
+
+		local oldModule = playerScripts:FindFirstChild("PlayerModule")
+		if oldModule and oldModule:IsA("ModuleScript") then
+			local ok, playerModule = pcall(require, oldModule)
+			if ok and type(playerModule) == "table" and type(playerModule.GetControls) == "function" then
+				return playerModule:GetControls()
+			end
+		end
+
+		task.wait(0.2)
+	end
+	return nil
+end
+
+local function hookControls()
+	local controls = findControls()
+	if not controls then
 		warn("[MovementController] PlayerModule fehlt – Trägheit ist aus.")
 		return
 	end
-	local ok, playerModule = pcall(require, playerModuleScript)
-	local controls = if ok and type(playerModule) == "table" then playerModule:GetControls() else nil
 	if type(controls) ~= "table" or type(controls.moveFunction) ~= "function" then
 		warn("[MovementController] Roblox-Steuermodul hat sich geändert – Trägheit ist aus.")
 		return
