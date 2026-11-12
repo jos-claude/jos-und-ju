@@ -14,34 +14,16 @@ Konventionen (passend zu ``drill_iron.blend``):
 import math
 import os
 import random
+import sys
 
+import bpy  # bpy vor bmesh laden
 import bmesh
-import bpy
 from mathutils import Matrix, Vector
 
-# ---------------------------------------------------------------------------
-# Farben (sRGB-Hex). Die ersten Werte entsprechen den Materialien des Bohrers.
-# ---------------------------------------------------------------------------
-PALETTE = {
-    "Orange": "#F2A12E",      # Hauptfarbe Beine/Waende (wie Bohrer)
-    "Amber": "#EDBA4E",       # gelbliches Orange (Lager-Kasten-Seiten)
-    "Yellow": "#F6D117",      # Pfeile, Warnstreifen
-    "Black": "#1C1C1D",       # Warnstreifen, Loecher
-    "SteelGrey": "#8C939B",   # Rahmen, Schienen
-    "SteelDark": "#5E656D",   # dunklere Stahlteile, Sockel
-    "SteelLight": "#BABEC4",  # Bolzen, Schilder, Rampe
-    "DarkGrey": "#3A3F46",    # Bandoberflaeche, Tueren, Rolltore
-    "White": "#E6E3DD",       # helle Schilder, Trichter innen
-    "Cyan": "#7FF6EF",        # Leuchten (in Roblox: Neon)
-    "Glass": "#CFE8F1",       # Bullaugen (in Roblox: Glass)
-    "GlassDark": "#6E7F89",   # getoentes Glas am Lager-Kasten
-    "GaugeOrange": "#F07A12", # Fuellstandsanzeige
-    "OreRock": "#7B6C61",     # Erzbrocken
-    "OreRockDark": "#5F544D", # Erzhaufen-Grundkoerper
-}
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-EMISSIVE = {"Cyan"}
-TRANSPARENT = {"Glass": 0.6, "GlassDark": 0.28}
+from gmt_materials import (MATERIALS, TEXTURED_TYPES, TILE_STUDS, TRANSPARENCY,  # noqa: E402
+                           TYPE_DEFAULTS, tex_names)
 
 
 def srgb_to_linear(c):
@@ -53,31 +35,95 @@ def hex_to_linear(h):
     return tuple(srgb_to_linear(int(h[i:i + 2], 16) / 255.0) for i in (0, 2, 4))
 
 
+def tex_dir():
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.environ.get("GMT_TEX_DIR", os.path.join(os.path.dirname(here), "texturen"))
+
+
+def _image(path, colorspace):
+    name = os.path.basename(path)
+    img = bpy.data.images.get(name)
+    if img is None:
+        img = bpy.data.images.load(path)
+        img.name = name
+    img.colorspace_settings.name = colorspace
+    return img
+
+
 def get_mat(name):
+    """Material Mat_<name>. Texturierte Typen bekommen Farb-, Rauheits-,
+    Metall- und Normal-Textur (UV-Kanal aus Model.build)."""
     full = "Mat_" + name
     mat = bpy.data.materials.get(full)
     if mat:
         return mat
+    hexcol, typ = MATERIALS[name]
     mat = bpy.data.materials.new(full)
     try:
         mat.use_nodes = True
     except Exception:
         pass
-    bsdf = mat.node_tree.nodes.get("Principled BSDF")
-    col = hex_to_linear(PALETTE[name]) + (1.0,)
+    nt = mat.node_tree
+    bsdf = nt.nodes.get("Principled BSDF")
+    col = hex_to_linear(hexcol) + (1.0,)
     bsdf.inputs["Base Color"].default_value = col
-    bsdf.inputs["Roughness"].default_value = 0.55
+    bsdf.inputs["Metallic"].default_value = TYPE_DEFAULTS[typ]["metal"]
+    bsdf.inputs["Roughness"].default_value = TYPE_DEFAULTS[typ]["rough"]
     mat.diffuse_color = col
-    if name in EMISSIVE:
+    mat["gmt_type"] = typ
+    if typ == "neon":
         bsdf.inputs["Emission Color"].default_value = col
-        bsdf.inputs["Emission Strength"].default_value = 2.5
-    if name in TRANSPARENT:
-        bsdf.inputs["Alpha"].default_value = TRANSPARENT[name]
+        bsdf.inputs["Emission Strength"].default_value = 1.6
+    if name in TRANSPARENCY:
+        bsdf.inputs["Alpha"].default_value = TRANSPARENCY[name]
         try:
             mat.surface_render_method = "BLENDED"
         except Exception:
             pass
+    files = tex_names(name) if typ in TEXTURED_TYPES else {}
+    d = tex_dir()
+    if files and all(os.path.exists(os.path.join(d, f)) for f in files.values()):
+        uv = nt.nodes.new("ShaderNodeUVMap")
+        uv.uv_map = "UVMap"
+        x = -700
+        def tex(key, cs, y):
+            n = nt.nodes.new("ShaderNodeTexImage")
+            n.image = _image(os.path.join(d, files[key]), cs)
+            n.location = (x, y)
+            nt.links.new(uv.outputs["UV"], n.inputs["Vector"])
+            return n
+        c = tex("color", "sRGB", 300)
+        nt.links.new(c.outputs["Color"], bsdf.inputs["Base Color"])
+        r = tex("rough", "Non-Color", 0)
+        nt.links.new(r.outputs["Color"], bsdf.inputs["Roughness"])
+        m = tex("metal", "Non-Color", -300)
+        nt.links.new(m.outputs["Color"], bsdf.inputs["Metallic"])
+        nrm = tex("normal", "Non-Color", -600)
+        nm = nt.nodes.new("ShaderNodeNormalMap")
+        nm.inputs["Strength"].default_value = 0.8
+        nt.links.new(nrm.outputs["Color"], nm.inputs["Color"])
+        nt.links.new(nm.outputs["Normal"], bsdf.inputs["Normal"])
     return mat
+
+
+def cube_uvs(me, tile=TILE_STUDS):
+    """Kasten-Projektion: jede Flaeche bekommt UVs nach ihrer Hauptachse."""
+    if not me.uv_layers:
+        me.uv_layers.new(name="UVMap")
+    uvl = me.uv_layers["UVMap"].data
+    verts = me.vertices
+    for poly in me.polygons:
+        n = poly.normal
+        ax = max(range(3), key=lambda i: abs(n[i]))
+        for li in poly.loop_indices:
+            co = verts[me.loops[li].vertex_index].co
+            if ax == 0:
+                u, v = co.y * (1 if n.x > 0 else -1), co.z
+            elif ax == 1:
+                u, v = co.x * (-1 if n.y > 0 else 1), co.z
+            else:
+                u, v = co.x, co.y * (1 if n.z > 0 else -1)
+            uvl[li].uv = (u / tile, v / tile)
 
 
 # ---------------------------------------------------------------------------
@@ -148,25 +194,82 @@ def cylinder(r, depth, center, axis="Z", segs=16, r2=None, bevel=0.0,
     return _finish(bm, m)
 
 
+def ear_clip(poly):
+    """Zerlegt ein einfaches (auch nicht-konvexes) Polygon in Dreiecke."""
+    n = len(poly)
+    area = sum(poly[i][0] * poly[(i + 1) % n][1] - poly[(i + 1) % n][0] * poly[i][1]
+               for i in range(n))
+    idx = list(range(n)) if area > 0 else list(reversed(range(n)))
+
+    def cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    def inside(p, a, b, c):
+        return (cross(a, b, p) >= -1e-12 and cross(b, c, p) >= -1e-12
+                and cross(c, a, p) >= -1e-12)
+
+    tris = []
+    guard = 0
+    while len(idx) > 3 and guard < 10000:
+        guard += 1
+        m = len(idx)
+        for k in range(m):
+            i0, i1, i2 = idx[k - 1], idx[k], idx[(k + 1) % m]
+            a, b, c = poly[i0], poly[i1], poly[i2]
+            if cross(a, b, c) <= 1e-12:
+                continue
+            if any(inside(poly[j], a, b, c) for j in idx if j not in (i0, i1, i2)):
+                continue
+            tris.append((i0, i1, i2))
+            idx.pop(k)
+            break
+        else:
+            break
+    if len(idx) == 3:
+        tris.append(tuple(idx))
+    return tris
+
+
+def _is_convex(poly):
+    n = len(poly)
+    sign = 0
+    for i in range(n):
+        a, b, c = poly[i - 1], poly[i], poly[(i + 1) % n]
+        cr = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0])
+        if abs(cr) < 1e-12:
+            continue
+        if sign == 0:
+            sign = 1 if cr > 0 else -1
+        elif (cr > 0) != (sign > 0):
+            return False
+    return True
+
+
 def prism(poly, w0, w1, frame, bevel=0.0):
     """Extrudiert ein 2D-Polygon [(u,v),...] von w0 bis w1.
 
     frame ist eine 4x4-Matrix, die (u, v, w) in Weltkoordinaten abbildet.
+    Nicht-konvexe Polygone werden sauber in Dreiecke zerlegt.
     """
     bm = bmesh.new()
     bot = [bm.verts.new((u, v, w0)) for u, v in poly]
     top = [bm.verts.new((u, v, w1)) for u, v in poly]
     n = len(poly)
-    bm.faces.new(list(reversed(bot)))
-    bm.faces.new(top)
+    if _is_convex(poly):
+        bm.faces.new(list(reversed(bot)))
+        bm.faces.new(top)
+    else:
+        for i, j, k in ear_clip(poly):
+            bm.faces.new((top[i], top[j], top[k]))
+            bm.faces.new((bot[k], bot[j], bot[i]))
     for i in range(n):
         j = (i + 1) % n
         bm.faces.new((bot[i], bot[j], top[j], top[i]))
-    _bevel(bm, bevel)
+    if bevel > 0 and _is_convex(poly):
+        _bevel(bm, bevel)
     big = [f for f in bm.faces if len(f.verts) > 4]
     if big:
-        bmesh.ops.triangulate(bm, faces=big, quad_method="BEAUTY",
-                              ngon_method="BEAUTY")
+        bmesh.ops.triangulate(bm, faces=big, quad_method="BEAUTY", ngon_method="EAR_CLIP")
     return _finish(bm, frame)
 
 
@@ -400,6 +503,10 @@ class Model:
         for p in polys:
             self.add(prism(p, w0, w1, frame), mat, group)
 
+    def sticker(self, poly, frame, mat, w0=0.012, w1=0.045, group=None, bevel=0.0):
+        """Flaches Teil auf einer Flaeche, leicht abgehoben (kein Z-Fighting)."""
+        self.add(prism(poly, w0, w1, frame, bevel=bevel), mat, group)
+
     def build(self, location=(0, 0, 0), collection=None):
         coll = collection or bpy.context.scene.collection
         objs = []
@@ -411,6 +518,7 @@ class Model:
             bm.free()
             for p in me.polygons:
                 p.use_smooth = False
+            cube_uvs(me)
             me.materials.append(get_mat(mat))
             ob = bpy.data.objects.new(name, me)
             ob.location = location
@@ -434,27 +542,53 @@ def tri_count(objs):
 # ---------------------------------------------------------------------------
 # Export
 # ---------------------------------------------------------------------------
-def export_fbx(objs, path):
+def _select(objs):
     bpy.ops.object.select_all(action="DESELECT")
     for o in objs:
         o.select_set(True)
     bpy.context.view_layer.objects.active = objs[0]
+
+
+def export_fbx(objs, path):
+    _select(objs)
     bpy.ops.export_scene.fbx(filepath=path, use_selection=True,
                              apply_unit_scale=True,
                              apply_scale_options="FBX_SCALE_ALL",
                              object_types={"MESH"}, mesh_smooth_type="FACE",
                              use_mesh_modifiers=True, add_leaf_bones=False,
-                             bake_anim=False, path_mode="AUTO")
+                             bake_anim=False, path_mode="RELATIVE",
+                             embed_textures=False)
+
+
+def export_glb(objs, path):
+    """glTF-Binaerdatei mit eingebetteten PBR-Texturen (fuer Roblox Import 3D)."""
+    _select(objs)
+    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True,
+                              export_apply=True, export_yup=True,
+                              export_image_format="JPEG", export_image_quality=88,
+                              export_materials="EXPORT")
+
+
+def export_model(objs, base_path):
+    export_glb(objs, base_path + ".glb")
+    export_fbx(objs, base_path + ".fbx")
+    mn, mx = bounds(objs)
+    print(f"[size] {os.path.basename(base_path)} {max(mx - mn):.3f}")
 
 
 def save_blend(path):
     bpy.ops.wm.save_as_mainfile(filepath=path, compress=True)
+    try:
+        bpy.ops.file.make_paths_relative()
+        bpy.ops.wm.save_mainfile(compress=True)
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------
 # Vorschau-Renders (Cycles, CPU) – nur zum Vergleichen mit den Referenzbildern
 # ---------------------------------------------------------------------------
-def setup_render(res=(1000, 700), samples=24):
+def setup_render(res=(1000, 700), samples=32):
     sc = bpy.context.scene
     sc.render.engine = "CYCLES"
     sc.cycles.device = "CPU"
@@ -465,24 +599,50 @@ def setup_render(res=(1000, 700), samples=24):
         pass
     sc.render.resolution_x, sc.render.resolution_y = res
     sc.render.film_transparent = False
-    sc.view_settings.view_transform = "Standard"
     sc.render.image_settings.file_format = "PNG"
+    try:
+        sc.view_settings.view_transform = "AgX"
+        for look in ("AgX - Punchy", "Punchy", "AgX - Medium High Contrast"):
+            try:
+                sc.view_settings.look = look
+                break
+            except Exception:
+                continue
+    except Exception:
+        sc.view_settings.view_transform = "Standard"
+    sc.view_settings.exposure = 0.35
+    # Himmel als Verlauf (dunkler Boden, heller Himmel) -> Metall spiegelt etwas
     world = bpy.data.worlds.get("World") or bpy.data.worlds.new("World")
     sc.world = world
     world.use_nodes = True
-    bg = world.node_tree.nodes.get("Background")
-    bg.inputs[0].default_value = (0.62, 0.62, 0.64, 1)
-    bg.inputs[1].default_value = 0.85
+    nt = world.node_tree
+    bg = nt.nodes.get("Background")
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    mr = nt.nodes.new("ShaderNodeMapRange")
+    mr.inputs["From Min"].default_value = -1.0
+    mr.inputs["From Max"].default_value = 1.0
+    nt.links.new(tc.outputs["Generated"], sep.inputs["Vector"])
+    nt.links.new(sep.outputs["Z"], mr.inputs["Value"])
+    nt.links.new(mr.outputs["Result"], ramp.inputs["Fac"])
+    els = ramp.color_ramp.elements
+    els[0].position, els[0].color = 0.35, (0.06, 0.06, 0.07, 1)
+    els[1].position, els[1].color = 0.62, (0.6, 0.63, 0.67, 1)
+    e = els.new(0.5)
+    e.color = (0.32, 0.31, 0.3, 1)
+    nt.links.new(ramp.outputs["Color"], bg.inputs["Color"])
+    bg.inputs["Strength"].default_value = 0.7
     if "Sun_Key" not in bpy.data.objects:
-        for name, rot, energy in (("Sun_Key", (50, 10, -35), 3.2),
-                                  ("Sun_Fill", (60, -15, 150), 0.9)):
+        for name, rot, energy, col in (("Sun_Key", (48, 8, -38), 3.6, (1.0, 0.96, 0.9)),
+                                       ("Sun_Rim", (65, -10, 140), 1.6, (0.8, 0.9, 1.0))):
             ld = bpy.data.lights.new(name, "SUN")
             ld.energy = energy
-            ld.angle = math.radians(8)
+            ld.color = col
+            ld.angle = math.radians(6)
             lo = bpy.data.objects.new(name, ld)
             lo.rotation_euler = [math.radians(a) for a in rot]
             sc.collection.objects.link(lo)
-    # Boden, der nur Schatten zeigt
     if "PreviewGround" not in bpy.data.objects:
         bm = box((400, 400, 0.02), (0, 0, -0.011))
         me = bpy.data.meshes.new("PreviewGround")
@@ -493,6 +653,16 @@ def setup_render(res=(1000, 700), samples=24):
         except Exception:
             pass
         sc.collection.objects.link(g)
+    # Hintergrund fuer Kamera-Strahlen hellgrau wie die Referenzblaetter
+    lp = nt.nodes.new("ShaderNodeLightPath")
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    bg2 = nt.nodes.new("ShaderNodeBackground")
+    bg2.inputs["Color"].default_value = (0.66, 0.66, 0.68, 1)
+    out = nt.nodes.get("World Output")
+    nt.links.new(lp.outputs["Is Camera Ray"], mix.inputs["Fac"])
+    nt.links.new(bg.outputs["Background"], mix.inputs[1])
+    nt.links.new(bg2.outputs["Background"], mix.inputs[2])
+    nt.links.new(mix.outputs["Shader"], out.inputs["Surface"])
 
 
 def bounds(objs):
@@ -605,3 +775,42 @@ def bar2d(p, q, width):
     d = (q - p).normalized()
     n = Vector((-d.y, d.x)) * width / 2
     return [tuple(p - n), tuple(q - n), tuple(q + n), tuple(p + n)]
+
+
+def sweep(path, off0, off1, z0, z1, cap_start=True, cap_end=True):
+    """Rechteck-Querschnitt entlang eines Pfads.
+
+    path: Liste von (Punkt (x, y), Seitenrichtung (nx, ny)) – die Seitenrichtung
+    zeigt nach links (bezogen auf die Laufrichtung). off0/off1 = seitlicher
+    Abstand von der Mittellinie, z0/z1 = Hoehe.
+    """
+    bm = bmesh.new()
+    rows = []
+    for (px, py), (nx, ny) in path:
+        rows.append([bm.verts.new((px + nx * o, py + ny * o, z))
+                     for o, z in ((off0, z0), (off1, z0), (off1, z1), (off0, z1))])
+    for k in range(len(rows) - 1):
+        a, b = rows[k], rows[k + 1]
+        for i in range(4):
+            j = (i + 1) % 4
+            bm.faces.new((a[i], a[j], b[j], b[i]))
+    if cap_start:
+        bm.faces.new(list(reversed(rows[0])))
+    if cap_end:
+        bm.faces.new(rows[-1])
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return bm
+
+
+def path_frame(path, s_index, lateral, z=0.0):
+    """Matrix an einem Pfadpunkt: u = Laufrichtung, v = links, w = oben."""
+    (px, py), (nx, ny) = path[s_index]
+    tx, ty = ny, -nx      # Laufrichtung (links = +90 Grad)
+    o = (px + nx * lateral, py + ny * lateral, z)
+    return frame_at(o, (tx, ty, 0), (nx, ny, 0))
+
+
+def circle2d(r, n=24, c=(0, 0)):
+    return [(c[0] + r * math.cos(2 * math.pi * k / n), c[1] + r * math.sin(2 * math.pi * k / n))
+            for k in range(n)]

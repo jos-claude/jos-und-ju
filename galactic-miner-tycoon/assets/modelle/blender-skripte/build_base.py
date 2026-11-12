@@ -214,8 +214,8 @@ def main():
     sc.collection.children.link(cr)
     room = build_room().build(collection=cr)
     if "--no-export" not in sys.argv:
-        g.export_fbx(hall, os.path.join(models_dir, "base_hall.fbx"))
-        g.export_fbx(room, os.path.join(models_dir, "base_room.fbx"))
+        g.export_model(hall, os.path.join(models_dir, "base_hall"))
+        g.export_model(room, os.path.join(models_dir, "base_room"))
         print(f"base_hall: {len(hall)} Objekte, {g.tri_count(hall)} Dreiecke")
         print(f"base_room: {len(room)} Objekte, {g.tri_count(room)} Dreiecke")
     # Aufstellung wie im Bild: Raum links, Halle, Raum rechts

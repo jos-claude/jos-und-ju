@@ -1,55 +1,77 @@
 --!strict
--- Galactic Miner Tycoon – Modelle nach dem FBX-Import in Roblox Studio einrichten.
+-- Galactic Miner Tycoon – Modelle nach dem Import in Roblox Studio einrichten.
 --
 -- Benutzung (Roblox Studio):
---   1. Die .fbx-Dateien aus assets/modelle/ mit "Import 3D" importieren
---      (Datei > Import 3D, Einstellung "Import Only As Model" an).
+--   1. Die .glb-Dateien aus assets/modelle/ mit "Import 3D" importieren
+--      (Datei > Import 3D). GLB bringt die Texturen (Lack, Stahl, Riffelblech …)
+--      als SurfaceAppearance mit. Die .fbx-Dateien gehen auch, dann ohne Texturen.
 --   2. Die importierten Modelle im Explorer markieren (oder nichts markieren,
 --      dann wird ganz Workspace durchsucht).
 --   3. Dieses Skript komplett in die Command Bar (Ansicht > Command Bar) kopieren
 --      und Enter drücken.
 --
 -- Was es macht:
---   - Teilt importierte Teile nach dem ersten Namensteil in Modelle auf
+--   - Sortiert importierte Teile nach dem ersten Namensteil in Modelle
 --     ("ConveyorStraight_Orange" -> Modell "ConveyorStraight").
---   - Färbt jede MeshPart nach dem letzten Namensteil (Orange, SteelGrey, Cyan …),
---     setzt Material (Cyan = Neon, Glas = Glass) und Transparenz.
+--   - Teile MIT Textur (SurfaceAppearance) behalten ihre Textur.
+--   - Teile OHNE Textur bekommen Farbe + passendes Roblox-Material
+--     (Stahl = Metal, Riffelblech = DiamondPlate, Band = Rubber …).
+--   - Leuchten werden Neon, Glas wird Glass mit Transparenz.
 --   - Verankert alles, kleine Deko-Teile ohne Kollision.
 --   - Bringt jedes Modell auf seine Größe in Studs (falls der Import anders skaliert hat).
 -- Das Skript kann gefahrlos mehrmals laufen.
 
 local Selection = game:GetService("Selection")
 
-type Look = { color: string, material: Enum.Material, transparency: number, collide: boolean }
+type Look = { color: string, material: Enum.Material, transparency: number, collide: boolean, plain: boolean? }
 
--- Gleiche Farben wie gmt_lib.py (PALETTE) und Jus Bohrer.
+-- Gleiche Farben wie blender-skripte/gmt_materials.py
 local LOOKS: { [string]: Look } = {
-	Orange = { color = "#F2A12E", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	Amber = { color = "#EDBA4E", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	Yellow = { color = "#F6D117", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
-	Black = { color = "#1C1C1D", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
-	SteelGrey = { color = "#8C939B", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	SteelDark = { color = "#5E656D", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	SteelLight = { color = "#BABEC4", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
-	DarkGrey = { color = "#3A3F46", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	White = { color = "#E6E3DD", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
-	Cyan = { color = "#5FE3DA", material = Enum.Material.Neon, transparency = 0, collide = false },
-	Glass = { color = "#CFE8F1", material = Enum.Material.Glass, transparency = 0.35, collide = true },
-	GlassDark = { color = "#6E7F89", material = Enum.Material.Glass, transparency = 0.55, collide = true },
-	GaugeOrange = { color = "#F07A12", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
-	OreRock = { color = "#7B6C61", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
-	OreRockDark = { color = "#5F544D", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	Orange = { color = "#D9862A", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	OrangeLight = { color = "#E8A445", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	Amber = { color = "#DC9B32", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	Yellow = { color = "#F2C80F", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	Black = { color = "#1B1B1D", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	White = { color = "#DAD5CD", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	Cream = { color = "#D3C7AD", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	GaugeOrange = { color = "#EB6A11", material = Enum.Material.SmoothPlastic, transparency = 0, collide = false },
+	Slate = { color = "#425367", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	DarkGrey = { color = "#363B42", material = Enum.Material.SmoothPlastic, transparency = 0, collide = true },
+	SteelGrey = { color = "#6F7A83", material = Enum.Material.Metal, transparency = 0, collide = true },
+	SteelDark = { color = "#464D54", material = Enum.Material.Metal, transparency = 0, collide = true },
+	SteelLight = { color = "#999EA1", material = Enum.Material.Metal, transparency = 0, collide = false },
+	Gunmetal = { color = "#5B524D", material = Enum.Material.Metal, transparency = 0, collide = true },
+	TreadPlate = { color = "#A0A3A2", material = Enum.Material.DiamondPlate, transparency = 0, collide = true },
+	Belt = { color = "#2F3237", material = Enum.Material.Rubber, transparency = 0, collide = true },
+	OreRock = { color = "#7C6C63", material = Enum.Material.Slate, transparency = 0, collide = true },
+	OreRockDark = { color = "#4A423D", material = Enum.Material.Slate, transparency = 0, collide = true },
+	-- ohne Textur, immer so einstellen:
+	Cyan = { color = "#45EEDC", material = Enum.Material.Neon, transparency = 0, collide = false, plain = true },
+	Glass = { color = "#B4C0C6", material = Enum.Material.Glass, transparency = 0.35, collide = true, plain = true },
+	GlassDark = { color = "#556169", material = Enum.Material.Glass, transparency = 0.5, collide = true, plain = true },
 }
 
--- Größte Ausdehnung jedes Modells in Studs (aus Blender, 1 Einheit = 1 Stud).
+-- Größte Ausdehnung jedes Modells in Studs (aus den Blender-Exporten).
 local SIZES: { [string]: number } = {
-	-- @SIZES@ (wird von export_sizes.py ausgefüllt)
+	ConveyorStraight = 8.0,
+	ConveyorSegment = 4.98,
+	ConveyorCurve = 8.49,
+	ConveyorCurveLeft = 8.49,
+	ConveyorEnd = 6.325,
+	OreChunkA = 1.056,
+	OreChunkB = 0.72,
+	OreChunkC = 1.07,
+	OreBin = 9.35,
+	BaseHall = 17.4,
+	BaseRoom = 11.35,
 }
 
 local function split(name: string): (string, string?)
-	local parts = string.split(name, "_")
+	-- Importer hängen manchmal Zusätze an (z. B. ".001"), die werden ignoriert
+	local clean = string.gsub(name, "%.%d+$", "")
+	local parts = string.split(clean, "_")
 	if #parts < 2 then
-		return name, nil
+		return clean, nil
 	end
 	return parts[1], parts[#parts]
 end
@@ -64,7 +86,7 @@ local function collectParts(roots: { Instance }): { MeshPart }
 		for _, inst in list do
 			if inst:IsA("MeshPart") then
 				local modelName, look = split(inst.Name)
-				if look and LOOKS[look] and (SIZES[modelName] or next(SIZES) == nil) then
+				if look and LOOKS[look] and SIZES[modelName] then
 					table.insert(found, inst)
 				end
 			end
@@ -81,43 +103,46 @@ end
 local parts = collectParts(roots)
 local models: { [string]: Model } = {}
 local touchedContainers: { [Instance]: boolean } = {}
+local textured = 0
 
 for _, part in parts do
 	local modelName, lookName = split(part.Name)
 	local look = LOOKS[lookName :: string]
-	part.Color = Color3.fromHex(look.color)
-	part.Material = look.material
-	part.Transparency = look.transparency
+	local surface = part:FindFirstChildOfClass("SurfaceAppearance")
+	if look.plain then
+		if surface then
+			surface:Destroy()
+		end
+		part.Color = Color3.fromHex(look.color)
+		part.Material = look.material
+		part.Transparency = look.transparency
+	elseif surface then
+		textured += 1 -- Textur vom Import behalten
+	else
+		part.Color = Color3.fromHex(look.color)
+		part.Material = look.material
+		part.Transparency = 0
+	end
 	part.Anchored = true
 	part.CanCollide = look.collide
 	part.CanTouch = look.collide
-	-- Eingebettete Texturen/SurfaceAppearance vom Import entfernen, damit die Farbe greift
-	for _, child in part:GetChildren() do
-		if child:IsA("SurfaceAppearance") then
-			child:Destroy()
-		end
-	end
-	if part.TextureID ~= "" then
-		part.TextureID = ""
-	end
 
 	-- In ein Modell mit dem Modellnamen einsortieren
 	local current = part.Parent
-	if not (current and current:IsA("Model") and current.Name == modelName) then
+	if current and current:IsA("Model") and current.Name == modelName then
+		models[modelName] = current
+	else
 		local target = models[modelName]
 		if not target then
-			local container = current and current.Parent or workspace
 			if current and current:IsA("Model") then
 				touchedContainers[current] = true
 			end
 			target = Instance.new("Model")
 			target.Name = modelName
-			target.Parent = if current and current:IsA("Model") then current.Parent else container
+			target.Parent = if current and current:IsA("Model") then current.Parent else (current or workspace)
 			models[modelName] = target
 		end
 		part.Parent = target
-	else
-		models[modelName] = current :: Model
 	end
 end
 
@@ -128,7 +153,9 @@ for container in touchedContainers do
 	end
 end
 
+local count = 0
 for name, model in models do
+	count += 1
 	local wanted = SIZES[name]
 	if wanted then
 		local size = model:GetExtentsSize()
@@ -148,10 +175,4 @@ for name, model in models do
 	end
 	print(("[GMT] %s: %d Teile, Größe %s"):format(name, #model:GetChildren(), tostring(model:GetExtentsSize())))
 end
-print(("[GMT] fertig: %d Teile in %d Modellen eingerichtet"):format(#parts, (function()
-	local n = 0
-	for _ in models do
-		n += 1
-	end
-	return n
-end)()))
+print(("[GMT] fertig: %d Teile (%d mit Textur) in %d Modellen eingerichtet"):format(#parts, textured, count))
