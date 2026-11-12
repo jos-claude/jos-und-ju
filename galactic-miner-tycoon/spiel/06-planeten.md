@@ -4,6 +4,9 @@
 - **Zuletzt geändert:** 11.11.2026
 - **Mindmap-Ast:** Exploration Planets / Alien Worlds (Lava, Eis, Dschungel)
 
+## Hinweis (Entscheidung 015)
+Insel 1 hat den orangefarbenen Look mit Saturn. Der violett-pinke Pilz-Planet ist ein späterer Kandidat für eine weitere Insel.
+
 ## Hinweis (Entscheidung 013)
 Jede Insel ist ein Level (ca. 1 Stunde Spielzeit). Die Rakete wird aus sehr vielen Erzen gebaut. Betritt man sie, kommt man automatisch auf die nächste Insel. Die Texte unten stammen noch aus der Zeit davor und werden später angepasst.
 

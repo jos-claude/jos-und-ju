@@ -153,3 +153,5 @@ Scene: a small round low-poly alien planet floating in outer space, seen from sl
 ```
 
 Nach der Auswahl: Das Bild als `bilder/welt/heimatplanet-02.jpg` speichern, dann passe ich Stil und Farbpalette von Insel 1 (`../spiel/15-optik-und-audio.md`) an.
+
+**Auswahl (12.11.2026):** Insel 1 ist Variante 7b (orange, mit Saturn). Gespeichert als `bilder/welt/heimatplanet-02-orange.jpg`. Variante 7a (violett-pink, Pilze) liegt als `bilder/welt/planet-pilz-violett-01.jpg` für später. Siehe Entscheidung 015.
