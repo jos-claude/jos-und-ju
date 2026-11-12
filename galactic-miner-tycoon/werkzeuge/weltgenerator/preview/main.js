@@ -60,14 +60,13 @@ async function main() {
       vec3 c = mix(ATMO_DECAY, ATMO_COL, smoothstep(0.05, 0.95, s));
       float g = pow(max(dot(dir, SUN_DIR), 0.0), 12.0);
       c += vec3(1.0, 0.8, 0.6) * g * ${(AT.Glare ?? 0.35).toFixed(3)} * 1.4;
-      return c * 1.18;
+      return c * 1.0;
     }
     vec3 applyAtmo(vec3 col, vec3 wp) {
       vec3 v = wp - cameraPosition;
       float d = length(v);
       vec3 dir = v / max(d, 1e-3);
       float f = 1.0 - exp(-pow(d / ${fogL.toFixed(1)}, 1.448));
-      f = 1.0 - pow(1.0 - f, 1.0 + 0.22 * ${(AT.Haze ?? 1.6).toFixed(2)});
       f *= mix(1.0, 0.45, smoothstep(0.0, 0.6, dir.y));
       return mix(col, atmoColorDir(dir), clamp(f, 0.0, 0.94));
     }`;
@@ -86,18 +85,24 @@ async function main() {
   scene.fog = new THREE.Fog(0xffffff, 1, 2);   // nur damit USE_FOG gesetzt ist
 
   // Licht: Sonne (ColorShift_Top), Umgebung (Ambient + OutdoorAmbient), Himmel/Boden (EnvironmentDiffuse, ColorShift_Bottom)
+  // Abbildung der Roblox-Lighting-Werte (gleiche Werte -> gleicher Kontrast):
+  //   Sonne = Brightness x ColorShift_Top (zur Haelfte weiss), Gegenlicht der Schattenseite = ColorShift_Bottom,
+  //   Grundlicht = OutdoorAmbient + Ambient/2, Himmelslicht = EnvironmentDiffuseScale
   const bright = LL.Brightness ?? 2.4;
-  const sunCol = lin(LL.ColorShift_Top || [255, 217, 168]).lerp(new THREE.Color(1, 1, 1), 0.45);
-  const sun = new THREE.DirectionalLight(sunCol, bright * 1.4);
+  const sunCol = lin(LL.ColorShift_Top || [255, 217, 168]).lerp(new THREE.Color(1, 1, 1), 0.5);
+  const sun = new THREE.DirectionalLight(sunCol, bright * 1.2);
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 1.2;
   sun.shadow.radius = 2.0;
   scene.add(sun, sun.target);
-  const amb = lin(LL.Ambient || [106, 88, 120]).add(lin(LL.OutdoorAmbient || [178, 140, 138]));
-  scene.add(new THREE.AmbientLight(amb, 1.05));
-  const hemi = new THREE.HemisphereLight(lin([120, 170, 190]), lin(LL.ColorShift_Bottom || [122, 111, 176]), 0.9 * (LL.EnvironmentDiffuseScale ?? 0.6) / 0.6);
+  const amb = lin(LL.OutdoorAmbient || [178, 140, 138]).add(lin(LL.Ambient || [106, 88, 120]).multiplyScalar(0.5));
+  scene.add(new THREE.AmbientLight(amb, 1.15));
+  const fill = new THREE.DirectionalLight(lin(LL.ColorShift_Bottom || [122, 111, 176]), 1.0);
+  fill.position.set(-SUN.x, 0.35, -SUN.z);
+  scene.add(fill);
+  const hemi = new THREE.HemisphereLight(lin([110, 150, 185]), lin([90, 70, 90]), 1.6 * (LL.EnvironmentDiffuseScale ?? 0.6));
   scene.add(hemi);
 
   // ---------------------------------------------------------------- Terrain-Daten
@@ -622,7 +627,8 @@ async function main() {
   // ---------------------------------------------------------------- Kamera + Nachbearbeitung
   const camera = new THREE.PerspectiveCamera(70, WIDTH / HEIGHT, 0.5, 30000);
   const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(WIDTH, HEIGHT, { type: THREE.HalfFloatType }));
-  composer.addPass(new RenderPass(scene, camera));
+  const renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
   const B = L.Bloom || {};
   const bloom = new UnrealBloomPass(new THREE.Vector2(WIDTH, HEIGHT), (B.Intensity ?? 0.45) * 1.6, Math.min(1, (B.Size ?? 24) / 40), (B.Threshold ?? 1.4) * 0.8);
   composer.addPass(bloom);
@@ -680,6 +686,75 @@ async function main() {
     return performance.now() - t0;
   };
   window.stats = { parts: partCount.n, lights: partCount.lights, ops: scn.terrainOps.length, air: airOps.length };
+
+  // ---------------------------------------------------------------- Karte: orthografisch, Sonnenlicht, ohne Dunst, mit Overlay
+  window.shotMap = async (size) => {
+    renderer.setSize(size, size);
+    composer.setSize(size, size);
+    fxaa.uniforms.resolution.value.set(1 / size, 1 / size);
+    const E = 2400;
+    const cam = new THREE.OrthographicCamera(-E, E, E, -E, 10, 30000);
+    cam.position.set(0, 12000, 0); cam.up.set(0, 0, -1); cam.lookAt(0, 0, 0); cam.updateProjectionMatrix();
+    scene.fog = null;
+    scene.traverse((o) => { if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.needsUpdate = true; }); } });
+    scene.userData.sky.visible = false;
+    scene.background = new THREE.Color(0x0b1622);
+    sun.target.position.set(0, 0, 0);
+    sun.position.set(SUN.x * 6000, SUN.y * 6000, SUN.z * 6000);
+    const sc = sun.shadow.camera;
+    sc.left = -E; sc.right = E; sc.top = E; sc.bottom = -E; sc.near = 100; sc.far = 14000; sc.updateProjectionMatrix();
+    sun.shadow.needsUpdate = true;
+    renderPass.camera = cam;
+    bloom.strength = 0.25;
+    composer.render();
+    const gl = renderer.getContext(); const px = new Uint8Array(4); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    // Overlay
+    const ov = document.createElement('canvas');
+    ov.width = size; ov.height = size;
+    Object.assign(ov.style, { position: 'fixed', left: '0px', top: '0px', pointerEvents: 'none' });
+    document.body.appendChild(ov);
+    const g = ov.getContext('2d');
+    const P = (x, z) => [(x + E) / (2 * E) * size, (z + E) / (2 * E) * size];
+    const mp = (scn.preview && scn.preview.map) || {};
+    g.lineJoin = 'round';
+    // Ringe
+    (mp.rings || [250, 600, 1100, 1600, 2000]).forEach((r, i) => {
+      g.beginPath(); g.setLineDash([10, 8]); g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,0.75)';
+      const [cx, cy] = P(0, 0); g.arc(cx, cy, r / (2 * E) * size, 0, Math.PI * 2); g.stroke();
+      g.setLineDash([]);
+      const [lx, ly] = P(-r * 0.707, -r * 0.707);
+      g.font = 'bold 18px sans-serif'; g.fillStyle = 'rgba(255,255,255,0.9)'; g.fillText(`r ${r}`, lx + 4, ly - 4);
+    });
+    const ringNames = mp.ringNames || ['A', 'B', 'C', 'D', 'E'];
+    [125, 425, 850, 1350, 1800].forEach((r, i) => {
+      const [lx, ly] = P(r * 0.5, r * 0.866);
+      g.font = 'bold 26px sans-serif'; g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,0.6)'; g.strokeText(ringNames[i], lx, ly); g.fillStyle = '#fff'; g.fillText(ringNames[i], lx, ly);
+    });
+    // Washes
+    (mp.washes || []).forEach((pl, k) => {
+      g.beginPath(); g.setLineDash([16, 10]); g.lineWidth = 3; g.strokeStyle = 'rgba(255,236,170,0.95)';
+      for (let i = 0; i < pl.length; i += 2) { const [X, Y] = P(pl[i], pl[i + 1]); if (i === 0) g.moveTo(X, Y); else g.lineTo(X, Y); }
+      g.stroke(); g.setLineDash([]);
+      const n = pl.length; const [X, Y] = P(pl[n - 2], pl[n - 1]);
+      g.font = 'bold 16px sans-serif'; g.fillStyle = 'rgba(255,236,170,1)'; g.fillText('W' + (k + 1), X + 6, Y);
+    });
+    // Landmarken
+    (mp.landmarks || []).forEach((l) => {
+      const [X, Y] = P(l.x, l.z);
+      g.beginPath(); g.arc(X, Y, 7, 0, Math.PI * 2); g.fillStyle = '#ff5ad1'; g.fill(); g.lineWidth = 2; g.strokeStyle = '#fff'; g.stroke();
+      g.font = 'bold 17px sans-serif'; g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,0.75)';
+      g.strokeText(l.label, X + 10, Y + 6); g.fillStyle = '#fff'; g.fillText(l.label, X + 10, Y + 6);
+    });
+    if (mp.spawn) { const [X, Y] = P(mp.spawn[0], mp.spawn[1]); g.fillStyle = '#ffd400'; g.fillRect(X - 6, Y - 6, 12, 12); g.fillText('Spawn', X + 8, Y - 8); }
+    // Nordpfeil + Massstab
+    g.fillStyle = '#fff'; g.font = 'bold 28px sans-serif'; g.fillText('N', 34, 52);
+    g.beginPath(); g.moveTo(44, 62); g.lineTo(34, 92); g.lineTo(54, 92); g.closePath(); g.fill();
+    const sb = 500 / (2 * E) * size;
+    g.fillRect(30, size - 40, sb, 6); g.font = '18px sans-serif'; g.fillText('500 Studs', 30, size - 50);
+    g.font = 'bold 22px sans-serif'; g.fillText('Insel 1 - Karte (Draufsicht, Sonne Az 250, El 22)', 90, 40);
+    await new Promise((r) => requestAnimationFrame(() => r()));
+    return true;
+  };
 
   if (Q.get('shot')) {
     if (Q.get('shot') !== 'none') await window.shot(Q.get('shot'), false);

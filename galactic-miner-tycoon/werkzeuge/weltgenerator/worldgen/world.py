@@ -75,6 +75,7 @@ class PartDef:
     cast_shadow: bool = True
     collide: bool = False
     light: dict | None = None     # {"range":, "brightness":, "role" oder "color":}
+    particles: dict | None = None  # Wunsch an den Builder: ParticleEmitter (z. B. Dampf), siehe README
 
 
 @dataclass

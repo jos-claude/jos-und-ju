@@ -9,7 +9,7 @@ import time
 
 import numpy as np
 
-from . import cameras, compose, fields, lighting, materials, terrain
+from . import cameras, checks, compose, fields, lighting, materials, terrain
 from .ctx import Ctx
 from .layout import STRATA_BASE, SUN_AZ, SUN_EL
 from .world import RGB, World
@@ -32,10 +32,11 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
     zoneA = (c.rw > 185) & (c.rw < 255) & ~c.mask("claimed") & (c.wash_dist > 5)
     zoneB = (c.rw > 270) & (c.rw < 600) & ~c.mask("claimed") & (c.wash_dist > 5)
     zoneD = (c.rw > 1150) & (c.rw < 1560) & ~c.mask("claimed") & (c.wash_dist > 5)
-    fields.outcrops(c, zoneA, 0.08, (2.0, 4.0), "outA")
-    fields.outcrops(c, zoneB, 0.06, (2.5, 5.0), "outB")
-    fields.outcrops(c, zoneD, 0.05, (3.0, 6.0), "outD")
+    fields.outcrops(c, zoneA, 0.05, (2.0, 4.0), "outA")
+    fields.outcrops(c, zoneB, 0.04, (2.5, 5.0), "outB")
+    fields.outcrops(c, zoneD, 0.03, (3.0, 6.0), "outD")
     fields.low_floating_stones(c, 50)
+    terrain.foothills(c, 10)
     terrain.rim(c)
     terrain.floating_rocks(c)
     log("Rand, Balkone, Schwebfelsen")
@@ -59,5 +60,9 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
         "sun": {"azimuth": SUN_AZ, "elevation": SUN_EL, "direction": lighting.sun_direction()},
         "spawn": [round(sx, 2), round(float(c.h_at(sx, sz)) + 0.5, 2), round(sz, 2)],
     })
-    w.preview = {"cameras": cameras.make(c)}
+    w.preview = {"cameras": cameras.make(c), "map": cameras.map_data(c)}
+    res = checks.analyse(w, c, getattr(c, "deco_zone", None))
+    w.report = checks.report_lines(res)
+    w.checks = res
+    log("Pruefungen")
     return w

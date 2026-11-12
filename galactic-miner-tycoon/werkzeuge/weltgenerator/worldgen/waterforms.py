@@ -156,7 +156,7 @@ def playa(c: Ctx, cx, cz, diam, name="playa"):
     rim = np.clip(-rr / 70.0, 0, 1)
     hn = np.where(rr <= 0, dry * (1 - ss(0, 1, rim)) + np.maximum(Hl, dry) * ss(0, 1, rim), hn)
     hn = np.where(rr <= 0, np.minimum(hn, Hl), hn)
-    hn = np.where(rr <= 0, np.maximum(hn, dry), hn)
+    hn = np.where((rr <= 0) & (rr > -70), np.maximum(hn, dry), hn)
     spots = (c.nz.fbm(name + "s", x, z, 45, 3) > 0.12) & (rr > 12)
     hn = np.where(spots, F, hn)
     # Spot-Ufer weich: Nachbarn der Spots leicht absenken
@@ -247,6 +247,8 @@ def fan(c: Ctx, ax, az_, dir_deg, radius, open_deg=90.0, name="fan"):
         dd = np.abs(np.radians((ang - ca + 180) % 360 - 180) * rho + wig)
         ch = np.maximum(ch, ss(5.0, 0.0, dd) * ss(10, 30, rho))
     surf = surf - 1.6 * ch
+    keep = c.mask("volcano")[sl] | c.mask("lava")[sl] | c.mask("mesa")[sl] | c.mask("ridge")[sl]
+    shape = np.where(keep, 0.0, shape)
     add = (surf - Hl) * shape
     hn = Hl + np.maximum(add, 0)
     c.H[sl] = hn

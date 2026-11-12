@@ -135,9 +135,13 @@ def export(world: World, out_dir: Path):
                 e["collide"] = True
             if p.light:
                 e["light"] = p.light
+            if getattr(p, "particles", None):
+                e["particles"] = p.particles
             parts.append(e)
         variants = [{role: color3(c) for role, c in v.items()} for v in t.variants]
         templates[t.name] = {"category": t.category, "parts": parts, "variants": variants}
+        if getattr(t, "extra", None):
+            templates[t.name].update(t.extra)
     _write(data_dir / "Templates.luau", "return " + luau(templates) + "\n")
 
     # --- Platzierungen (je Vorlage ein flaches Zahlenfeld, 8 Werte pro Objekt) ---

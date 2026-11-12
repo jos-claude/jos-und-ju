@@ -40,10 +40,18 @@ function serve() {
   const err = await page.evaluate(() => window.__error);
   if (err) { console.error(err); }
   const all = await page.evaluate(() => window.presets || []);
-  const want = process.argv.slice(2).length ? process.argv.slice(2) : all;
+  let want = process.argv.slice(2).length ? process.argv.slice(2) : [...all, 'karte'];
+  want = [...want.filter((n) => n !== 'karte'), ...want.filter((n) => n === 'karte')];   // Karte zuletzt (aendert Groesse)
   console.log(`geladen in ${((Date.now() - t0) / 1000).toFixed(1)} s, Stats:`, await page.evaluate(() => window.stats));
   for (const name of want) {
     const t = Date.now();
+    if (name === 'karte') {
+      await page.setViewportSize({ width: 1800, height: 1800 });
+      await page.evaluate(() => window.shotMap(1800));
+      await page.screenshot({ path: path.join(OUT, 'karte.png'), timeout: 600000 });
+      console.log(`  karte.png (${((Date.now() - t) / 1000).toFixed(1)} s)`);
+      continue;
+    }
     const ms = await page.evaluate((n) => window.shot(n), name);
     await page.screenshot({ path: path.join(OUT, name + '.png'), timeout: 600000 });
     console.log(`  ${name}.png (Render ${(ms / 1000).toFixed(1)} s, gesamt ${((Date.now() - t) / 1000).toFixed(1)} s)`);

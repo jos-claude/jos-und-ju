@@ -76,14 +76,26 @@ def landmarks(c: Ctx):
     gdx, gdz = math.sin(math.radians(ga)), -math.cos(math.radians(ga))
     for key, side in (("L1a", -1), ("L1b", 1)):
         sl_ = S[key]
-        R = sl_.data["diam"] / 2
+        if side < 0:   # breite, gestufte Mesa
+            diam, top_y = 134.0, sl_.data["top"]
+        else:          # schlanke Butte mit harter Kappe
+            diam, top_y = 54.0, sl_.data["top"] + 8.0
+        R = diam / 2 * (1.25 if side < 0 else 1.0)
         lat = side * (45.0 + R)
         along = sl_.r - 40
-        x = sx + gdx * along - gdz * lat * -1
-        z = sz + gdz * along + gdx * lat * -1
+        x = sx + gdx * along - gdz * lat
+        z = sz + gdz * along + gdx * lat
         az = math.degrees(math.atan2(x, -z)) % 360
-        lf.mesa(c, x, z, sl_.data["diam"], sl_.data["top"] - float(c.h_at(x, z)), stage="mesa", aspect=1.18,
-                rot=math.radians(az), nsteps=6 if side < 0 else 5, talus=0.7, top_patch="Grass" if side < 0 else None)
+        g = float(c.h_at(x, z))
+        if side < 0:
+            lf.mesa(c, x, z, diam, top_y - g, stage="mesa", aspect=1.5, rot=math.radians(az + 90), nsteps=6, talus=0.6,
+                    top_patch="Grass", nv=8)
+        else:
+            t = lf.mesa(c, x, z, diam, top_y - g, stage="butte", aspect=1.08, nsteps=3, talus=0.55, gully=False, nv=8)
+            m = c.feat["mesa"][-1]
+            rtop = max(6.0, m["Rmin"] - m["top_inset"] - 2)
+            lf.op_cyl(c, x, t + 2.2, z, 5.0, rtop + 3.0, "Limestone")
+            lf.op_cyl(c, x, t + 5.4, z, 2.0, rtop + 1.0, "Limestone")
         c.feat["landmark"].append({"key": key, "x": x, "z": z})
     # L2 Zwillingstuerme
     s2 = S["L2"]
@@ -100,11 +112,14 @@ def landmarks(c: Ctx):
     vx, vz = s5.xz
     fields.volcano(c, vx, vz, s5.data["top"], s5.data["crater"], west_az=238.0)
     c.feat["landmark"].append({"key": "L5", "x": vx, "z": vz})
-    for k, da in enumerate((20, 75, 130, 330)):
-        a = da + rng.uniform(-15, 15)
+    vsl = c.win(vx, vz, 330)
+    own = np.zeros(c.H.shape, bool)
+    own[vsl] = c.mask("volcano")[vsl]
+    for k, da in enumerate((15, 70, 125, 335, 165)):
+        a = da + rng.uniform(-12, 12)
         Rv = 230
-        sx, sz = vx + Rv * 0.55 * math.sin(math.radians(a)), vz - Rv * 0.55 * math.cos(math.radians(a))
-        fields.lava_tongue(c, sx, sz, a, rng.uniform(180, 420), rng.uniform(26, 46), name="tongue%d" % k)
+        sx, sz = vx + Rv * 0.5 * math.sin(math.radians(a)), vz - Rv * 0.5 * math.cos(math.radians(a))
+        fields.lava_tongue(c, sx, sz, a, rng.uniform(220, 460), rng.uniform(30, 50), name="tongue%d" % k, own=own)
     # L4 Bogen (Duenenland)
     s4 = S["L4"]
     ax, az_ = s4.xz
@@ -172,25 +187,26 @@ def hoodoo_garden(c: Ctx):
     tries = 0
     while len(groups) < 6 and tries < 2000:
         tries += 1
-        ga = a0 + rng.uniform(-26, 24)
-        gr = rng.uniform(390, 590)
+        ga = a0 + rng.uniform(-30, 28)
+        gr = rng.uniform(385, 615)
         gx, gz = pol(ga, gr)
-        if any(math.hypot(gx - q[0], gz - q[1]) < 120 for q in groups):
+        if any(math.hypot(gx - q[0], gz - q[1]) < 112 for q in groups):
             continue
         if not lf.is_free(c, gx, gz, 26, wash_margin=10):
             continue
-        groups.append((gx, gz, rng.uniform(32, 58)))
+        groups.append((gx, gz, rng.uniform(40, 62)))
     count = 0
+    area = sum(g[2] ** 2 for g in groups) or 1.0
     for gi, (gx, gz, grad) in enumerate(groups):
-        n = int(rng.integers(12, 22))
+        n = int(round(108 * grad ** 2 / area)) + int(rng.integers(-2, 3))
         pts = []
         for _ in range(n * 30):
             if len(pts) >= n:
                 break
             ang = rng.uniform(0, 2 * math.pi)
-            rr = grad * math.sqrt(rng.uniform(0, 1))
+            rr = (grad + 8) * math.sqrt(rng.uniform(0, 1))
             hx, hz = gx + rr * math.cos(ang), gz + rr * math.sin(ang)
-            if any(math.hypot(hx - p[0], hz - p[1]) < rng.uniform(18, 26) for p in pts):
+            if any(math.hypot(hx - p[0], hz - p[1]) < rng.uniform(16, 24) for p in pts):
                 continue
             if c.wash_dist[c.idx(hx, hz)] < 10 or c.mask("claimed")[c.idx(hx, hz)]:
                 continue
@@ -204,6 +220,22 @@ def hoodoo_garden(c: Ctx):
         sl, circ = _circle(c, gx, gz, grad + 14)
         lf.claim(c, sl, circ)
         c.feat["hoodoo_group"].append({"x": gx, "z": gz, "R": grad})
+    # Finnen mit Fenstern am Aussenrand jeder Gruppe (Erosionsfolge Plateau -> Finne -> Fenster -> Hoodoo)
+    for gi, (gx, gz, grad) in enumerate(groups):
+        ga = math.degrees(math.atan2(gx, -gz)) % 360
+        gr = math.hypot(gx, gz)
+        for k in range(2):
+            if fins >= 12:
+                break
+            fa = ga + (k - 0.5) * math.degrees(38.0 / gr) * 2 + rng.uniform(-2, 2)
+            L = rng.uniform(40, 85)
+            r0 = gr + grad + rng.uniform(18, 30)
+            p0, p1 = pol(fa, r0), pol(fa + rng.uniform(-2, 2), r0 + L)
+            mx, mz = (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2
+            if c.wash_dist[c.idx(mx, mz)] < 20 or c.wash_dist[c.idx(*p1)] < 15:
+                continue
+            lf.fin(c, p0, p1, rng.uniform(7, 10), rng.uniform(22, 48), windows=int(rng.integers(1, 3)), name="fin%d_%d" % (gi, k))
+            fins += 1
     c.feat["landmark"].append({"key": "L3", "x": pol(a0, 500)[0], "z": pol(a0, 500)[1]})
     return count, fins
 
@@ -214,8 +246,8 @@ RING_SPEC = {
     "A": dict(n=6, r=(205, 300), lead=(50, 90), h=(22, 52)),
     "B": dict(n=24, r=(300, 590), lead=(70, 170), h=(40, 105)),
     "C": dict(n=12, r=(640, 1070), lead=(70, 150), h=(30, 85)),
-    "D": dict(n=20, r=(1150, 1520), lead=(70, 170), h=(50, 125)),
-    "E": dict(n=9, r=(1620, 1840), lead=(60, 130), h=(40, 100)),
+    "D": dict(n=14, r=(1150, 1480), lead=(70, 160), h=(50, 120)),
+    "E": dict(n=6, r=(1620, 1840), lead=(60, 120), h=(40, 95)),
 }
 
 
@@ -318,12 +350,12 @@ def ridges(c: Ctx):
     base6 = -24.0
     pos = [0.16, 0.5, 0.84] if not (0.3 < tg < 0.7) else [0.14, 0.86, 0.5]
     for p, h in zip(sorted(pos), (hs[0] - base6, hs[1] - base6, hs[2] - base6)):
-        peaks6.append((p, h, 0.2))
+        peaks6.append((p, h, 0.3))
     gaps = []
     if 0.05 < tg < 0.95:
         gaps.append((tg, 120.0, 2.0))
     # Front zeigt zur Basis: Laufrichtung p0->p1 ist +90 Grad -> links = Richtung Basis
-    lf.ridge(c, p0, p1, rng.uniform(-40, 40), peaks6, base=None, front=1, dip_deg=34, gaps=gaps, name="L6")
+    lf.ridge(c, p0, p1, rng.uniform(-40, 40), peaks6, base=None, front=1, dip_deg=13, back_deg=40, gaps=gaps, name="L6")
     c.feat["landmark"].append({"key": "L6", "x": cx, "z": cz})
     others = [(300, 260, 120), (172, 300, 140), (352, 240, 105), (232, 330, 125), (22, 210, 95), (73, 280, 130)]
     for k, (a, L, h) in enumerate(others):
@@ -345,9 +377,9 @@ def ridges(c: Ctx):
         q0 = (cx - tx * L / 2, cz - tz * L / 2)
         q1 = (cx + tx * L / 2, cz + tz * L / 2)
         npk = int(rng.integers(1, 4))
-        pk = [((i + 0.5) / npk + rng.uniform(-0.08, 0.08), h * rng.uniform(0.7, 1.0) if i else h, 0.5 / npk + 0.05) for i in range(npk)]
+        pk = [((i + 0.5) / npk + rng.uniform(-0.08, 0.08), h * rng.uniform(0.7, 1.0) if i else h, 0.7 / npk + 0.08) for i in range(npk)]
         lf.ridge(c, q0, q1, rng.uniform(-60, 60), pk, front=1 if rng.uniform() < 0.5 else -1,
-                 dip_deg=rng.uniform(28, 40), face_deg=rng.uniform(56, 68), back_deg=rng.uniform(32, 40), name="ridge%d" % k)
+                 dip_deg=rng.uniform(10, 15), face_deg=rng.uniform(62, 70), back_deg=rng.uniform(40, 46), name="ridge%d" % k)
 
 
 def tunnels(c: Ctx, n=4):
@@ -384,6 +416,13 @@ def massifs(c: Ctx):
         if sight_block(a, r):
             a += 8
         x, z = pol(a, r)
+        for _ in range(60):
+            if lf.is_free(c, x, z, d * 0.62, wash_margin=20):
+                break
+            a2, r2 = a + rng.uniform(-14, 14), r + rng.uniform(-90, 90)
+            x, z = pol(a2, r2)
+        else:
+            continue
         lf.mesa(c, x, z, d, h, stage="mesa", aspect=1.25, nsteps=3, talus=0.5, top_patch="Sand")
         # 2 Durchgangs-Canyons + 1 kurzer Seitencanyon mit Oase am Ende
         base = c.feat["mesa"][-1]["base"]
@@ -629,6 +668,35 @@ def ring_c_mesas(c: Ctx):
     return mesa_groups(c, "C", sector)
 
 
+def lava_flows(c: Ctx):
+    """Klar begrenzte Lavastroeme (Ring C Nordost): von den Kleinvulkanen und aus Spalten."""
+    rng = c.rng
+    n = 0
+    for v in [f for f in c.feat["volcano"] if f["small"]]:
+        for k in range(int(rng.integers(1, 3))):
+            a = rng.uniform(0, 360)
+            sx, sz = v["x"] + v["Rv"] * 0.6 * math.sin(math.radians(a)), v["z"] - v["Rv"] * 0.6 * math.cos(math.radians(a))
+            own = np.zeros(c.H.shape, bool)
+            vs = c.win(v["x"], v["z"], v["Rv"] * 1.3)
+            own[vs] = c.mask("volcano")[vs]
+            fields.lava_tongue(c, sx, sz, a, rng.uniform(140, 300), rng.uniform(22, 36), name="ct%d" % n, own=own)
+            n += 1
+    fis = 0
+    for _ in range(300):
+        if fis >= 3:
+            break
+        a, r = rng.uniform(-50, 110) % 360, rng.uniform(700, 1030)
+        x, z = pol(a, r)
+        if c.wNE[c.idx(x, z)] < 0.7 or not lf.is_free(c, x, z, 50, wash_margin=40):
+            continue
+        d0 = rng.uniform(0, 360)
+        for dd in (0, 180):
+            fields.lava_tongue(c, x, z, d0 + dd + rng.uniform(-20, 20), rng.uniform(160, 330), rng.uniform(22, 40), name="ft%d" % n)
+            n += 1
+        fis += 1
+    return n
+
+
 def build_landforms(c: Ctx):
     """Reihenfolge: Washes -> grosse Landmarken -> Becken -> Felder -> Berge -> Faecher."""
     setup_washes(c)
@@ -651,7 +719,7 @@ def build_landforms(c: Ctx):
         counts["mesas_" + ring] = mesa_groups(c, ring)
     counts["mesas_C"] = ring_c_mesas(c)
     counts["spires"] = spires(c, 16)
-    fields.lava_fields(c)
+    lava_flows(c)
     fields.dunes(c)
     counts["fans"] = fans(c)
     return counts

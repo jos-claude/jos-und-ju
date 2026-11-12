@@ -10,11 +10,14 @@ from .layout import DIP_DEG, LEE_DIR, STRATA_BASE, STRATA_PERIOD
 from .noise import smoothstep as ss
 from .world import CELL, MAT, N, STRATA_FLAG, VOID, World
 
-# Schichtband-Stapel (Vorgabe 4.2), Periode 240, y_eff = y + 48 + S
+# Schichtband-Stapel, Periode 240, y_eff = y + 48 + S.
+# Abweichung von Vorgabe 4.2 (Review Runde 1): duennere Baender (4-20) in mehr Wechseln, damit jede Mesa-Stufe
+# 1-2 saubere Streifen zeigt und die Danxia-Kaemme viele Farben haben. Gleiche Materialien/Farben wie 4.1.
 BANDS = [
-    ("Mud", 16), ("Sandstone", 24), ("Limestone", 8), ("Slate", 24), ("Salt", 4), ("Sandstone", 28),
-    ("Limestone", 10), ("Concrete", 4), ("Rock", 32), ("Limestone", 10), ("Slate", 30), ("Salt", 6),
-    ("Sandstone", 28), ("Mud", 16),
+    ("Mud", 10), ("Sandstone", 18), ("Limestone", 8), ("Slate", 16), ("Salt", 4), ("Sandstone", 14),
+    ("Rock", 12), ("Limestone", 6), ("Slate", 20), ("Concrete", 4), ("Sandstone", 16), ("Mud", 6),
+    ("Limestone", 10), ("Rock", 18), ("Salt", 6), ("Slate", 12), ("Sandstone", 20), ("Limestone", 6),
+    ("Concrete", 6), ("Rock", 14), ("Mud", 14),
 ]
 BAND_LUT = np.zeros(STRATA_PERIOD, np.uint8)
 BAND_TOPS = []  # (Grenze oben, Material darunter)
@@ -26,7 +29,7 @@ for _m, _t in BANDS:
 assert _p == STRATA_PERIOD
 
 LAYERS = {
-    "topDepth": 5, "subDepth": 14, "bedrock": "Rock",
+    "topDepth": 5, "subDepth": 14, "bedrock": "Slate",
     "subsoil": {
         "Ground": "Mud", "Grass": "Ground", "LeafyGrass": "Mud", "Sand": "Sandstone", "Mud": "Mud",
         "Basalt": "Basalt", "CrackedLava": "Basalt", "Salt": "Limestone", "Snow": "Slate", "Ice": "Glacier",
@@ -74,66 +77,74 @@ def slope_deg(H):
     return np.degrees(np.arctan(np.hypot(gx, gz)))
 
 
+def _clean(m, r_open=5, r_close=6, min_cells=180):
+    """Morphologie: kleine Inseln/Loecher weg, Grenzen entlang weicher Kurven."""
+    from scipy import ndimage as ndi
+    yy, xx = np.mgrid[-r_close:r_close + 1, -r_close:r_close + 1]
+    kc = xx * xx + yy * yy <= r_close * r_close
+    yy, xx = np.mgrid[-r_open:r_open + 1, -r_open:r_open + 1]
+    ko = xx * xx + yy * yy <= r_open * r_open
+    m = ndi.binary_closing(m, structure=kc)
+    m = ndi.binary_opening(m, structure=ko)
+    lab, n = ndi.label(m)
+    if n:
+        sizes = ndi.sum(m, lab, index=np.arange(1, n + 1))
+        keep = np.concatenate([[False], sizes >= min_cells])
+        m = keep[lab]
+    return m
+
+
 def assign(c: Ctx):
+    """Boden: Ground (Pfirsich) dominiert. Sand nur in Washes, Faechern, Duenen; Mud nur an Schutthalden und
+    nassen Mulden. Ring E kuehl (Slate) mit grossen Rock-Zonen und Schnee in Mulden."""
     x, z, H = c.x, c.z, c.H
     nz = c.nz
-    rw = c.rw
+    rw = getattr(c, "rw_mat", c.rw)
     top = c.top
     sl = slope_deg(np.where(c.void, np.nan, H))
     sl = np.nan_to_num(sl, nan=0.0)
     c.slope = sl
-    rwd = rw + nz.fbm("matring", x, z, 70, 3) * 60.0
-    pA = nz.fbm("patchA", x, z, 90, 4)
-    pB = nz.fbm("patchB", x, z, 55, 4)
-    pC = nz.fbm("patchC", x, z, 140, 3)
+    rwd = rw + nz.fbm("matring", x, z, 260, 2) * 70.0
     G, SAND, MUD = MAT["Ground"], MAT["Sand"], MAT["Mud"]
-    # Grundboden je Ring
     top[:] = G
-    ringA = rwd < 250
-    ringB = (rwd >= 250) & (rwd < 600)
-    ringC = (rwd >= 600) & (rwd < 1100)
-    ringD = (rwd >= 1100) & (rwd < 1600)
-    ringE = rwd >= 1600
-    # A: Korall, Sand-Flecken 8 %, Mud 2 %
-    top[ringA & (pA > 0.30)] = SAND
-    top[ringA & (pB < -0.40)] = MUD
-    # B: Ground, Sand 10 %, Mud 9 %
-    top[ringB & (pA > 0.24)] = SAND
-    top[ringB & (pB < -0.30)] = MUD
-    # C Nordost: Asche (Basalt) mit Korall-Inseln; C Suedwest: Sand mit Korall
-    ne = c.wNE + nz.fbm("nedither", x, z, 40, 2) * 0.5 > 0.5
-    top[ringC & ne & (pC < -0.08)] = MAT["Basalt"]
-    top[ringC & ne & (pB < -0.25)] = MUD
-    top[ringC & ~ne] = SAND
-    top[ringC & ~ne & (pC > 0.25)] = G
-    # D: Ground, Sand, Mud
-    top[ringD & (pA > 0.12)] = SAND
-    top[ringD & (pB < -0.33)] = MUD
-    # E: Schiefer/Fels lavendelgrau, Staub, Sand
+    ringE = (rwd >= 1610) & ~c.void
+    # Ring C Suedwest: Duenenfeld = Sand (weich begrenzt)
+    dune = c.masks.get("dune_zone")
+    if dune is not None:
+        top[_clean(dune, 6, 8, 400)] = SAND
+    # Ring E: Slate, grosse Rock-Zonen (Wellenlaenge 500), Schnee in Mulden
+    rockE = ringE & (nz.fbm("rockE", x, z, 500, 2) > 0.12)
     top[ringE] = MAT["Slate"]
-    top[ringE & (pC > 0.18)] = MAT["Rock"]
-    top[ringE & (pA < -0.38)] = G
-    top[ringE & (pB > 0.40)] = SAND
-    # Washes: Sand mit Kies-Streifen (laengs)
-    wf = c.mask("wash")
-    streak = nz.fbm("gravel", x * 1.0, z * 1.0, 26, 3)
-    top[wf] = SAND
-    top[c.mask("wash_floor") & (streak > 0.33) & (rwd > 250)] = G
-    for name, m in [("talus", MUD), ("fan", SAND)]:
-        if name in c.masks:
-            top[c.masks[name]] = m
+    top[_clean(rockE, 6, 8, 600)] = MAT["Rock"]
+    if "snow" in c.masks:
+        top[_clean(c.masks["snow"] & ringE, 4, 6, 200)] = MAT["Snow"]
+    # Sand: Washes (Band mit weichem, geschwungenem Rand), Faecher, Canyonboeden
+    wm = c.wash_dist < -2.0 + 3.0 * nz.fbm("washedge", x, z, 90, 2)
+    top[_clean(wm, 3, 5, 120)] = SAND
+    if "fan" in c.masks:
+        top[_clean(c.masks["fan"], 4, 5, 150)] = SAND
+    # Mud: Schutthalden
+    if "talus" in c.masks:
+        top[c.masks["talus"]] = MUD
     # Strata: Landformen + steile Hange
     st = c.strata
-    for name in ("scarp", "rim", "mesa", "ridge", "spire", "fin", "wave", "outcrop", "hoodoo_foot", "float", "canyon_wall"):
+    for name in ("scarp", "mesa", "ridge", "spire", "fin", "wave", "outcrop", "hoodoo_foot", "float", "canyon_wall"):
         if name in c.masks:
             st |= c.masks[name]
-    st |= (sl > 40.0)
+    st |= (sl > 40.0) & ~ringE
     for name in ("talus", "rim_talus", "no_strata", "volcano", "lava", "basalt_cells", "playa", "terrace", "pond",
-                 "geode", "crater_floor", "ramp", "wash_floor"):
+                 "geode", "crater_floor", "ramp", "wash_floor", "rim"):
         if name in c.masks:
             st &= ~c.masks[name]
     if "rim_talus" in c.masks:
         top[c.masks["rim_talus"]] = MAT["Rock"]
+    if "rim" in c.masks:
+        rm = c.masks["rim"]
+        top[rm] = MAT["Slate"]
+        top[rm & (nz.fbm("rimrock", x, z, 300, 2) > 0.2)] = MAT["Rock"]
+        snowcap = rm & (H > 228.0 + 14.0 * nz.fbm("snowline", x, z, 120, 2)) & (sl < 58)
+        top[snowcap] = MAT["Snow"]
+        top[rm & (H > 255) & (sl < 70)] = MAT["Snow"]
     c.strata_slope = sl
 
 
@@ -151,13 +162,14 @@ def finalize(c: Ctx, w: World):
     void = c.void
     sl = c.strata_slope
     # Schichtversatz S
-    S = s_smooth(c) + c.nz.fbm("bandnoise", c.x, c.z, 22, 2) * 2.2
+    S = s_smooth(c) + c.nz.fbm("bandnoise", c.x, c.z, 80, 2) * 1.5 * 2.2
     S = S * (1 - c.S_local_w) + c.S_local * c.S_local_w
     S_int = np.mod(np.round(S), STRATA_PERIOD).astype(np.int64)
     st = c.strata & ~void
     # flache Schicht-Spalten: Deckmaterial = Band direkt unter der Oberflaeche (kein Flackern der Voxelmitte)
     flat = st & (sl < 32.0)
-    yb = H - 1.5 + S_int + STRATA_BASE
+    S_sm = np.mod(np.round(s_smooth(c) * (1 - c.S_local_w) + c.S_local * c.S_local_w), STRATA_PERIOD)
+    yb = H - 1.5 + S_sm + STRATA_BASE
     band_below = BAND_LUT[np.floor(yb).astype(np.int64) % STRATA_PERIOD]
     explicit_top = getattr(c, "strata_top", None)  # Schnee, Gras, Staub auf Schichtfelsen
     code = np.where(st, STRATA_FLAG, 0).astype(np.int64)
