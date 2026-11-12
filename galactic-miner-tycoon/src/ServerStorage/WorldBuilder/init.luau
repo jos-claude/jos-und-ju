@@ -254,6 +254,14 @@ local function buildTerrain(meta: any)
 	log("Loesche altes Terrain ...")
 	terrain:Clear()
 
+	-- Animiertes Gras auf dem Terrain-Material Grass (Moos-/Wiesenflaechen)
+	local okDecoration = pcall(function()
+		(terrain :: any).Decoration = meta.terrainDecoration ~= false
+	end)
+	if not okDecoration then
+		log("Hinweis: Terrain.Decoration bitte von Hand einschalten (Workspace.Terrain -> Decoration), dann waechst Gras.")
+	end
+
 	-- Farben erst nach Clear() setzen
 	if meta.materialColors then
 		for name, color in meta.materialColors do
