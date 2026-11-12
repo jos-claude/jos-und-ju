@@ -47,12 +47,16 @@ function ResourceNodeService.RulesFor(oreId: string): NodePlacement.Rules
 	local def = (Ores.byId :: any)[oreId]
 	local hall = BaseLayout.hall
 	local pad = BaseLayout.nodes.keepOutPadding
+	local clearCircles = {}
+	for _, spawn in BaseLayout.nodes.spawnPoints do
+		table.insert(clearCircles, { x = spawn.x, z = spawn.z, r = BaseLayout.nodes.spawnClearRadius })
+	end
 	return {
 		minRadius = def.minRadius,
 		maxRadius = def.maxRadius,
 		minSpacing = BaseLayout.nodes.minSpacing,
 		maxAttempts = BaseLayout.nodes.maxAttempts,
-		clearCircles = { { x = 0, z = 0, r = BaseLayout.nodes.spawnClearRadius } },
+		clearCircles = clearCircles,
 		clearRects = {
 			{
 				minX = hall.centerX - hall.width / 2 - pad,

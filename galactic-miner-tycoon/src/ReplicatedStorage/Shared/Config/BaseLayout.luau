@@ -36,7 +36,9 @@ export type BaseLayoutConfig = {
 	-- Regeln für Erz-Vorkommen (zusätzlich zum Ring aus Ores.luau).
 	nodes: {
 		minSpacing: number, -- Mindestabstand Mitte zu Mitte zwischen zwei Vorkommen
-		spawnClearRadius: number, -- um den Spawnpunkt (0, 0) frei lassen
+		spawnClearRadius: number, -- um jeden Spawnpunkt frei lassen
+		-- Alter Spawn (0, 0) und Spawn des WorldBuilders (0, 20) (Auftrag 001, Nachtrag Jos 12.11.)
+		spawnPoints: { { x: number, z: number } },
 		keepOutPadding: number, -- Abstand zu Halle und Lager
 		maxAttempts: number, -- Versuche pro Vorkommen, bevor aufgegeben wird
 		interactDistance: number, -- Server: so nah (waagerecht) muss man zum Hacken sein
@@ -50,9 +52,10 @@ export type BaseLayoutConfig = {
 local BaseLayout: BaseLayoutConfig = {
 	FOLDER_NAME = "GMT_Gameplay",
 
+	-- Front der Halle bei z = 30: 10 Studs Platz vor dem Spawn des WorldBuilders (0, 0, 20).
 	hall = {
 		centerX = 0,
-		centerZ = 30,
+		centerZ = 44,
 		width = 40,
 		depth = 28,
 		wallHeight = 14,
@@ -61,12 +64,12 @@ local BaseLayout: BaseLayoutConfig = {
 
 	storage = {
 		binX = 0,
-		binZ = 40,
+		binZ = 54,
 		binWidth = 8,
 		binHeight = 10,
 		binDepth = 5,
 		dropZoneX = 0,
-		dropZoneZ = 32,
+		dropZoneZ = 46,
 		dropZoneWidth = 12,
 		dropZoneDepth = 7,
 		dropZoneHeight = 8,
@@ -75,6 +78,7 @@ local BaseLayout: BaseLayoutConfig = {
 	nodes = {
 		minSpacing = 24,
 		spawnClearRadius = 12,
+		spawnPoints = { { x = 0, z = 0 }, { x = 0, z = 20 } },
 		keepOutPadding = 6,
 		maxAttempts = 60,
 		interactDistance = 14,

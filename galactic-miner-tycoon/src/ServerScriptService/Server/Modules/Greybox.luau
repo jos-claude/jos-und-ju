@@ -229,10 +229,11 @@ function Greybox.buildStorage(
 	bin.Parent = folder
 
 	-- Abladefeld: drauflaufen = alles Getragene kommt in den passenden Kasten.
+	-- Um 90° gedreht, damit "ABLADEN" lesbar ist, wenn man von Norden (Eingang) hereinkommt.
 	local zone = part(
 		"GMT_PH_DropZone",
-		Vector3.new(storage.dropZoneWidth, 0.1, storage.dropZoneDepth),
-		CFrame.new(storage.dropZoneX, floorTop + 0.06, storage.dropZoneZ),
+		Vector3.new(storage.dropZoneDepth, 0.1, storage.dropZoneWidth),
+		CFrame.new(storage.dropZoneX, floorTop + 0.06, storage.dropZoneZ) * CFrame.Angles(0, math.rad(90), 0),
 		COLORS.dropZone,
 		Enum.Material.Neon,
 		folder
