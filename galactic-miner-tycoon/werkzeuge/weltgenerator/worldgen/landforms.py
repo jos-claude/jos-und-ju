@@ -178,8 +178,10 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     mesa_h = np.where(s > -1, h, -1e9)
     # Schutthalde (Mud) mit Schuttkegeln unter den Rinnen
     T = tal_l * TAN(31) * 0.85
-    tl = tal_l * (1.0 + 0.6 * g)
-    Tg = T * (1.0 + 0.5 * g)
+    gs = np.maximum(0.0, np.cos(k * th + 0.0)) ** 2 if gully else np.zeros_like(s)
+    gs = 0.5 * gs + 0.5 * (c.nz.fbm("talcone", x, z, 30, 2) * 0.5 + 0.5)
+    tl = tal_l * (1.0 + 0.3 * gs)
+    Tg = T * (1.0 + 0.22 * gs)
     q = np.clip((d + 0.15 * tl) / tl, 0, 1)
     tal = base + Tg * (1 - q) ** 1.55 + c.nz.fbm("talus", x, z, 14, 2) * 0.6
     tal = np.where(q < 1, tal, -1e9)

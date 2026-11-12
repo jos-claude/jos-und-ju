@@ -88,7 +88,7 @@ async function main() {
   // Licht: Sonne (ColorShift_Top), Umgebung (Ambient + OutdoorAmbient), Himmel/Boden (EnvironmentDiffuse, ColorShift_Bottom)
   const bright = LL.Brightness ?? 2.4;
   const sunCol = lin(LL.ColorShift_Top || [255, 217, 168]).lerp(new THREE.Color(1, 1, 1), 0.45);
-  const sun = new THREE.DirectionalLight(sunCol, bright * 1.25);
+  const sun = new THREE.DirectionalLight(sunCol, bright * 1.4);
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
   sun.shadow.bias = -0.0004;
@@ -96,7 +96,7 @@ async function main() {
   sun.shadow.radius = 2.0;
   scene.add(sun, sun.target);
   const amb = lin(LL.Ambient || [106, 88, 120]).add(lin(LL.OutdoorAmbient || [178, 140, 138]));
-  scene.add(new THREE.AmbientLight(amb, 1.25));
+  scene.add(new THREE.AmbientLight(amb, 1.05));
   const hemi = new THREE.HemisphereLight(lin([120, 170, 190]), lin(LL.ColorShift_Bottom || [122, 111, 176]), 0.9 * (LL.EnvironmentDiffuseScale ?? 0.6) / 0.6);
   scene.add(hemi);
 
@@ -235,7 +235,9 @@ async function main() {
     vec3 blendedColor(vec2 q, float y, vec3 p, vec3 nn, out int domM) {
       vec2 g = (q - ${ORIGIN.toFixed(1)}) / ${CELL.toFixed(1)} - 0.5;
       ivec2 i0 = ivec2(floor(g));
-      vec2 f = smoothstep(0.15, 0.85, g - vec2(i0));
+      vec2 jit = vec2(vnoise(vec3(q * 0.55, 1.7)), vnoise(vec3(q * 0.55, 9.3))) - 0.5;
+      vec2 jit2 = vec2(vnoise(vec3(q * 0.17, 4.1)), vnoise(vec3(q * 0.17, 2.2))) - 0.5;
+      vec2 f = smoothstep(0.05, 0.95, g - vec2(i0) + jit * 0.55 + jit2 * 0.5);
       vec3 acc = vec3(0.0); float ws = 0.0; float amp = 0.0; float best = -1.0; domM = 0;
       float fy = fract(y / 4.0);
       float vw = 0.5 * smoothstep(0.55, 1.0, abs(fy - 0.5) * 2.0) * (1.0 - smoothstep(0.55, 0.85, abs(nn.y)));
@@ -318,6 +320,21 @@ async function main() {
         .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n reflectedLight.directDiffuse += poolLight(vWPos, normalize(vWNrm)) * BRDF_Lambert(diffuseColor.rgb);');
     };
     m.customProgramCacheKey = () => 'terrain-' + kind;
+    if (kind === 'op') {
+      const prev = m.onBeforeCompile;
+      m.onBeforeCompile = (sh) => {
+        prev(sh);
+        const disp = `
+          #ifdef USE_INSTANCING
+          { vec3 wpp = (modelMatrix * instanceMatrix * vec4(position, 1.0)).xyz;
+            float nd = sin(wpp.x * 0.61 + wpp.z * 0.37) * sin(wpp.y * 0.73 - wpp.x * 0.29) + 0.5 * sin(wpp.z * 1.3 + wpp.y * 1.1);
+            vec3 ln = normalize(mat3(instanceMatrix) * normal);
+            vec3 wd = ln * nd * 0.55;
+            transformed += (inverse(mat3(instanceMatrix)) * wd); }
+          #endif`;
+        sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' + disp);
+      };
+    }
     return m;
   }
 
@@ -410,7 +427,7 @@ async function main() {
 
   // ---------------------------------------------------------------- Zusatzformen (positiv) + Innenflaechen der Luft-Formen
   {
-    const geos = { Ball: new THREE.SphereGeometry(1, 24, 16), Block: new THREE.BoxGeometry(1, 1, 1), Cylinder: new THREE.CylinderGeometry(1, 1, 1, 24) };
+    const geos = { Ball: new THREE.SphereGeometry(1, 28, 18), Block: new THREE.BoxGeometry(1, 1, 1, 4, 4, 4), Cylinder: new THREE.CylinderGeometry(1, 1, 1, 28, 8) };
     const groups = { Ball: [], Block: [], Cylinder: [] };
     for (const o of scn.terrainOps) {
       const m4 = new THREE.Matrix4();
@@ -450,13 +467,14 @@ async function main() {
     if (ok) {
       const cube = await new THREE.CubeTextureLoader().setPath(DATA + 'sky/').loadAsync(names.map((n) => n + '.png'));
       cube.colorSpace = THREE.SRGBColorSpace;
-      skyUniforms.tSky.value = cube; skyUniforms.hasSky.value = 1;
+      scene.background = cube;          // normal laden, three.js spiegelt beim Abtasten selbst
       scene.environment = cube;
+      skyUniforms.hasSky.value = 1;
     }
     const satAz = deg(40), satEl = deg(28);
     const SAT = new THREE.Vector3(Math.sin(satAz) * Math.cos(satEl), Math.sin(satEl), -Math.cos(satAz) * Math.cos(satEl));
     const skyMat = new THREE.ShaderMaterial({
-      uniforms: skyUniforms, depthWrite: false, side: THREE.BackSide,
+      uniforms: skyUniforms, depthWrite: false, side: THREE.BackSide, transparent: true,
       vertexShader: 'varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position,1.0); gl_Position = p.xyww; }',
       fragmentShader: `
         uniform samplerCube tSky; uniform int hasSky; varying vec3 vDir;
@@ -465,10 +483,9 @@ async function main() {
         vec3 srgb2lin(vec3 c){ return pow(c, vec3(2.2)); }
         void main(){
           vec3 d = normalize(vDir);
-          vec3 col;
+          vec3 col = vec3(0.0);
           if (hasSky == 1) {
-            col = textureCube(tSky, vec3(-d.x, d.y, d.z)).rgb;
-            col = srgb2lin(col);
+            // nur Dunst-Schicht ueber dem Hintergrund (Saturn bei El 28 bleibt klar)
           } else {
             float e = d.y;
             vec3 zen = srgb2lin(vec3(0.039,0.106,0.173)), hor = srgb2lin(vec3(0.122,0.31,0.36)), und = srgb2lin(vec3(0.165,0.141,0.25));
@@ -491,10 +508,11 @@ async function main() {
             if (ang < rr && !(ring && front)) col = satc * (0.45 + 0.55 * smoothstep(0.1, -0.06, px));
             else if (ring && (front || ang > rr)) col = mix(col, srgb2lin(vec3(0.8, 0.74, 0.6)), ell < rr * 1.53 ? 0.45 : 0.85);
           }
-          // Atmosphaere ueber dem Himmel (Horizont-Dunst)
-          float hz = exp(-abs(d.y) / 0.085) * (d.y > 0.0 ? 1.0 : 0.85);
-          col = mix(col, atmoColorDir(d), clamp(hz * ${(0.55 + 0.6 * density).toFixed(3)}, 0.0, 0.9));
-          gl_FragColor = vec4(col, 1.0);
+          // Atmosphaere ueber dem Himmel: nur der Horizont-Bereich verschwimmt (El < ~10 Grad)
+          float hz = exp(-abs(d.y) / 0.075) * (d.y > 0.0 ? 1.0 : 0.85);
+          hz = clamp(hz * ${(0.55 + 0.6 * density).toFixed(3)}, 0.0, 0.9);
+          if (hasSky == 1) gl_FragColor = vec4(atmoColorDir(d), hz);
+          else gl_FragColor = vec4(mix(col, atmoColorDir(d), hz), 1.0);
         }`,
     });
     const sky = new THREE.Mesh(new THREE.SphereGeometry(10000, 64, 32), skyMat);

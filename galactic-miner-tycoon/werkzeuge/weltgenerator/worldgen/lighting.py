@@ -15,8 +15,9 @@ def sun_direction(az=SUN_AZ, el=SUN_EL):
 def lighting_meta():
     return {
         "Lighting": {
-            "ClockTime": 16.5,
-            "GeographicLatitude": 0,
+            # Vom Himmels-Agenten mit der gemessenen Roblox-Sonnenformel bestimmt: ergibt Azimut 250, Elevation 22
+            "ClockTime": 16.45,
+            "GeographicLatitude": 42,
             "Brightness": 2.4,
             "Ambient": RGB("#6A5878"),
             "OutdoorAmbient": RGB("#B28C8A"),
@@ -36,5 +37,5 @@ def lighting_meta():
         "ColorCorrection": {"Brightness": 0.02, "Contrast": 0.12, "Saturation": 0.18, "TintColor": RGB("#FFF1E6")},
         "SunRays": {"Intensity": 0.06, "Spread": 0.8},
         "DepthOfField": {"Enabled": False, "FarIntensity": 0.08, "FocusDistance": 200, "InFocusRadius": 400, "NearIntensity": 0},
-        "Sky": {"CelestialBodiesShown": False, "StarCount": 0},
+        "Sky": {"CelestialBodiesShown": False, "StarCount": 0},  # SkyboxOrientation bleibt Standard (0, 0, 0)
     }
