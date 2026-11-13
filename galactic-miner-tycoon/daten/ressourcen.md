@@ -3,15 +3,15 @@
 Status: **abgestimmt für M1 (11.11.2026, Ju), Zahlen dürfen später angepasst werden**. Namen sind frei erfunden und änderbar. Regeln: Entscheidungen 010 und 011.
 
 ## Rohstoffe auf dem Heimatplaneten
-Planeten-Radius: **2000 Studs**. Jedes Erz hat einen Ring (Mindest- und Maximalradius, Entscheidung 020) (flache Plattform, Entscheidung 015). Vorkommen sind zufällig verteilt, ungefährlich und haben einen **Mindestradius** um die Basis. Sie erscheinen erst mit dem Fortschritt des Spielers.
+Planeten-Radius: **1000 Studs** (Entscheidung 022, vorher 2000). Jedes Erz hat einen Ring (Mindest- und Maximalradius, Entscheidung 020) (flache Plattform, Entscheidung 015). Vorkommen sind zufällig verteilt, ungefährlich und haben einen **Mindestradius** um die Basis. Sie erscheinen erst mit dem Fortschritt des Spielers.
 
 | ID | Name | Mindestradius (Studs) | Maximalradius (Studs) | Stufe |
 |---|---|---|---|---|
-| `iron_ore` | Eisenerz | 10 | 200 | 1 |
-| `copper_ore` | Kupfererz | 250 | 700 | 2 |
-| `coal` | Kohle | 600 | 1100 | 3 |
-| `crystal` | Kristall | 1100 | 1600 | 4 |
-| `titanium_ore` | Titanerz | 1600 | 2000 | 5 |
+| `iron_ore` | Eisenerz | 10 | 100 | 1 |
+| `copper_ore` | Kupfererz | 125 | 350 | 2 |
+| `coal` | Kohle | 300 | 550 | 3 |
+| `crystal` | Kristall | 550 | 800 | 4 |
+| `titanium_ore` | Titanerz | 800 | 1000 | 5 |
 
 ## Wann erscheinen Vorkommen? (abgestimmt, Entscheidung 016)
 Der **Auslöser** ist der Fortschritt des Spielers, nicht die Uhrzeit allein.

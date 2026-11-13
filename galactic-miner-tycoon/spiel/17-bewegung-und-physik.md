@@ -22,7 +22,7 @@ Wie sich der Spieler auf Insel 1 bewegt. Es soll sich anfühlen wie auf einem fr
 | **Schwung in der Luft** | In der Luft lenkt man nur langsam um. Wer rennend abspringt, fliegt weiter. Loslassen bremst nicht sofort | `MovementController` (Client) |
 | **Landestaub** | Bei einer richtigen Landung pufft eine Staubwolke in der Farbe des Bodens auf. Kleine Stufen stauben nicht | `MovementController` (Client) |
 
-Die Laufgeschwindigkeit bleibt beim Roblox-Standard (16). Die Insel ist groß (Radius 2000), langsamer laufen würde nur nerven. Ein Upgrade für die Laufgeschwindigkeit gibt es nicht, schneller ist man mit dem Rover (Entscheidung 018).
+Die Laufgeschwindigkeit bleibt beim Roblox-Standard (16). Die Insel ist groß (Radius 1000, Entscheidung 022), langsamer laufen würde nur nerven. Ein Upgrade für die Laufgeschwindigkeit gibt es nicht, schneller ist man mit dem Rover (Entscheidung 018).
 
 Alle Zahlen: `../daten/bewegung.md`. Im Code: `../src/ReplicatedStorage/Shared/Config/Movement.luau`.
 
