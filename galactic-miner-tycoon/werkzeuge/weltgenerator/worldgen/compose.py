@@ -247,9 +247,9 @@ def hoodoo_garden(c: Ctx):
 RING_SPEC = {
     # n Berge, r-Bereich, Leit-Durchmesser, Hoehe ueber Umland
     "A": dict(n=4, r=(215, 300), lead=(70, 105), h=(26, 52)),
-    "B": dict(n=10, r=(310, 590), lead=(90, 170), h=(45, 105)),
+    "B": dict(n=9, r=(310, 590), lead=(90, 170), h=(45, 105)),
     "C": dict(n=8, r=(640, 1070), lead=(90, 160), h=(30, 85)),
-    "D": dict(n=14, r=(1150, 1480), lead=(70, 160), h=(50, 120)),
+    "D": dict(n=12, r=(1150, 1480), lead=(70, 160), h=(50, 120)),
     "E": dict(n=6, r=(1620, 1840), lead=(60, 120), h=(40, 95)),
 }
 

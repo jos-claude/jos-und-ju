@@ -16,7 +16,7 @@ Größe: **1024 × 1024** pro Bild. Roblox nutzt für Skybox-Bilder höchstens 1
 | `sky_Ft.png` | **SkyboxFt** | Norden (−Z) | Saturn oben rechts, Mond 1 und Sternhaufen am oberen Rand |
 | `sky_Lf.png` | **SkyboxLf** | Osten (+X) | rechtes Ende der Saturn-Ringe (oben links im Bild) |
 | `sky_Bk.png` | **SkyboxBk** | Süden (+Z) | Sterne, Horizont |
-| `sky_Rt.png` | **SkyboxRt** | Westen (−X) | Sonne (Az 250°, El 22°), Eisriese, Pfirsich-Glühen am Horizont |
+| `sky_Rt.png` | **SkyboxRt** | Westen (−X) | Sonne (Az 250°, El 30°), Eisriese, Pfirsich-Glühen am Horizont |
 | `sky_Up.png` | **SkyboxUp** | oben (+Y) | Nebelband über den Zenit, Mond 2, Ränder von Saturn und Sternhaufen |
 | `sky_Dn.png` | **SkyboxDn** | unten (−Y) | Violett-dunkel mit Sternen |
 
@@ -56,22 +56,22 @@ Danach die IDs auch in `../asset-liste.md` eintragen.
 
 ## Sonne in Lighting (muss zur Skybox-Sonne passen)
 
-Die Skybox-Sonne ist auf diese Werte gerendert (Vorschlag, noch nicht von Jos/Ju abgestimmt):
+Die Skybox-Sonne ist auf diese Werte gerendert (Vorschlag, noch nicht von Jos/Ju abgestimmt). Nach einer Review steht die Sonne höher als in der Vorgabe (Elevation **30°** statt 22°), damit der Boden heller wird; der Azimut bleibt 250°.
 
 | Eigenschaft | Wert | Ergebnis |
 |---|---|---|
-| `Lighting.ClockTime` | **16.45** (= `TimeOfDay` 16:27:00) | Sonne bei Azimut 250,0°, Elevation 22,0° |
-| `Lighting.GeographicLatitude` | **42** | |
+| `Lighting.ClockTime` | **15.8956** (= `TimeOfDay` 15:53:44) | Sonne bei Azimut 250,0°, Elevation 30,0° |
+| `Lighting.GeographicLatitude` | **40.73** | Richtung zur Sonne (x, y, z) = (−0.8138, 0.5000, 0.2962) |
 | `Sky.CelestialBodiesShown` | `false` | Sonne, Mond, Sterne kommen aus der Skybox |
 | `Sky.StarCount` | `0` | |
 
 Woher die Werte kommen: Roblox berechnet `Lighting:GetSunDirection()` (laut zwei an Studio gemessenen Nachbauten des Renderers) als
 `(−sin h · cos t,  cos h · cos t,  sin t)` mit `h = (ClockTime − 12) / 24 · 360°` und `t = GeographicLatitude − 23,5°`.
-Mit 16,45 und 42 ergibt das Azimut 250,0° und Elevation 22,0°. Zum Prüfen in der Studio-Befehlsleiste:
+Mit 15,8956 und 40,73 ergibt das Azimut 250,0° und Elevation 30,0° (gerundet 15,9 / 40,7 wären Az 250,05° / El 29,94°). Zum Prüfen in der Studio-Befehlsleiste:
 
 ```lua
 local d = game.Lighting:GetSunDirection()
-print(math.deg(math.atan2(d.X, -d.Z)) % 360, math.deg(math.asin(d.Y)))  -- erwartet: ~250  ~22
+print(math.deg(math.atan2(d.X, -d.Z)) % 360, math.deg(math.asin(d.Y)))  -- erwartet: ~250  ~30
 ```
 
 Kommt etwas anderes heraus, nicht die Bilder ändern, sondern `ClockTime`/`GeographicLatitude` anpassen und Bescheid sagen – dann wird der Himmel mit der echten Richtung neu gerendert (`SkyModel(sun_dir=…)` in `worldgen/sky.py`).

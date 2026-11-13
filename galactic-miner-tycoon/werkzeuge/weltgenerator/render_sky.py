@@ -122,8 +122,9 @@ def main():
     sun_az, sun_el = sky.az_el_from_dir(model.sun_dir)
     log(f"Sonne aus Lighting (ClockTime {sky.LIGHTING_CLOCK_TIME}, GeographicLatitude {sky.LIGHTING_LATITUDE}): "
         f"Azimut {sun_az:.2f}, Elevation {sun_el:.2f}")
-    ct, lat = sky.solve_roblox_sun(250.0, 22.0)
-    log(f"Exakt Azimut 250 / Elevation 22 waere ClockTime {ct:.4f}, GeographicLatitude {lat:.3f}")
+    ct, lat = sky.solve_roblox_sun(sky.SUN_TARGET_AZ, sky.SUN_TARGET_EL)
+    log(f"Exakt Azimut {sky.SUN_TARGET_AZ:g} / Elevation {sky.SUN_TARGET_EL:g} waere ClockTime {ct:.4f}, "
+        f"GeographicLatitude {lat:.3f}")
     for name, body, L in (("Saturn", model.saturn, model.saturn_light), ("Mond 1", model.moon1, model.sun_dir),
                           ("Mond 2", model.moon2, model.sun_dir), ("Eisriese", model.ice, model.sun_dir)):
         ph, frac, pa = sky.light_geometry(body.c, L)

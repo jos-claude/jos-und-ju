@@ -98,9 +98,12 @@ def solve_roblox_sun(az_deg: float, el_deg: float) -> tuple[float, float]:
     return (12.0 + h / (2.0 * math.pi) * 24.0) % 24.0, math.degrees(tilt) + 23.5
 
 
-# Empfohlene Lighting-Werte (gerundet) -> Azimut 250,0 Grad, Elevation 22,0 Grad
-LIGHTING_CLOCK_TIME = 16.45
-LIGHTING_LATITUDE = 42.0
+# Ziel-Sonnenrichtung (Review: Sonne hoeher fuer helleren Boden; vorher Elevation 22 Grad)
+SUN_TARGET_AZ = 250.0
+SUN_TARGET_EL = 30.0
+# Empfohlene Lighting-Werte -> Azimut 250,00 Grad, Elevation 30,00 Grad (TimeOfDay 15:53:44)
+LIGHTING_CLOCK_TIME = 15.8956
+LIGHTING_LATITUDE = 40.73
 
 
 # ---------------------------------------------------------------------------
@@ -770,7 +773,7 @@ class SkySpec:
     saturn_ring_opening: float = 20.0
     saturn_roll: float = 14.0  # rechte Seite hoeher (Vorgabe "Roll -14 Grad, rechte Seite hoeher")
     # Saturn-Licht (Stil): Phasenwinkel 30,5 Grad = 93 % beleuchtet, Licht von links (Positionswinkel
-    # auf dem Bild: 0 = rechts, 90 = oben). Die echte Sonne steht von Saturn aus gesehen 69 Grad ueber
+    # auf dem Bild: 0 = rechts, 90 = oben). Die echte Sonne steht von Saturn aus gesehen 76 Grad ueber
     # der Ringebene -> es gaebe weder Ring- noch Planetenschatten. None = physikalisch.
     saturn_phase: float | None = 30.5
     saturn_light_pa: float | None = 185.0

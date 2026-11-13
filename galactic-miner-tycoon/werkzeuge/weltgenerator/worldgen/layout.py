@@ -14,10 +14,11 @@ import numpy as np
 H0 = 48.0                      # Vorgabe-Hoehe des Plateaus (wird ueberall abgezogen)
 WIND_FROM = 250.0              # Wind kommt aus WSW
 LEE_DIR = 70.0                 # Lee-Richtung / Schattenrichtung / Neigung der Pflanzen
-SUN_AZ, SUN_EL = 250.0, 22.0
+SUN_AZ, SUN_EL = 250.0, 30.0       # Review: Sonne 30 Grad (vorher 22) fuer helleren Boden
 STRATA_PERIOD = 240
-STRATA_BASE = 48               # y_eff = y + 48 -> Baender liegen wie in der Vorgabe (Plateau h 48)
-DIP_DEG = 3.0                  # globale Neigung der Schichten (Fall nach ONO, Azimut 70)
+STRATA_BASE = 4                # Review: Korall-Doppelband (Mud 24 + 16) liegt bei y -28..+12 = Bodenhoehe -> Berge wachsen
+                               # aus einem korallfarbenen Sockel
+DIP_DEG = 1.5                  # globale Neigung der Schichten (Fall nach ONO, Azimut 70); Review: 1,5-2 statt 3
 
 RING_EDGES = [0, 250, 600, 1100, 1600, 2000]
 RING_NAMES = ["A", "B", "C", "D", "E"]

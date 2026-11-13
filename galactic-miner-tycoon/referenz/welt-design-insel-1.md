@@ -431,3 +431,17 @@ Drei Karten (0–1), vom Bauer aus Gelände und Wasser berechnet:
 - **Saturn-Größe 14°** (Stil) statt realistischer 5–6°: ok?
 - Rand: **Balkone mit unsichtbarer Wand** und schwebende Felsen als reine Optik: ok?
 - Sollen die Landmarken-Slots **fest** sein (Vorschlag) oder auch seed-abhängig?
+- **Erze nur bis r 1900** (Vorschlag aus dem Bau): Das Randgebirge braucht den Platz 1900–2000. `daten/ressourcen.md` nennt noch 2000 als Maximalradius. Der Generator liefert Bauzonen bis 1900 (`WorldBuilder.IsBuildZone`). Bitte entscheiden.
+- **Bauzonen Ring D:** Mit allen Formen sind es ca. 54 % statt der geplanten 60 %. Reicht das, oder lieber weniger Kämme/Tafelberge?
+- **Teile:** ca. 24 200 Teile Deko. Für Handys eher viel. Später häufige Deko als MeshParts bauen? (siehe `technik/weltgenerator.md`)
+
+## Umsetzung (Stand 12.11.2026)
+Gebaut vom Weltgenerator (`werkzeuge/weltgenerator`), Vorschau-Bilder in `bilder/welt/vorschau-insel-1/`. Bewusste Abweichungen stehen im Generator-Code und in `welt/README.md`. Die wichtigsten:
+- Plateau auf y = 0 statt 48.
+- Vulkan auf Az 34° statt 20°, damit man ihn durch das Saturn-Tor sieht.
+- Weniger Tafelberge, Felsnadeln und Canyons zugunsten der Bauzonen.
+- Lavazungen statt großer Lavafelder.
+- Dünnere Gesteinsbänder (21 Bänder).
+- Hoodoos mindestens 8 Studs dick (sonst zerfallen sie in Roblox-Voxeln).
+- Sonne über ClockTime 16,45 / GeographicLatitude 42.
+- Dazu leichter Nebel (Wunsch Jos).

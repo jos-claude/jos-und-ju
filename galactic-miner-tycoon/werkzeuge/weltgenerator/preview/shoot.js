@@ -1,6 +1,7 @@
 // Screenshots der Vorschau (Playwright + SwiftShader).
 //   node preview/shoot.js                 # alle Kamera-Presets -> out/shots/<name>.png
 //   node preview/shoot.js hero spawn_040  # nur diese
+//   <preset>_grau                          # Graustufen-Kontrolle (z. B. spawn_040_grau) + Helligkeit je Material (.json)
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -40,7 +41,7 @@ function serve() {
   const err = await page.evaluate(() => window.__error);
   if (err) { console.error(err); }
   const all = await page.evaluate(() => window.presets || []);
-  let want = process.argv.slice(2).length ? process.argv.slice(2) : [...all, 'karte'];
+  let want = process.argv.slice(2).length ? process.argv.slice(2) : [...all, 'spawn_040_grau', 'karte'];
   want = [...want.filter((n) => n !== 'karte'), ...want.filter((n) => n === 'karte')];   // Karte zuletzt (aendert Groesse)
   console.log(`geladen in ${((Date.now() - t0) / 1000).toFixed(1)} s, Stats:`, await page.evaluate(() => window.stats));
   for (const name of want) {
@@ -50,6 +51,20 @@ function serve() {
       await page.evaluate(() => window.shotMap(1800));
       await page.screenshot({ path: path.join(OUT, 'karte.png'), timeout: 600000 });
       console.log(`  karte.png (${((Date.now() - t) / 1000).toFixed(1)} s)`);
+      continue;
+    }
+    if (name.endsWith('_grau')) {
+      const base = name.slice(0, -5);
+      await page.evaluate(() => window.setGray(true));
+      await page.evaluate((n) => window.shot(n), base);
+      await page.screenshot({ path: path.join(OUT, name + '.png'), timeout: 600000 });
+      const st = await page.evaluate(() => window.grayStats());
+      await page.evaluate(() => window.setGray(false));
+      fs.writeFileSync(path.join(OUT, name + '.json'), JSON.stringify(st, null, 1));
+      const g = st.Ground ? st.Ground.mean : null;
+      const rows = Object.entries(st).sort((a, b) => b[1].pixels - a[1].pixels)
+        .map(([m, v]) => `${m} ${v.mean.toFixed(3)}${g !== null && m !== 'Ground' ? ` (${(v.mean - g >= 0 ? '+' : '') + (v.mean - g).toFixed(3)})` : ''}`);
+      console.log(`  ${name}.png  Helligkeit: ${rows.join(', ')}`);
       continue;
     }
     const ms = await page.evaluate((n) => window.shot(n), name);

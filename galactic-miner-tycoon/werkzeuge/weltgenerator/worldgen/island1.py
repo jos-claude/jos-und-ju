@@ -44,9 +44,9 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
     zoneA = (c.rw > 185) & (c.rw < 255) & ~c.mask("claimed") & (c.wash_dist > 5)
     zoneB = (c.rw > 270) & (c.rw < 600) & ~c.mask("claimed") & (c.wash_dist > 5)
     zoneD = (c.rw > 1150) & (c.rw < 1560) & ~c.mask("claimed") & (c.wash_dist > 5)
-    fields.outcrops(c, zoneA, 0.05, (2.0, 4.0), "outA")
-    fields.outcrops(c, zoneB, 0.04, (2.5, 5.0), "outB")
-    fields.outcrops(c, zoneD, 0.03, (3.0, 6.0), "outD")
+    fields.outcrops(c, zoneA, 0.03, (2.0, 4.0), "outA")
+    fields.outcrops(c, zoneB, 0.02, (2.5, 5.0), "outB")
+    fields.outcrops(c, zoneD, 0.02, (3.0, 6.0), "outD")
     fields.low_floating_stones(c, 30)
     terrain.foothills(c, 10)
     terrain.rim(c)
@@ -84,6 +84,8 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
         "lighting": lighting.lighting_meta(),
         "sun": {"azimuth": SUN_AZ, "elevation": SUN_EL, "direction": lighting.sun_direction()},
         "spawn": [round(sx, 2), round(float(c.h_at(sx, sz)) + 0.5, 2), round(sz, 2)],
+        # Review 2b: animiertes Terrain-Gras auf Grass (ersetzt die Gras-Bueschel in Hainen); Farbe = Grass-Terrainfarbe
+        "terrain": {"Decoration": True, "GrassLength": 0.7},
     })
     if p is not None:
         placement.place_all(p)
@@ -100,6 +102,9 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
                 continue
             w.report.append(f"  {g:14s} {p.count[g]:5d} / {p.parts[g]:6d} / {p.lights[g]:3d}")
         c.deco_islands = p.islands
+        total = sum(len(w.templates[q[0]].parts) for q in w.placements)
+        if total > 25000:
+            print(f"  WARNUNG: {total} Teile (Budget 25 000)")
         log("Deko gesetzt")
     w.preview = {"cameras": cameras.make(c), "map": cameras.map_data(c)}
     w.build_zones = build_zone_raster(c, res["build"])
