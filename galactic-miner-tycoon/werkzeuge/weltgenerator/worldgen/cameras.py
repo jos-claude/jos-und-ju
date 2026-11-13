@@ -172,4 +172,7 @@ def make(c):
     if l9:
         cpos = _ahead(l9["x"], l9["z"], 200, 420)
         cams["ring_e_tower"] = _cam((cpos[0], H(*cpos) + 14, cpos[1]), (l9["x"], 150, l9["z"]), fov=70, shadow=(l9["x"], l9["z"], 600))
+    # (z) Zielbild-Kamera: exakt der Studio-Screenshot, aus dem das KI-Zielbild entstand
+    #     (referenz/bilder/welt/ki-ziel/insel1-ziel-v1.png). Roblox-Standard-FOV 70 (vertikal).
+    cams["ziel"] = _cam((-420, 320, 520), (150, 0, -200), fov=70, shadow=(0, -100, 1100))
     return cams
