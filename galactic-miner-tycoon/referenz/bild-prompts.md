@@ -91,6 +91,43 @@ Scene: an isometric game scene seen from above at 45 degrees, a floating diorama
 
 ---
 
+## M1 – Schmiede (Raum 2) (Vorschlag, 14.11.2026)
+Bauplan mit allen Maßen: `../assets/modelle/bauplaene/spitzhacke.md` und `../assets/modelle/bauplaene/schmiede-einrichtung.md`. Die Bilder sind optional, der Bauplan reicht für Blender. Sie helfen aber, den Look vorher zu prüfen.
+
+### 8. Spitzhacke (Stufe 3, Stahl) als Modellblatt
+_`PickaxeSteel`: die mittlere Stufe als Referenz für das gemeinsame Gerüst aller fünf Hacken._
+
+```
+Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids, not futuristic and not overly complicated. Maximum about 12 distinct parts so it can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no logos, no watermark, no people.
+
+Layout: one single model sheet divided into a grid of 7 panels separated by thin white lines. All 7 panels show the exact same object with identical design, proportions and colors. Top row: (1) large isometric 3/4 perspective view from front-left above, (2) straight orthographic front view, (3) straight orthographic side view. Bottom row: (4) straight orthographic top-down view, (5) medium close-up 3/4 view of the most important part, (6) and (7) two small macro close-ups of the smaller details. Orthographic views must be perfectly straight with no perspective distortion, exactly 90 degrees, so the shapes can be measured and rebuilt in Blender.
+
+Object: A chunky toy-like mining pickaxe for a kid-friendly game, standing upright: a thick octagonal steel handle with a black rubber grip with three ribs at the bottom and a small octagonal steel pommel, three stacked rings of yellow-black-yellow hazard color below the head, a dark steel collar, and a blocky orange head block with beveled edges, copper-colored bolts in the corners and two small glowing cyan square lights on each side. From the head block a light steel pick point extends to the front, tapering and curving slightly downward to a blunt rounded tip (not sharp), and a shorter flat chisel end extends to the back, getting wider and flatter. A small glowing cyan dot on a dark steel cap on top of the head. Proportions: total height about four times the head height, head span about three quarters of the total height.
+```
+
+### 8b. Alle fünf Spitzhacken nebeneinander
+_Zum Vergleich der Stufen. Im selben Chat wie 8 machen, damit der Stil gleich bleibt._
+
+```
+Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids, not futuristic and not overly complicated. Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.
+
+Layout: one single image, five pickaxes standing upright in a row from left to right, same camera (isometric 3/4 view from front-left above), same base design, evenly spaced, each one slightly taller and more impressive than the one before. All five share the same build: octagonal handle, grip at the bottom, blocky head block, a pick point to the front curving slightly down to a blunt tip, a short flat chisel end to the back.
+(1) Rusty pickaxe: rust-brown head and head block, grip wrapped in cream tape, a bolted metal patch on the side, blunt chipped tip, no lights.
+(2) Iron pickaxe: plain steel-grey head, orange head block, black rubber grip, one yellow ring below the head, one small cyan light.
+(3) Steel pickaxe: shiny light steel head, orange head block with copper bolts, yellow-black-yellow hazard rings, two cyan lights, a cyan dot on top.
+(4) Crystal pickaxe: the pick point is a glowing pink-purple six-sided crystal held in a steel ring, orange head block, three cyan lights, soft purple glow.
+(5) Titanium pickaxe: silvery pale-blue titanium head with a thin glowing cyan edge along the top of the pick, slightly bigger orange head block, four cyan lights, a glowing cyan ring around the pommel.
+```
+
+### 9. Schmiede von innen
+_Szene, kein Modellblatt. Zeigt die Einrichtung aus `schmiede-einrichtung.md`._
+
+```
+Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces, soft clean lighting, no realistic textures, toy-like and friendly for kids, not futuristic and not overly complicated. No text, no letters, no logos, no watermark, no people.
+
+Scene: an isometric cutaway diorama of a small forge workshop room inside a space colony base, seen from above at 45 degrees with the front wall and the roof removed, rectangular room with orange walls and a steel tread-plate floor. Back left corner: a chunky orange forge furnace on a dark steel base with hazard stripes, a glowing orange ember mouth with a steel frame, a temperature gauge on the side and a tall dark steel chimney with orange bands going up, a small crate of black coal next to it. Left wall: an upgrade station with a dark steel plinth with hazard stripes, an orange back panel with steel X-struts and a cyan light strip on top, a chunky grey anvil with a hammer lying on it, and next to the anvil a glass display case on an orange pedestal with a cyan glowing ring, showing a pickaxe inside. A small steel water tank in front of it. Right wall: a matching upgrade station with the same plinth and back panel, a steel workbench with strap rolls and a small rivet press, and a backpack hanging on a stand with a cyan glowing base. Back wall center: a round dark steel teleporter platform with a glowing cyan ring and a steel arch with an orange top beam with hazard stripes and cyan light strips on the inside of the pillars. Back right wall: a tool rack with five pickaxes hanging in a row, two in color and three as dark silhouettes. Two orange industrial lamps hang from above. Warm orange light from the furnace on the left, cool cyan light from the teleporter, clean readable layout, no UI.
+```
+
 ## Später (M2 und weiter)
 Diese Prompts sind noch nicht auf den neuen Stil angepasst. Bitte vor der Nutzung mit mir als komplette Einzel-Prompts wie oben schreiben lassen: Fabrik, Silo, Band-Sammler, Raketenstartplatz, Forschungslabor, Werkbank, Raumschiff, Planeten.
 
