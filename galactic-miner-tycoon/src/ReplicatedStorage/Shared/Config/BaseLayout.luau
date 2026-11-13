@@ -47,6 +47,35 @@ export type BaseLayoutConfig = {
 
 	-- Platzhalter-Farben der Erze (bis Jos' Modelle da sind).
 	oreColors: { [string]: Color3 },
+
+	-- Kauffelder (Schritt 5 und 6): drauflaufen = kaufen. x/z = Mitte, size = Kantenlänge.
+	pads: {
+		size: number,
+		height: number, -- so hoch über dem Boden zählt man noch als "auf dem Feld"
+		drillIron: { x: number, z: number }, -- in der Start-Halle
+		forgeRoom: { x: number, z: number }, -- vor der Tür der Schmiede
+		pickaxe: { x: number, z: number }, -- in der Schmiede
+		backpack: { x: number, z: number }, -- in der Schmiede
+		lobby: { x: number, z: number }, -- Platzhalter "Lobby (später)" in der Schmiede
+	},
+
+	-- Schmiede (Raum 2) neben der Start-Halle, Front mit Tür nach Norden (-Z) wie die Halle.
+	forge: {
+		centerX: number,
+		centerZ: number,
+		width: number,
+		depth: number,
+		wallHeight: number,
+		wallThickness: number,
+		doorWidth: number,
+		doorHeight: number,
+	},
+
+	-- Bohrer (Greybox): so nah (waagerecht) muss man zum Aufstellen und Abholen sein.
+	drills: {
+		interactDistance: number,
+		promptDistance: number,
+	},
 }
 
 local BaseLayout: BaseLayoutConfig = {
@@ -91,6 +120,34 @@ local BaseLayout: BaseLayoutConfig = {
 		coal = Color3.fromRGB(40, 36, 44),
 		crystal = Color3.fromRGB(190, 110, 240),
 		titanium_ore = Color3.fromRGB(200, 214, 228),
+	},
+
+	-- Halle: x -20..20, z 30..58. Abladefeld x -6..6, z 42,5..49,5.
+	pads = {
+		size = 7,
+		height = 8,
+		drillIron = { x = -12, z = 40 },
+		forgeRoom = { x = 44, z = 23 },
+		pickaxe = { x = 36, z = 44 },
+		backpack = { x = 52, z = 44 },
+		lobby = { x = 44, z = 53 },
+	},
+
+	-- Schmiede: x 28..60, z 30..58 (8 Studs Lücke zur Halle).
+	forge = {
+		centerX = 44,
+		centerZ = 44,
+		width = 32,
+		depth = 28,
+		wallHeight = 14,
+		wallThickness = 1,
+		doorWidth = 10,
+		doorHeight = 10,
+	},
+
+	drills = {
+		interactDistance = 14,
+		promptDistance = 10,
 	},
 }
 

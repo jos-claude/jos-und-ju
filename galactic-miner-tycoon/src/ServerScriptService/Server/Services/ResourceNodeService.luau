@@ -46,6 +46,9 @@ end
 function ResourceNodeService.RulesFor(oreId: string): NodePlacement.Rules
 	local def = (Ores.byId :: any)[oreId]
 	local hall = BaseLayout.hall
+	local forge = BaseLayout.forge
+	local forgePad = BaseLayout.pads.forgeRoom
+	local padHalf = BaseLayout.pads.size / 2
 	local pad = BaseLayout.nodes.keepOutPadding
 	local clearCircles = {}
 	for _, spawn in BaseLayout.nodes.spawnPoints do
@@ -63,6 +66,13 @@ function ResourceNodeService.RulesFor(oreId: string): NodePlacement.Rules
 				maxX = hall.centerX + hall.width / 2 + pad,
 				minZ = hall.centerZ - hall.depth / 2 - pad,
 				maxZ = hall.centerZ + hall.depth / 2 + pad,
+			},
+			-- Schmiede (Raum 2) mit dem Kauffeld vor ihrer Tür (Schritt 6)
+			{
+				minX = forge.centerX - forge.width / 2 - pad,
+				maxX = forge.centerX + forge.width / 2 + pad,
+				minZ = math.min(forge.centerZ - forge.depth / 2, forgePad.z - padHalf) - pad,
+				maxZ = forge.centerZ + forge.depth / 2 + pad,
 			},
 		},
 	}

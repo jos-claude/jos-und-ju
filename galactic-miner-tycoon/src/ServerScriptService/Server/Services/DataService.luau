@@ -111,6 +111,31 @@ function DataService.SaveWorld(worldId: string): boolean
 	return ok
 end
 
+-- NUR IN STUDIO (Test "Speichern und Laden"): Welt speichern, aus dem Mock-Speicher frisch laden
+-- und allen Services wie beim Beitritt melden. So wird der echte Lade-Weg geprüft, ohne das
+-- Spiel zu verlassen. Im echten Spiel tut die Funktion nichts.
+function DataService.ReloadWorldForTest(player: Player): boolean
+	if not RunService:IsStudio() or repository.worldStore.kind ~= "mock" then
+		return false
+	end
+	local worldId = worldIdByPlayer[player]
+	if not worldId or not DataService.SaveWorld(worldId) then
+		return false
+	end
+	local result = repository:loadOrCreateForPlayer(player.UserId)
+	if not result.ok or not result.world or result.world.worldId ~= worldId then
+		warn(`[DataService] Test-Neuladen fehlgeschlagen: {result.error}`)
+		return false
+	end
+	worldsById[worldId] = result.world
+	playTimeMarks[worldId] = os.clock()
+	log(`{player.Name}: Welt {worldId} für den Test neu geladen`)
+	for _, callback in readyCallbacks do
+		task.spawn(callback, player, result.world)
+	end
+	return true
+end
+
 local function onPlayerAdded(player: Player)
 	player:SetAttribute("SaveStoreKind", repository.worldStore.kind)
 	player:SetAttribute("DataReady", false)
