@@ -42,9 +42,11 @@ Jos' Cloud-Chats konnten nicht in Studio arbeiten. Jos' lokaler Claude hat ihre 
 **Wichtig zum Besitz:** Der Place gehört Ju (`kakakakuka`). Modelle, die auf Jos' Konto hochgeladen werden, könnten im **Live-Spiel** wegen Asset-Rechten nicht laden (im Studio geht es). Falls das passiert: Ju importiert die `.glb` selbst mit Import 3D, dann gehören sie dem Place-Besitzer.
 
 ## Das ist fertig, wenn …
-- [ ] Ju hat `main` gepullt und Rojo hat `ServerStorage.WorldBuilder` und den neuen `MovementController` im Place.
+- [x] Ju hat `main` gepullt und Rojo hat `ServerStorage.WorldBuilder` und den neuen `MovementController` im Place.
 - [ ] Schritt 3 baut auf dem WorldBuilder-Gelände auf (oder Ju schreibt hier unten, warum nicht).
 - [ ] Ju hat kurz bestätigt, dass die Aufteilung oben passt (oder Änderungen hier eingetragen).
 
 ## Ergebnis
 (wird vom Bearbeiter ausgefüllt, wenn der Auftrag fertig ist)
+
+> **Nachtrag 13.11.2026 (Ju, mit Claude): Modell-Import erledigt.** Die 9 Modelle (alle `.fbx` außer `drill_iron.fbx`) sind auf Jus Konto hochgeladen und in `ServerStorage.GMT_Models` eingerichtet (Farben, verankert, Größe geprüft, aufrecht). Asset-IDs: `assets/asset-liste.md`. Bitte nicht noch einmal importieren. Einrichten lief mit der Logik aus `StudioModelSetup.luau`. Offen bleibt: Ju bestätigt die Aufteilung (Jos: Welt und Modelle, Ju: Code in `src/`).

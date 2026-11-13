@@ -11,3 +11,18 @@
 | Lager-Kasten (`OreBin`, `bin_*`) | Modell (21 Teile, ca. 9.000 Dreiecke, Deckel/Erzhaufen/Anzeige getrennt) | `modelle/ore_bin.glb/.fbx`, `modelle/ore_bin.blend` | – | selbst (Blender, nach `referenz/bilder/gebaeude/lager-kasten-01.jpg`) | Jos (mit Claude) | v3 fertig, Import in Studio offen |
 | Start-Halle (`BaseHall`) | Modell (11 Teile, ca. 4.000 Dreiecke, Tür getrennt) | `modelle/base_hall.fbx/.glb`, `modelle/base.blend` | – | selbst (Blender, nach `referenz/bilder/gebaeude/basis-01.jpg`) | Jos (mit Claude) | v3 fertig, Import in Studio offen |
 | Gesperrter Raum (`BaseRoom`) | Modell (11 Teile, ca. 2.200 Dreiecke, Rolltor getrennt) | `modelle/base_room.fbx/.glb` | – | selbst (Blender) | Jos (mit Claude) | v3 fertig, Import in Studio offen |
+
+## Roblox-Asset-IDs der importierten Modelle (13.11.2026)
+Hochgeladen von Claude (Ju) über Open Cloud auf das Konto des Place-Besitzers (Ju). In Studio liegen die Modelle in `ServerStorage.GMT_Models`. Hochgeladene Modelle lassen sich über Open Cloud nicht löschen, nur im Creator Dashboard.
+
+| Modell | Asset-ID |
+|---|---|
+| ConveyorSegment | 116413465941420 |
+| ConveyorStraight | 79562193567287 |
+| ConveyorCurve | 134336095953676 |
+| ConveyorCurveLeft | 89114707761972 |
+| ConveyorEnd | 116431496040310 |
+| OreChunkA/B/C (zusammen) | 126940783580041 |
+| OreBin | 83143021088022 |
+| BaseHall | 113729453111097 |
+| BaseRoom | 103778311952310 |
