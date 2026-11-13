@@ -31,6 +31,7 @@ local Shop = require(Config:WaitForChild("Shop"))
 local Modules = script.Parent.Parent:WaitForChild("Modules")
 local WorldData = require(Modules:WaitForChild("WorldData"))
 local GreyboxDrill = require(Modules:WaitForChild("GreyboxDrill"))
+local Ground = require(Modules:WaitForChild("Ground"))
 local GameplayFolder = require(Modules:WaitForChild("GameplayFolder"))
 local PlayerState = require(Modules:WaitForChild("PlayerState"))
 local Remotes = require(Modules:WaitForChild("Remotes"))
@@ -148,16 +149,42 @@ local function buildModel(world: World, state: DrillState)
 		return -- Vorkommen-Modell noch nicht gebaut; der nächste Sync versucht es wieder
 	end
 	local groundY = (nodeModel:GetAttribute("GroundY") :: number?) or 0
-	local drill = GreyboxDrill.buildDrill(
-		GameplayFolder.child("Drills"),
-		state.nodeId,
-		state.drillId,
-		node.x,
-		node.z,
-		groundY,
-		BaseLayout.oreColors[node.ore] or Color3.new(1, 1, 1),
-		BaseLayout.drills.promptDistance
-	)
+	local oreColor = BaseLayout.oreColors[node.ore] or Color3.new(1, 1, 1)
+	local folder = GameplayFolder.child("Drills")
+	local drill: GreyboxDrill.DrillModel? = nil
+	local modelName = BaseLayout.drills.modelName
+	if modelName then
+		-- 3D-Modell: Sockel auf der Seite des Felsens, die zur Basis zeigt (dort kommt der Spieler her).
+		local hall = BaseLayout.hall
+		drill = GreyboxDrill.buildFromModel(
+			modelName,
+			folder,
+			state.nodeId,
+			state.drillId,
+			node.x,
+			node.z,
+			Vector3.new(hall.centerX - node.x, 0, hall.centerZ - node.z),
+			BaseLayout.drills.modelOffset,
+			function(x: number, z: number): number
+				return (Ground.heightAt(x, z))
+			end,
+			oreColor,
+			BaseLayout.drills.promptDistance
+		)
+	end
+	if not drill then
+		drill = GreyboxDrill.buildDrill(
+			folder,
+			state.nodeId,
+			state.drillId,
+			node.x,
+			node.z,
+			groundY,
+			oreColor,
+			BaseLayout.drills.promptDistance
+		)
+	end
+	assert(drill, "Bohrer-Modell fehlt")
 	drill.prompt.Triggered:Connect(function(player: Player)
 		onTake(player, state.nodeId)
 	end)
