@@ -20,7 +20,7 @@ Der Spieler setzt immer mehr Bohrer auf Erzvorkommen und verbindet sie mit Förd
 - Ohne Rucksack trägt der Spieler 10 Einheiten. Der Rucksack aus der Schmiede erhöht das (Entscheidung 017).
 - Förderband in Segmenten (Raster), ein Segment kostet Material. Das Band ist Logik im Hintergrund plus Optik, keine echten Items (Performance). Durchsatz z. B. 5/s.
 - Ein Band führt nur zu dem Kasten, der zum Erz des Bohrers passt.
-- **Offline-Ertrag: ja** (Entscheidung 011). Begrenzt durch die Kasten-Kapazität: Sind die Kästen voll, passiert nichts mehr. Vorschlag: Beim Einloggen wird aus der Zeit seit dem letzten Speichern berechnet, was Bohrer mit Band geliefert hätten (höchstens bis die Kästen voll sind). Bohrer ohne Band füllen nur ihren Puffer (50).
+- **Offline-Ertrag: ja** (Entscheidung 011). Begrenzt durch die Kasten-Kapazität: Sind die Kästen voll, passiert nichts mehr. Bohrer ohne Band füllen offline ihren Puffer (beschlossen, Entscheidung 021). Vorschlag für Bänder: Beim Einloggen wird aus der Zeit seit dem letzten Speichern berechnet, was Bohrer mit Band geliefert hätten (höchstens bis die Kästen voll sind). Bohrer ohne Band füllen nur ihren Puffer (50).
 
 ## Offene Fragen
 - Bänder verlegt man Punkt für Punkt per Antippen (011). Zusätzlich schlägt das Spiel eine Route vor (Vorschau mit Preis), die man annehmen oder durch eigenes Verlegen ersetzen kann (012).

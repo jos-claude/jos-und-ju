@@ -29,3 +29,4 @@ Regeln:
 | 018 | [Trainingsraum und Lauf-Geschwindigkeit entfallen](018-kein-trainingsraum.md) | Beschlossen | 12.11.2026 |
 | 019 | [Leichte Schwerkraft und Planeten-Bewegung](019-leichte-schwerkraft.md) | Beschlossen (Grundsatz, Zahlen Vorschlag) | 12.11.2026 |
 | 020 | [Balancing Insel 1](020-balancing-insel-1.md) | Beschlossen | 12.11.2026 |
+| 021 | [Bohrer-Kauf, Offline-Puffer und Schmiede-Stufen](021-bohrer-kauf-offline-puffer-schmiede.md) | Beschlossen | 14.11.2026 |
