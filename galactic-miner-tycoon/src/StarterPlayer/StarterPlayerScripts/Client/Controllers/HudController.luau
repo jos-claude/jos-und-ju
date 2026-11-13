@@ -1,7 +1,8 @@
 --!strict
 -- HUD oben in der Mitte (spiel/14-ui-und-bedienung.md): Lager-Menge (Eisen-Kasten) und Tragevorrat.
 -- Wenig UI, große Zahlen, handy-tauglich. Liest nur Attribute am eigenen Player (PlayerState.luau auf dem Server):
---   Bin_iron_ore / BinCap_iron_ore, CarriedTotal / CarryCapacity
+--   Bin_iron_ore / BinCap_iron_ore, CarriedTotal / CarryCapacity, DrillsToPlace (Hinweis "Bohrer aufstellen")
+-- Beim Ausgeben (Kauf) fliegt "-20" unter dem Lager-Feld weg; ein größerer Tragevorrat lässt das Feld poppen.
 -- Zahlen zählen kurz hoch, das Feld "poppt" bei jedem Zuwachs. Ist man voll, erscheint ein Hinweis.
 -- Alle Feel-Zahlen stehen in CONFIG (Skill game-feel-juice): ändern = Zahl ändern, kein Umbau.
 
@@ -32,6 +33,13 @@ local CONFIG = {
 	-- Hinweis, wenn der Tragevorrat voll ist
 	FULL_HINT = "Voll! Bring das Erz zum Abladefeld im Lager",
 	HINT_PULSE_TIME = 0.6,
+	-- Hinweis, solange ein gekaufter Bohrer noch nicht aufgestellt ist (Schritt 5)
+	DRILL_HINT = "Stell den Bohrer auf ein Eisen-Vorkommen",
+	DRILL_HINT_COLOR = Color3.fromRGB(120, 240, 140),
+	-- Ausgeben: "-20" fliegt unter dem Lager-Feld weg
+	SPEND_COLOR = Color3.fromRGB(255, 110, 90),
+	SPEND_RISE = 26, -- Pixel nach unten
+	SPEND_TIME = 0.8,
 }
 
 local HudController = {}
@@ -43,6 +51,8 @@ type Panel = {
 	number: NumberValue,
 	capacity: number,
 	tween: Tween?,
+	last: number, -- zuletzt gesetzter Zielwert (für "-20" beim Ausgeben)
+	showSpend: boolean,
 	popTween: Tween?,
 }
 
@@ -113,7 +123,8 @@ local function makePanel(root: Instance, name: string, caption: string, iconColo
 	local number = Instance.new("NumberValue")
 	number.Parent = frame
 
-	local panel: Panel = { frame = frame, value = value, pop = pop, number = number, capacity = 0 }
+	local panel: Panel =
+		{ frame = frame, value = value, pop = pop, number = number, capacity = 0, last = 0, showSpend = false }
 	number.Changed:Connect(function(v: number)
 		value.Text = `{HudController.FormatNumber(v)}/{HudController.FormatNumber(panel.capacity)}`
 	end)
@@ -145,8 +156,35 @@ local function popPanel(panel: Panel)
 end
 
 -- Neuen Wert anzeigen: hochzählen (ein NumberValue, alter Tween wird abgebrochen gegen Flackern).
+-- "-20" fliegt unter dem Feld weg und blendet aus (Ausgeben beim Kaufen).
+local function flySpend(panel: Panel, delta: number)
+	local l = label(
+		"Spend",
+		panel.frame,
+		`-{HudController.FormatNumber(-delta)}`,
+		CONFIG.SPEND_COLOR,
+		UDim2.new(0, 90, 0, 30),
+		UDim2.new(1, -96, 1, 2)
+	)
+	l.TextXAlignment = Enum.TextXAlignment.Right
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 2
+	stroke.Color = Color3.fromRGB(40, 15, 10)
+	stroke.Parent = l
+	local info = TweenInfo.new(CONFIG.SPEND_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	TweenService:Create(l, info, { Position = UDim2.new(1, -96, 1, 2 + CONFIG.SPEND_RISE), TextTransparency = 1 }):Play()
+	TweenService:Create(stroke, info, { Transparency = 1 }):Play()
+	task.delay(CONFIG.SPEND_TIME + 0.05, function()
+		l:Destroy()
+	end)
+end
+
 local function setPanel(panel: Panel, amount: number, capacity: number)
-	local increased = amount > panel.number.Value
+	local increased = amount > panel.number.Value or (panel.capacity > 0 and capacity > panel.capacity)
+	if panel.showSpend and amount < panel.last then
+		flySpend(panel, amount - panel.last)
+	end
+	panel.last = amount
 	panel.capacity = capacity
 	if panel.tween then
 		panel.tween:Cancel()
@@ -177,7 +215,15 @@ local function refresh()
 	setPanel(panels.Storage, stored :: number, storedCap :: number)
 
 	local full = (carryCap :: number) > 0 and (carried :: number) >= (carryCap :: number)
-	hint.Visible = full
+	local drillsToPlace = (player:GetAttribute("DrillsToPlace") or 0) :: number
+	if full then
+		hint.Text = CONFIG.FULL_HINT
+		hint.TextColor3 = CONFIG.FULL
+	elseif drillsToPlace > 0 then
+		hint.Text = CONFIG.DRILL_HINT
+		hint.TextColor3 = CONFIG.DRILL_HINT_COLOR
+	end
+	hint.Visible = full or drillsToPlace > 0
 end
 
 local function buildGui()
@@ -211,6 +257,7 @@ local function buildGui()
 	layout.Parent = row
 
 	panels.Storage = makePanel(row, "Storage", "LAGER · EISEN", CONFIG.IRON, 1)
+	panels.Storage.showSpend = true
 	panels.Carry = makePanel(row, "Carry", "TRAGEN", CONFIG.IRON, 2)
 
 	hint = label(
@@ -253,7 +300,7 @@ function HudController.Init() end
 
 function HudController.Start()
 	buildGui()
-	for _, name in { "CarriedTotal", "CarryCapacity", "Bin_iron_ore", "BinCap_iron_ore" } do
+	for _, name in { "CarriedTotal", "CarryCapacity", "Bin_iron_ore", "BinCap_iron_ore", "DrillsToPlace" } do
 		player:GetAttributeChangedSignal(name):Connect(refresh)
 	end
 	refresh()

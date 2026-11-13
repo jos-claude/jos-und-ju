@@ -60,6 +60,10 @@ local function surfaceText(target: BasePart, face: Enum.NormalId, text: string, 
 	return label
 end
 
+-- Für andere Greybox-Module (GreyboxDrill, GreyboxShop): gleicher Stil, gleiche Helfer.
+Greybox.part = part
+Greybox.surfaceText = surfaceText
+
 -- Start-Halle (Raum 1): Boden, drei Wände, offene Front nach Norden (-Z) mit Stahlrahmen und Schild.
 function Greybox.buildHall(parent: Instance, hall: any, groundY: number): Model
 	local model = Instance.new("Model")
