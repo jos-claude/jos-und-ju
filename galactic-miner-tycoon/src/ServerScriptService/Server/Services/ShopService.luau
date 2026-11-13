@@ -211,7 +211,8 @@ local function build()
 	end
 	local outsideY = Ground.heightAt(BaseLayout.pads.forgeRoom.x, BaseLayout.pads.forgeRoom.z)
 
-	forgeRoom = GreyboxShop.buildForge(root, f, forgeY)
+	-- 3D-Modell von Jos (BaseRoom), sonst Greybox
+	forgeRoom = GreyboxShop.buildForgeFromModel(root, f, forgeY) or GreyboxShop.buildForge(root, f, forgeY)
 	GreyboxShop.closeDoor(forgeRoom :: GreyboxShop.Room, `GESPERRT\n{Wallet.describe(Rooms.byId.forge.cost)}`)
 
 	local p = BaseLayout.pads

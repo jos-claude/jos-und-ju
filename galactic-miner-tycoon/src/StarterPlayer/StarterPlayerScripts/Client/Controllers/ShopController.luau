@@ -96,9 +96,16 @@ local function padModel(padId: string): Model?
 	return if model and model:IsA("Model") then model else nil
 end
 
+-- Teil mit der Puffer-Anzeige (3D-Modell: Drill_MotorHead, Greybox: Motor).
+local function motorOf(model: Model): BasePart?
+	local gui = model:FindFirstChild("BufferGui", true)
+	local motor = gui and gui.Parent
+	return if motor and motor:IsA("BasePart") then motor else nil
+end
+
 local function drillModel(nodeId: string): Model?
 	local drills = gameplayChild("Drills")
-	local model = drills and drills:FindFirstChild(`GMT_PH_Drill_{nodeId}`)
+	local model = drills and drills:FindFirstChild(`GMT_Drill_{nodeId}`)
 	return if model and model:IsA("Model") then model else nil
 end
 
@@ -205,11 +212,11 @@ local function onDrillResult(kind: string, nodeId: string, amount: number)
 		-- Das Modell kommt per Replikation evtl. erst kurz nach der Meldung an.
 		task.spawn(function()
 			local drills = gameplayChild("Drills")
-			local model = drills and drills:WaitForChild(`GMT_PH_Drill_{nodeId}`, 2)
+			local model = drills and drills:WaitForChild(`GMT_Drill_{nodeId}`, 2)
 			if model and model:IsA("Model") then
 				animateScale(model, CONFIG.PLACE_START_SCALE, nil, 0, CONFIG.PLACE_GROW_TIME)
-				local motor = model:FindFirstChild("Motor")
-				if motor and motor:IsA("BasePart") then
+				local motor = motorOf(model)
+				if motor then
 					popup(motor, "Bohrer läuft!", CONFIG.POPUP_GOOD)
 				end
 			end
@@ -217,36 +224,56 @@ local function onDrillResult(kind: string, nodeId: string, amount: number)
 		return
 	end
 	local model = drillModel(nodeId)
-	local motor = model and model:FindFirstChild("Motor")
+	local motor = model and motorOf(model)
 	if kind == "taken" then
 		local t = math.clamp(amount / CONFIG.TAKE_PITCH_FULL_AT, 0, 1)
 		play("Take", CONFIG.TAKE_PITCH_MIN + (CONFIG.TAKE_PITCH_MAX - CONFIG.TAKE_PITCH_MIN) * t)
-		if motor and motor:IsA("BasePart") then
+		if motor then
 			popup(motor, `+{amount}`, CONFIG.POPUP_ORE)
 		end
 		return
 	end
 	play("Fail", CONFIG.FAIL_PITCH)
 	local text = DRILL_MESSAGES[kind]
-	if text and motor and motor:IsA("BasePart") then
+	if text and motor then
 		popup(motor, text, CONFIG.POPUP_BAD)
 	end
 end
 
 -- Bohrköpfe drehen (nur lokal, jeder gerenderte Frame). Voller Puffer = Stillstand.
+-- Gedreht werden alle Teile mit dem Attribut Spin, um die senkrechte Achse durch ihre Mitte.
+local spinParts: { [Model]: { BasePart } } = {}
+
+local function partsToSpin(model: Model): { BasePart }
+	local list = spinParts[model]
+	if not list then
+		list = {}
+		for _, d in model:GetDescendants() do
+			if d:IsA("BasePart") and d:GetAttribute("Spin") == true then
+				table.insert(list, d)
+			end
+		end
+		if #list > 0 then -- leer = Teile noch nicht repliziert, nächsten Frame neu suchen
+			spinParts[model] = list
+			model.Destroying:Once(function()
+				spinParts[model] = nil
+			end)
+		end
+	end
+	return list :: { BasePart }
+end
+
 local function spinBits(dt: number)
 	local drills = gameplayChild("Drills")
 	if not drills then
 		return
 	end
-	local angle = CONFIG.BIT_SPIN_SPEED * dt
+	local turn = CFrame.Angles(0, CONFIG.BIT_SPIN_SPEED * dt, 0)
 	for _, model in drills:GetChildren() do
 		if model:IsA("Model") and model:GetAttribute("Full") ~= true then
-			for _, name in { "Bit", "OreRing" } do
-				local p = model:FindFirstChild(name)
-				if p and p:IsA("BasePart") then
-					p.CFrame = p.CFrame * CFrame.Angles(angle, 0, 0) -- Zylinder-Achse ist lokal X
-				end
+			for _, p in partsToSpin(model) do
+				local pos = p.Position
+				p.CFrame = CFrame.new(pos) * turn * (p.CFrame - pos)
 			end
 		end
 	end

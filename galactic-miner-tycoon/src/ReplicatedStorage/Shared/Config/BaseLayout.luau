@@ -69,12 +69,22 @@ export type BaseLayoutConfig = {
 		wallThickness: number,
 		doorWidth: number,
 		doorHeight: number,
+		-- 3D-Modell von Jos aus ServerStorage.GMT_Models (nil = Greybox). Es wird beim Spielstart kopiert,
+		-- vergrößert und so tief gesetzt, dass sein Innenboden auf dem Gelände liegt. Innen kommen dünne
+		-- Platzhalter-Wände dazu, weil das Modell keinen Innenraum hat (Wände nur von außen sichtbar).
+		modelName: string?,
+		modelScale: number,
 	},
 
-	-- Bohrer (Greybox): so nah (waagerecht) muss man zum Aufstellen und Abholen sein.
+	-- Bohrer: so nah (waagerecht) muss man zum Aufstellen und Abholen sein.
 	drills: {
 		interactDistance: number,
 		promptDistance: number,
+		-- 3D-Modell (nil = Greybox). Gesucht in ServerStorage.GMT_Models, sonst im Workspace (nur kopiert).
+		modelName: string?,
+		-- Sockel-Mitte so weit neben dem Felsen, dass der Bohrkopf im Felsen steckt
+		-- (Modell drill_iron: Bohrkopf 4 Studs vor der Sockel-Mitte).
+		modelOffset: number,
 	},
 }
 
@@ -128,9 +138,10 @@ local BaseLayout: BaseLayoutConfig = {
 		height = 8,
 		drillIron = { x = -12, z = 40 },
 		forgeRoom = { x = 44, z = 23 },
-		pickaxe = { x = 36, z = 44 },
-		backpack = { x = 52, z = 44 },
-		lobby = { x = 44, z = 53 },
+		-- in der Schmiede (Modell mit Faktor 2,6: innen ca. x 33..55, z 33..56)
+		pickaxe = { x = 37.5, z = 41 },
+		backpack = { x = 50.5, z = 41 },
+		lobby = { x = 44, z = 51 },
 	},
 
 	-- Schmiede: x 28..60, z 30..58 (8 Studs Lücke zur Halle).
@@ -143,11 +154,15 @@ local BaseLayout: BaseLayoutConfig = {
 		wallThickness = 1,
 		doorWidth = 10,
 		doorHeight = 10,
+		modelName = "BaseRoom",
+		modelScale = 2.6,
 	},
 
 	drills = {
 		interactDistance = 14,
 		promptDistance = 10,
+		modelName = "drill_iron",
+		modelOffset = 6.5,
 	},
 }
 
