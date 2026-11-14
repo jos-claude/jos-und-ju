@@ -7,17 +7,17 @@ import numpy as np
 
 from .ctx import Ctx
 from .landforms import TAN, claim, op_ball, op_cyl, set_mat, set_strata_top
-from .layout import LEE_DIR, ang_diff, pol
+from .layout import LEE_DIR, ang_diff, pol, sr
 from .noise import smoothstep as ss
 from .waterforms import snap4_down
 
 
 # ------------------------------------------------------------------ Vulkan
-def volcano(c: Ctx, cx, cz, top, crater_d, west_az=None, name="volcano", small=False):
+def volcano(c: Ctx, cx, cz, top, crater_d, west_az=None, name="volcano", small=False, slope=25.0, spur=None):
     nz = c.nz
-    base = float(np.percentile(c.H[c.win(cx, cz, 300 if not small else 60)], 40))
+    base = float(np.percentile(c.H[c.win(cx, cz, 200 if not small else 60)], 40))
     Hv = top - base
-    Rv = Hv / TAN(25.0 if not small else 24.0)
+    Rv = Hv / TAN(slope if not small else 24.0)
     Rc = crater_d / 2
     pad = Rv * 1.35 + 40
     sl = c.win(cx, cz, pad)
@@ -28,8 +28,8 @@ def volcano(c: Ctx, cx, cz, top, crater_d, west_az=None, name="volcano", small=F
     lob = 1 + 0.13 * nz.fbm(name + "lob", cx + 80 * np.sin(np.radians(ang)), cz - 80 * np.cos(np.radians(ang)), 70, 3)
     Rv_a = Rv * lob
     if west_az is not None:
-        spur = ss(26, 6, np.abs(ang_diff(ang, west_az)))
-        Rv_a = Rv_a * (1 + spur * (TAN(25) / TAN(15) - 1))
+        sp = ss(26, 6, np.abs(ang_diff(ang, west_az)))
+        Rv_a = Rv_a * (1 + sp * ((TAN(25) / TAN(15) if spur is None else spur) - 1))     # Runde 2: Sporn kuerzer
     q = np.clip((rho - Rc) / (Rv_a - Rc), 0, 1)
     cone = base + Hv * (1 - q) ** 1.3
     # Radiale Erosionsrinnen
@@ -123,7 +123,7 @@ def lava_tongue(c: Ctx, sx, sz, dir_deg, length, width, name="tongue", own=None)
 def lava_fields(c: Ctx):
     """Ring C Nordost: ~30 % Lavafeld (Basaltsaeulen-Zellen + Risse), Rest Asche-Ebene."""
     x, z = c.x, c.z
-    zone = (c.wNE > 0.5) & (c.rw > 660) & (c.rw < 1060) & ~c.mask("claimed") & (c.wash_dist > 25)
+    zone = (c.wNE > 0.5) & (c.rw > sr(660)) & (c.rw < sr(1060)) & ~c.mask("claimed") & (c.wash_dist > 25)
     f = c.nz.fbm("lavazone", x, z, 230, 3) + 0.35 * c.nz.fbm("lavazone2", x, z, 80, 2)
     field = zone & (f > 0.13)
     # Oasen ausschneiden (werden spaeter bepflanzt)
@@ -151,13 +151,14 @@ def dunes(c: Ctx):
     a = math.radians(LEE_DIR)
     w = x * math.sin(a) - z * math.cos(a)       # windabwaerts (Richtung 70)
     v = x * math.cos(a) + z * math.sin(a)       # quer zum Wind (Kaemme ~ 340/160)
-    zone = (c.wNE < 0.5) & (c.rw > 650) & (c.rw < 1075)
+    # Runde 2: Ring C Suedwest jetzt r 325-540; Duenen-Wellenlaenge 112 -> 84 (schmaleres Feld)
+    zone = (c.wNE < 0.5) & (c.rw > sr(650)) & (c.rw < sr(1075))
     zone &= ~c.mask("claimed")
     # Duenenfelder dicht um den Bogen (Az 180-250), sonst lockerer mit breiten Sandpfannen dazwischen
     near_arch = ss(45, 15, np.abs((c.az - 212 + 180) % 360 - 180))
-    env = ss(0.10 - 0.14 * near_arch, 0.30 - 0.1 * near_arch, c.nz.fbm("duneenv", x, z, 240, 3))
-    env = env * ss(0, 40, c.wash_dist) * ss(640, 720, c.rw) * ss(1080, 1010, c.rw)
-    lam = 112.0 + 18.0 * c.nz.fbm("dunelam", x, z, 600, 2)
+    env = ss(0.10 - 0.14 * near_arch, 0.30 - 0.1 * near_arch, c.nz.fbm("duneenv", x, z, sr(240) + 20, 3))
+    env = env * ss(0, 28, c.wash_dist) * ss(sr(640), sr(720), c.rw) * ss(sr(1080), sr(1010), c.rw)
+    lam = 84.0 + 14.0 * c.nz.fbm("dunelam", x, z, sr(600), 2)
     wb = w + 46.0 * c.nz.fbm("dunebend", v * 0.6, w * 0.15, 170, 3) + 14.0 * c.nz.fbm("dunebend2", x, z, 60, 2)
     t = np.mod(wb / lam, 1.0)
     ac = 0.77
@@ -171,7 +172,7 @@ def dunes(c: Ctx):
     m = zone & (env > 0.2)
     c.mask("dune")[:] |= m
     c.obstacle |= zone & (dz > 3.0)
-    zall = (c.wNE < 0.5) & (c.rw > 640) & (c.rw < 1090) & ~c.mask("claimed")
+    zall = (c.wNE < 0.5) & (c.rw > sr(640)) & (c.rw < sr(1090)) & ~c.mask("claimed")
     c.mask("dune_zone")[:] |= zall
 
 
@@ -212,22 +213,23 @@ def wave(c: Ctx, cx, cz, rx=170.0, rz=85.0, rot_deg=None, name="wave"):
 # ------------------------------------------------------------------ Hochland E
 def highland(c: Ctx):
     x, z = c.x, c.z
-    e = ss(1580, 1660, c.rw) * (c.r < 1890)
-    waves = 2.6 * c.nz.fbm("ewave", x, z, 420, 2)
+    # Runde 2: Radien x 0,5, Wellen und Nebelbecken flacher (Profil-Hoehen x 0,5)
+    e = ss(sr(1580), sr(1660), c.rw) * (c.r < sr(1890))
+    waves = 1.0 * c.nz.fbm("ewave", x, z, sr(420) + 40, 2)
     c.H = c.H + waves * e
-    # Nebelbecken: 3 flache Senken (-10)
+    # Nebelbecken: 3 flache Senken (-6)
     for k in range(3):
         for _ in range(40):
             a = c.u(0, 360)
-            r = c.u(1680, 1800)
+            r = c.u(sr(1680), sr(1800))
             px, pz = pol(a, r)
             if all(abs(ang_diff(a, b)) > 14 for b in c.L.washes) and all(abs(ang_diff(a, f["az"])) > 50 for f in c.feat["fogbasin"]):
                 break
-        R = c.u(125, 190)
+        R = c.u(60, 90)
         sl = c.win(px, pz, R * 1.2)
         lx, lz = c.local(sl)
-        q = np.hypot(lx - px, lz - pz) / R * (1 + 0.15 * c.nz.fbm("fogb%d" % k, lx, lz, 80, 2))
-        dip = 10.0 * (1 - ss(0.0, 1.0, q)) ** 1.0 * ss(1.0, 0.0, q)
+        q = np.hypot(lx - px, lz - pz) / R * (1 + 0.15 * c.nz.fbm("fogb%d" % k, lx, lz, 60, 2))
+        dip = 6.0 * (1 - ss(0.0, 1.0, q)) ** 1.0 * ss(1.0, 0.0, q)
         c.H[sl] = c.H[sl] - dip
         c.mask("fogbasin")[sl] |= q < 0.8
         c.feat["fogbasin"].append({"x": px, "z": pz, "R": R, "az": a})
@@ -235,10 +237,10 @@ def highland(c: Ctx):
     curv = c.nz.fbm("snowcurv", x, z, 70, 3)
     snow = (e > 0.5) & (curv < -0.25) & ~c.mask("wash")
     c.mask("snow")[:] |= snow
-    for k in range(6):
-        a, r = c.u(0, 360), c.u(1650, 1850)
+    for k in range(5):
+        a, r = c.u(0, 360), c.u(sr(1650), sr(1850))
         px, pz = pol(a, r)
-        R = c.u(30, 60)
+        R = c.u(20, 40)
         s2 = c.win(px, pz, R * 1.3)
         lx, lz = c.local(s2)
         q = np.hypot(lx - px, lz - pz) / R * (1 + 0.25 * c.nz.fbm("ice%d" % k, lx, lz, 25, 2))
@@ -269,7 +271,7 @@ def low_floating_stones(c: Ctx, n=30):
     while placed < n and tries < 4000:
         tries += 1
         a = c.u(0, 360)
-        r = c.u(1180, 1840)
+        r = c.u(sr(1180), sr(1840))
         px, pz = pol(a, r)
         if c.void[c.idx(px, pz)]:
             continue
@@ -287,15 +289,15 @@ def low_floating_stones(c: Ctx, n=30):
         if c.feat["lowfloat"] and placed % 5 != 0:
             last = c.feat["lowfloat"][-1]
             ang = c.u(0, 6.28)
-            px, pz = last["x"] + math.cos(ang) * c.u(45, 90), last["z"] + math.sin(ang) * c.u(45, 90)
-            if c.void[c.idx(px, pz)] or math.hypot(px, pz) > 1860:
+            px, pz = last["x"] + math.cos(ang) * c.u(35, 70), last["z"] + math.sin(ang) * c.u(35, 70)
+            if c.void[c.idx(px, pz)] or math.hypot(px, pz) > sr(1860):
                 continue
             g = float(c.h_at(px, pz))
             sl = c.win(px, pz, R + 6)
             gmax = float(c.H[sl].max())
             y = max(gmax + 15, g + hov)
         # Form: duenner Moosdeckel, darunter ein runder Fels-Kegel aus Kugeln (Roblox-Voxel runden das weich ab)
-        body = "Slate" if r > 1600 else "Sandstone"
+        body = "Slate" if r > sr(1600) else "Sandstone"
         op_cyl(c, px, y - 1.0, pz, 3.0, R * 0.92, "Grass")
         op_ball(c, px, y - 0.86 * R, pz, 0.82 * R, body)
         op_ball(c, px, y - 1.35 * R, pz, max(4.0, 0.55 * R), "Rock")

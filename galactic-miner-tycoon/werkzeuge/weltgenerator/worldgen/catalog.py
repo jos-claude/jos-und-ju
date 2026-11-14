@@ -576,8 +576,9 @@ def volcano_plume(k, rc, depth, rf):
     """Runde 1: Rauchfahne + Glutrand fuer den Vulkan (an die Kratergroesse angepasst, Fusspunkt = Kraterboden-Mitte).
     1 unsichtbares Traegerteil mit Rauch-Partikeln (kind "smoke") und PointLight, 8 Neon-Keile am oberen Kraterhang."""
     # Groesse 26 -> 85 (Vorschlag war 18 -> 55; im Zielbild ist die Fahne oben so breit wie der Kegel)
-    smoke = {"kind": "smoke", "rate": 6, "lifetime": [12, 18], "size": [26, 85], "speed": [10, 14], "spread": 8,
-             "color": "#D9CCD6", "transparency": [0.35, 1.0]}
+    # Runde 2 (Offen aus Runde 1: Vulkan praesenter): groessere, laengere Fahne (32 -> 100, 14-22 s, Rate 7; 100 = Partikel-Hoechstgroesse in Roblox)
+    smoke = {"kind": "smoke", "rate": 7, "lifetime": [14, 22], "size": [32, 100], "speed": [10, 14], "spread": 8,
+             "color": "#D9CCD6", "transparency": [0.3, 1.0]}
     light = {"range": 60, "brightness": 2.0, "role": "ember"}
     parts = [block((0, 3.0, 0), (4, 4, 4), "ember", None, "Plastic", transparency=1.0, cast_shadow=False,
                    particles=smoke, light=light)]

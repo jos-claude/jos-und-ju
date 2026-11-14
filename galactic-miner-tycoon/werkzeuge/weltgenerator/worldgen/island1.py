@@ -11,22 +11,22 @@ import numpy as np
 
 from . import cameras, checks, compose, ecology, fields, lighting, materials, placement, terrain
 from .ctx import Ctx
-from .layout import STRATA_BASE, SUN_AZ, SUN_EL
-from .world import RGB, World
+from .layout import BUILD_MAX_R, PLATEAU_R, STRATA_BASE, SUN_AZ, SUN_EL, sr
+from .world import HALF, RGB, World
 
 SEED = 1
 
 
 def build_zone_raster(c, build, cell=16):
     """Bauzonen als grobes Raster fuer den Erz-Spawn: eine 16x16-Zelle zaehlt, wenn alle 4x4-Spalten Bauzone sind.
-    Ring E nur bis r 1900 (Randgebirge ist Grenze)."""
+    Ring E nur bis BUILD_MAX_R (Runde 2: r 950; Randgebirge ist Grenze)."""
     k = int(cell // 4)
     n = build.shape[0] // k
     b = build[: n * k, : n * k].reshape(n, k, n, k).all(axis=(1, 3))
-    xs = -2304 + cell / 2 + cell * np.arange(n)
+    xs = -HALF + cell / 2 + cell * np.arange(n)
     X, Z = np.meshgrid(xs, xs)
-    b &= np.hypot(X, Z) <= 1900
-    return {"cell": cell, "n": n, "origin": -2304.0, "mask": b}
+    b &= np.hypot(X, Z) <= BUILD_MAX_R
+    return {"cell": cell, "n": n, "origin": -HALF, "maxRadius": BUILD_MAX_R, "mask": b}
 
 
 def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
@@ -41,17 +41,18 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
     log("Grundgelaende")
     counts = compose.build_landforms(c)
     log(f"Landformen {counts}")
-    zoneA = (c.rw > 185) & (c.rw < 255) & ~c.mask("claimed") & (c.wash_dist > 5)
-    zoneB = (c.rw > 270) & (c.rw < 600) & ~c.mask("claimed") & (c.wash_dist > 5)
-    zoneD = (c.rw > 1150) & (c.rw < 1560) & ~c.mask("claimed") & (c.wash_dist > 5)
+    # Runde 2: Felsbaenke um das Plateau (r 130-170), Ring B und Ring D (Radien x 0,5)
+    zoneA = (c.rw > PLATEAU_R + 14) & (c.rw < PLATEAU_R + 55) & ~c.mask("claimed") & (c.wash_dist > 5)
+    zoneB = (c.rw > sr(270) + 20) & (c.rw < sr(600)) & ~c.mask("claimed") & (c.wash_dist > 5)
+    zoneD = (c.rw > sr(1150)) & (c.rw < sr(1560)) & ~c.mask("claimed") & (c.wash_dist > 5)
     c.stage("outcrops")
     fields.outcrops(c, zoneA, 0.03, (2.0, 4.0), "outA")
     fields.outcrops(c, zoneB, 0.02, (2.5, 5.0), "outB")
     fields.outcrops(c, zoneD, 0.02, (3.0, 6.0), "outD")
     c.stage("low_floating_stones")
-    fields.low_floating_stones(c, 30)
+    fields.low_floating_stones(c, 20)
     c.stage("foothills")
-    terrain.foothills(c, 10)
+    terrain.foothills(c, 12)
     c.stage("rim")
     terrain.rim(c)
     c.stage("floating_rocks")
@@ -112,6 +113,19 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
         if total > 25000:
             print(f"  WARNUNG: {total} Teile (Budget 25 000)")
         log("Deko gesetzt")
+    c.deco_xz = np.array([(q[1], q[3]) for q in w.placements]) if w.placements else np.zeros((0, 2))
     w.preview = {"cameras": cameras.make(c), "map": cameras.map_data(c)}
     w.build_zones = build_zone_raster(c, res["build"])
+    # Runde 2: Messwert der Schleife = Bauzonen-Anteil je Ring im 16er-Export (das liest der Erz-Spawn)
+    from .layout import RING_EDGES, RING_NAMES
+    bz = w.build_zones
+    xs = bz["origin"] + bz["cell"] / 2 + bz["cell"] * np.arange(bz["n"])
+    X, Z = np.meshgrid(xs, xs)
+    R = np.hypot(X, Z)
+    vals = []
+    for i, k in enumerate(RING_NAMES):
+        r1 = BUILD_MAX_R if k == "E" else RING_EDGES[i + 1]
+        sel = (R >= RING_EDGES[i]) & (R < r1)
+        vals.append(f"{k} {100 * bz['mask'][sel].mean():.1f} %")
+    w.report.insert(6, "  Bauzonen im 16er-Export (Ziel >= 40 % je Ring): " + ", ".join(vals))
     return w

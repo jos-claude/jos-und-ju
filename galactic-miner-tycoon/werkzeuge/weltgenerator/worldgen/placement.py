@@ -13,9 +13,9 @@ import numpy as np
 from . import catalog
 from .ctx import Ctx
 from .landforms import set_mat, set_strata_top
-from .layout import LEE_DIR, ang_diff, pol
+from .layout import LEE_DIR, PLATEAU_FREE_R, PLATEAU_R, RING_EDGES, ang_diff, pol, sr
 from .noise import smoothstep as ss
-from .world import CELL, MAT, World
+from .world import CELL, HALF, MAT, World
 
 LEE = (math.sin(math.radians(LEE_DIR)), -math.cos(math.radians(LEE_DIR)))
 PLATEAU_OK = ("Tuft", "Pebble", "Noodle")
@@ -25,7 +25,13 @@ OBSTACLE_GROUPS = {"BalloonTree", "CrystalM", "CrystalMLit", "CrystalG", "Crysta
 
 
 def ring_of(r):
-    return "A" if r < 250 else "B" if r < 600 else "C" if r < 1100 else "D" if r < 1600 else "E"
+    e = RING_EDGES
+    return "A" if r < e[1] else "B" if r < e[2] else "C" if r < e[3] else "D" if r < e[4] else "E"
+
+
+def cell_xz(ix, iz):
+    """Mitte der Raster-Spalte [iz, ix] in Weltkoordinaten."""
+    return -HALF + CELL / 2 + CELL * ix, -HALF + CELL / 2 + CELL * iz
 
 
 class Placer:
@@ -83,8 +89,8 @@ class Placer:
     # ---------------- Gelaende-Abfragen
     def ground(self, x, z):
         c = self.c
-        fx = (x + 2304.0 - 2.0) / CELL
-        fz = (z + 2304.0 - 2.0) / CELL
+        fx = (x + HALF - CELL / 2) / CELL
+        fz = (z + HALF - CELL / 2) / CELL
         ix, iz = int(math.floor(fx)), int(math.floor(fz))
         tx, tz = fx - ix, fz - iz
         H = c.H
@@ -133,8 +139,8 @@ class Placer:
             variant = 0
         grounded = y is None
         t = tmpl or self.groups[group][int(self.rng.integers(0, len(self.groups[group])))]
-        if y is None and group not in PLATEAU_OK and math.hypot(x, z) < 152.0 + (radius * s + 5 if group in OBSTACLE_GROUPS else 0):
-            return None             # Plateau r < 150 bleibt frei (nur Kniehohes ohne Kollision)
+        if y is None and group not in PLATEAU_OK and math.hypot(x, z) < PLATEAU_FREE_R + (radius * s + 5 if group in OBSTACLE_GROUPS else 0):
+            return None             # Plateau bleibt frei (nur Kniehohes ohne Kollision); Runde 2: r 120 statt 152
         if y is None:
             y = self.ground(x, z) - sink * s
         if yaw is None:
@@ -319,7 +325,7 @@ def boulder_groups(p: Placer, isl, n):
             continue
         y = None
         if s > 2.0:                                   # grosse Brocken: auf den tiefsten Punkt setzen (Hang)
-            if math.hypot(x, z) < 152.0 + 1.9 * s + 5:
+            if math.hypot(x, z) < PLATEAU_FREE_R + 1.9 * s + 5:
                 continue                              # Plateau bleibt frei (put prueft das nur ohne y)
             y = p.low_ground(x, z, 1.2 * s) - 0.25 * s
         p.put("Boulder", x, z, s, int(p.rng.integers(0, 3)), y=y, lean=False, sink=0.25, radius=1.9, obstacle=True)
@@ -571,7 +577,8 @@ def plan_islands(p: Placer):
     lm = {f["key"]: f for f in c.feat["landmark"]}
     sx, _, sz = c.L.spawn
     # Ring A: Haupthain im Lee rechts vom Tor, Teich-Hain, Abendbank, Mesa-Fuesse
-    gx, gz = pol(66, 208)
+    # Runde 2: Ring A ist Plateau -> Haupthain direkt am Plateau-Rand (r 165), rechts vom Saturn-Tor
+    gx, gz = pol(84, 166)
     p.island(gx, gz, 46, "grove", big=1.35, ground="grass")
     for w in c.feat["water"]:
         if w["kind"] in ("pond", "spring") or w["kind"].startswith("oasis"):
@@ -579,26 +586,35 @@ def plan_islands(p: Placer):
     pond = [w for w in c.feat["water"] if w["kind"] == "pond"]
     if pond:
         w0 = pond[0]
-        p.island(w0["x"] + LEE[0] * 12, w0["z"] + LEE[1] * 12, w0["R"] + 40, "pond", water=w0, ground="grass")
+        p.island(w0["x"] + LEE[0] * 10, w0["z"] + LEE[1] * 10, w0["R"] + 24, "pond", water=w0, ground="grass")
     if "L0" in lm:
         l0 = lm["L0"]
         p.island(l0["x"] + LEE[0] * 45, l0["z"] + LEE[1] * 45, 34, "mesa_foot", ground="grass")
+    # Runde 2: Mesa-Fuss-Haine am Kranz um das Plateau (vorher Ring A bis r 330)
+    n_in = 0
     for m in c.feat["mesa"]:
         rr = math.hypot(m["x"], m["z"])
-        if rr < 330 and m["stage"] == "mesa" and len([i for i in p.islands if i["ring"] == "A"]) < 6:
+        if rr < 240 and m["stage"] == "mesa" and n_in < 3:
             d = m["R"] + 26
-            p.island(m["x"] + LEE[0] * d, m["z"] + LEE[1] * d, 36, "mesa_foot", ground="grass")
+            x, z = m["x"] + LEE[0] * d, m["z"] + LEE[1] * d
+            if math.hypot(x, z) < PLATEAU_FREE_R + 30 or any(math.hypot(x - i["x"], z - i["z"]) < 60 for i in p.islands):
+                continue
+            p.island(x, z, 36, "mesa_foot", ground="grass")
+            n_in += 1
     # Ring B: Quellwaeldchen, Nadelgarten, Mesa-Fuesse, Zwillingstuerme
     for g in c.feat.get("grove_spring", []):
-        p.island(g["x"], g["z"], 62, "spring", ground="grass")
+        p.island(g["x"], g["z"], 42, "spring", ground="grass")
     for k, g in enumerate(c.feat.get("hoodoo_group", [])[:4]):
         p.island(g["x"], g["z"], g["R"] + 10, "hoodoo")
     nb = 0
     for m in sorted(c.feat["mesa"], key=lambda m: -m["R"]):
         rr = math.hypot(m["x"], m["z"])
-        if 300 < rr < 600 and m["stage"] == "mesa" and nb < 3:
+        if sr(300) + 20 < rr < sr(600) and m["stage"] == "mesa" and nb < 2:
             d = m["R"] + 30
-            p.island(m["x"] + LEE[0] * d, m["z"] + LEE[1] * d, 44, "mesa_foot", ground="grass")
+            x, z = m["x"] + LEE[0] * d, m["z"] + LEE[1] * d
+            if any(math.hypot(x - i["x"], z - i["z"]) < 70 for i in p.islands):
+                continue
+            p.island(x, z, 42, "mesa_foot", ground="grass")
             nb += 1
     if "L2" in lm:
         l2 = lm["L2"]
@@ -607,13 +623,13 @@ def plan_islands(p: Placer):
     ndm = 0
     for m in sorted(c.feat["mesa"], key=lambda m: -m["R"]):
         rr = math.hypot(m["x"], m["z"])
-        if 1150 < rr < 1550 and m["stage"] == "mesa" and ndm < 4:
+        if sr(1150) < rr < sr(1550) and m["stage"] == "mesa" and ndm < 4:
             d = m["R"] + 28
             p.island(m["x"] + LEE[0] * d, m["z"] + LEE[1] * d, 42, "mesa_foot", ground="grass")
             ndm += 1
     # Runde 1: Ring C bekommt 3 kleine Mesa-Fuss-Haine (Mittelfeld im Zielbild-Blick Az 300-110 bevorzugt)
     ncm = 0
-    cm = [m for m in c.feat["mesa"] if 640 < math.hypot(m["x"], m["z"]) < 1100 and m["stage"] == "mesa"]
+    cm = [m for m in c.feat["mesa"] if sr(640) < math.hypot(m["x"], m["z"]) < sr(1100) and m["stage"] == "mesa"]
     cm.sort(key=lambda m: (abs(ang_diff(math.degrees(math.atan2(m["x"], -m["z"])), 25.0)) > 85, -m["R"]))
     for m in cm:
         if ncm >= 3:
@@ -621,7 +637,7 @@ def plan_islands(p: Placer):
         d = m["R"] + 28
         x, z = m["x"] + LEE[0] * d, m["z"] + LEE[1] * d
         iz, ix = c.idx(x, z)
-        if c.wash_dist[iz, ix] < 25 or c.void[iz, ix] or any(math.hypot(x - i["x"], z - i["z"]) < 140 for i in p.islands):
+        if c.wash_dist[iz, ix] < 25 or c.void[iz, ix] or any(math.hypot(x - i["x"], z - i["z"]) < 90 for i in p.islands):
             continue
         p.island(x, z, 42, "mesa_foot", ground="grass")
         ncm += 1
@@ -630,17 +646,17 @@ def plan_islands(p: Placer):
         p.island(o["x"], o["z"], o["R"] + 15, "oasis", ground="grass")
     if "L4" in lm:
         l4 = lm["L4"]
-        p.island(l4["x"], l4["z"], 85, "dunes")
+        p.island(l4["x"], l4["z"], 70, "dunes")
     nd = 0
     for _ in range(400):
         if nd >= 2:
             break
-        a, r = rng.uniform(150, 280), rng.uniform(700, 1050)
+        a, r = rng.uniform(150, 280), rng.uniform(sr(700), sr(1050))
         x, z = pol(a, r)
         iz, ix = c.idx(x, z)
-        if c.mask("dune")[iz, ix] or c.wash_dist[iz, ix] < 30 or any(math.hypot(x - i["x"], z - i["z"]) < 250 for i in p.islands):
+        if c.mask("dune")[iz, ix] or c.wash_dist[iz, ix] < 22 or any(math.hypot(x - i["x"], z - i["z"]) < 140 for i in p.islands):
             continue
-        p.island(x, z, 60, "dunes")
+        p.island(x, z, 50, "dunes")
         nd += 1
     for cy in c.feat.get("oasis_canyon", []):
         p.island(cy["x"], cy["z"], 32, "oasis", ground="grass")
@@ -654,10 +670,10 @@ def plan_islands(p: Placer):
     for w in c.feat["water"]:
         if w["kind"] == "crater":
             p.island(w["x"] + LEE[0] * (w["R"] + 20), w["z"] + LEE[1] * (w["R"] + 20), 40,
-                     "cool" if math.hypot(w["x"], w["z"]) > 1600 else "grove", big=0.8, ground="grass")
+                     "cool" if math.hypot(w["x"], w["z"]) > RING_EDGES[4] else "grove", big=0.8, ground="grass")
     # Ring E: kuehle Haine an Nebelbecken, Eisfelder
     for f in c.feat.get("fogbasin", []):
-        p.island(f["x"] + LEE[0] * f["R"] * 0.6, f["z"] + LEE[1] * f["R"] * 0.6, 50, "cool")
+        p.island(f["x"] + LEE[0] * f["R"] * 0.6, f["z"] + LEE[1] * f["R"] * 0.6, 42, "cool")
     for f in c.feat.get("ice", [])[:4]:
         p.island(f["x"], f["z"], f["R"], "ice")
     # Deko-Zone + Bodenbewuchs malen
@@ -688,7 +704,7 @@ def plan_islands(p: Placer):
                 c.H[sl] += np.where(dry & (dw > 14), A * ss(1.1, 0.05, q) * ss(14, 30, dw), 0.0)
     spring_pots(p)
     moss_terrain(p)
-    dz &= c.r > 152
+    dz &= c.r > PLATEAU_FREE_R
     c.deco_zone_plan = dz
 
 
@@ -700,7 +716,7 @@ def spring_pots(p: Placer, n=8):
     rng = np.random.default_rng(c.seed * 7717 + 11)     # eigener Zufall
     # Ring B/C (Ring A hat die knappsten Bauflaechen); mittig im Hain, wo die Baeume ohnehin Deko-Zone sind
     isl = [i for i in p.islands if i["theme"] in ("grove", "mesa_foot", "oasis", "spring", "pond")
-           and 260 < math.hypot(i["x"], i["z"]) < 1100]
+           and RING_EDGES[2] < math.hypot(i["x"], i["z"]) < sr(1100)]          # Runde 2: erst ab Ring C
     if not isl:
         return 0
     done = 0
@@ -716,7 +732,7 @@ def spring_pots(p: Placer, n=8):
         x, z = i["x"] + math.cos(a) * rr, i["z"] + math.sin(a) * rr
         d = float(rng.uniform(18, 32))
         R = d / 2 + 8
-        if math.hypot(x, z) < 165 + R or any(math.hypot(x - q[0], z - q[1]) < 60 for q in pots):
+        if math.hypot(x, z) < PLATEAU_FREE_R + 10 + R or any(math.hypot(x - q[0], z - q[1]) < 55 for q in pots):
             continue
         sl = c.win(x, z, R)
         lx, lz = c.local(sl)
@@ -748,7 +764,7 @@ def moss_terrain(p: Placer):
             a, rr = rng.uniform(0, 2 * math.pi), isl["R"] * math.sqrt(rng.uniform(0.05, 1.1))
             x, z = isl["x"] + math.cos(a) * rr, isl["z"] + math.sin(a) * rr
             iz, ix = c.idx(x, z)
-            if c.void[iz, ix] or not np.isnan(c.wl[iz, ix]) or c.slope[iz, ix] > 14 or math.hypot(x, z) < 160:
+            if c.void[iz, ix] or not np.isnan(c.wl[iz, ix]) or c.slope[iz, ix] > 14 or math.hypot(x, z) < PLATEAU_FREE_R:
                 continue
             if isl["theme"] not in ("crystal", "terrace", "ice", "cool") and c.F[iz, ix] < 0.15:
                 continue
@@ -760,9 +776,9 @@ def moss_terrain(p: Placer):
     # feuchte Mulden draussen (frueher 90 Moos-Teile): flacher, damit Bauflaechen eben bleiben
     k = 0
     for _ in range(6000):
-        if k >= 70:
+        if k >= 60:
             break
-        a, r = rng.uniform(0, 360), rng.uniform(260, 1600)
+        a, r = rng.uniform(0, 360), rng.uniform(PLATEAU_FREE_R + 10, sr(1600))
         x, z = pol(a, r)
         iz, ix = c.idx(x, z)
         if c.F[iz, ix] < 0.35 or c.void[iz, ix] or not np.isnan(c.wl[iz, ix]) or c.slope[iz, ix] > 12:
@@ -770,12 +786,12 @@ def moss_terrain(p: Placer):
         R = rng.uniform(5, 14)
         moss_patch(c, x, z, R, h=float(np.clip(0.05 * R, 0.3, 0.7)), rng_seed=float(rng.uniform(0, 6)))
         k += 1
-    # Plateau r 40-150: ein paar flache Moosflecken (nur Material, keine Hoehe -> Bauflaeche bleibt eben)
+    # Plateau r 40-115: ein paar flache Moosflecken (nur Material, keine Hoehe -> Bauflaeche bleibt eben)
     k = 0
     for _ in range(400):
-        if k >= 7:
+        if k >= 6:
             break
-        a, r = rng.uniform(0, 360), rng.uniform(40, 150)
+        a, r = rng.uniform(0, 360), rng.uniform(40, PLATEAU_R)
         x, z = pol(a, r)
         if abs(x) < 46 and 14 < z < 76:
             continue
@@ -797,6 +813,10 @@ def place_all(p: Placer):
     c = p.c
     rng = p.rng
     rock_map(p)
+    # Runde 2: Hoodoo-Saeulen sind Zusatzformen (nicht in der Hoehenkarte) -> als belegt markieren, sonst stehen
+    # Kiesel, Brocken oder Nadeln in den Saeulen
+    for h in c.feat.get("hoodoo", []):
+        p.mark(h["x"], h["z"], h["hat_r"] + 1.0)
     for isl in p.islands:
         th = isl["theme"]
         if th == "grove":
@@ -826,8 +846,9 @@ def place_all(p: Placer):
     landmarks(p)
     volcano_plume(p)
     base_ring(p)
-    band_blocks(p)
+    band_blocks(p, 170)
     scattered(p)
+    field_clusters(p)
     edge_extras(p)
     ground_mist(p)
 
@@ -842,21 +863,21 @@ def base_ring(p: Placer):
         if clumps >= 48:
             break
         a = rng.uniform(0, 360)
-        r = rng.uniform(150, 265) if rng.uniform() < 0.75 else rng.uniform(40, 150)
+        r = rng.uniform(PLATEAU_R, 200) if rng.uniform() < 0.75 else rng.uniform(40, PLATEAU_R)
         x, z = pol(a, r)
-        if hall(x, z) or (r < 150 and rng.uniform() < 0.6):
+        if hall(x, z) or (r < PLATEAU_R and rng.uniform() < 0.6):
             continue
         # Klumpen haeufen sich an Felsfuessen und in Mulden, nicht auf freier Flaeche
         iz, ix = c.idx(x, z)
         if rng.uniform() > 0.25 + 0.75 * min(1.0, float(c.F[iz, ix]) * 2.0 + float(c.masks["talus"][max(0, iz - 6):iz + 7, max(0, ix - 6):ix + 7].any())):
             continue
-        if c.mask("wash")[iz, ix] and r < 250:
+        if c.mask("wash")[iz, ix] and r < 200:
             continue
-        tuft_clump(p, x, z, int(rng.integers(4, 9)) if r > 150 else int(rng.integers(3, 6)), spread=rng.uniform(2.5, 5.0))
+        tuft_clump(p, x, z, int(rng.integers(4, 9)) if r > PLATEAU_R else int(rng.integers(3, 6)), spread=rng.uniform(2.5, 5.0))
         clumps += 1
     # kleine Nudeln (kniehoch) ausserhalb von r 150, in Gruppen
     for k in range(10):
-        a, r = rng.uniform(0, 360), rng.uniform(165, 250)
+        a, r = rng.uniform(0, 360), rng.uniform(PLATEAU_FREE_R + 5, 200)
         x0, z0 = pol(a, r)
         for j in range(int(rng.integers(2, 6))):
             x, z = x0 + rng.normal(0, 6), z0 + rng.normal(0, 6)
@@ -866,7 +887,7 @@ def base_ring(p: Placer):
     for _ in range(600):                                  # Kiesel nur, wo Fels in der Naehe ist (nicht auf freie Bauflaeche)
         if k >= 30:
             break
-        a, r = rng.uniform(0, 360), rng.uniform(60, 250)
+        a, r = rng.uniform(0, 360), rng.uniform(60, 200)
         x, z = pol(a, r)
         iz, ix = c.idx(x, z)
         if p.rock_dist[iz, ix] > 50:
@@ -875,7 +896,7 @@ def base_ring(p: Placer):
             p.put("Pebble", x, z, rng.uniform(0.5, 1.1), lean=False, radius=1)
             k += 1
     # Plateau r 25-150: sparsam, in Gruepchen, viel freier Boden (alles kniehoch, ohne Kollision)
-    def plateau_spot(rmin=25, rmax=150):
+    def plateau_spot(rmin=25, rmax=PLATEAU_R - 2):
         for _ in range(200):
             a, r = rng.uniform(0, 360), rng.uniform(rmin, rmax)
             x, z = pol(a, r)
@@ -898,11 +919,11 @@ def base_ring(p: Placer):
         if q:
             p.put("Tuft", q[0], q[1], rng.uniform(0.9, 1.2), int(rng.integers(0, 3)), tmpl=p.groups["Tuft"][3 + k % 2], sink=0.08, radius=0.5)
     for k in range(3):                                    # kleine Nudelpflanzen <= 6 Studs
-        q = plateau_spot(40, 150)
+        q = plateau_spot(40, PLATEAU_R - 2)
         if q and p.free(q[0], q[1], 2):
             p.put("Noodle", q[0], q[1], rng.uniform(0.7, 0.82), int(rng.choice(4, p=np.array(catalog.NOODLE_W) / 100)), radius=2)
     # Mini-Kristall links vom Tor (Wegweiser)
-    for a, r in ((24, 178), (330, 205)):
+    for a, r in ((24, 138), (330, 150)):
         x, z = pol(a + rng.uniform(-3, 3), r)
         for _ in range(20):
             if p.ok_ground(x, z, 16) and p.free(x, z, 2):
@@ -919,15 +940,14 @@ def scattered(p: Placer):
     # Kiesel: Schutthalden (Farbe des Bandes darueber), Faecher-Spitzen, Wash-Raender
     tal = c.masks.get("talus")
     tq = np.nan_to_num(getattr(c, "talus_q", np.full(c.H.shape, 0.5)), nan=0.5)
-    iz, ix = np.nonzero(tal & (c.r > 160))
+    iz, ix = np.nonzero(tal & (c.r > PLATEAU_FREE_R + 5))
     sel = rng.choice(len(iz), size=min(len(iz), 3000), replace=False)
     n = 0
     for k in sel:                                       # Cluster aus 3-7 Kieseln: gross nah am Fels, klein weiter weg
-        if n >= 1000:
+        if n >= 1300:
             break
-        x0 = -2304 + 2 + 4 * ix[k]
-        z0 = -2304 + 2 + 4 * iz[k]
-        if math.hypot(x0, z0) > 600 and rng.uniform() > 0.35:    # weit draussen sparen (Teile-Budget, Handys)
+        x0, z0 = cell_xz(ix[k], iz[k])
+        if math.hypot(x0, z0) > sr(600) + 50 and rng.uniform() > 0.45:    # weit draussen sparen (Teile-Budget, Handys)
             continue
         q = float(tq[iz[k], ix[k]])
         for j in range(int(rng.integers(3, 8))):
@@ -944,7 +964,7 @@ def scattered(p: Placer):
             if p.ok_ground(x, z, 30) and p.free(x, z, 1.5):
                 p.put("Pebble", x, z, rng.uniform(0.8, 2.2), lean=False, radius=1.2, sink=0.35)
     # Runde 1: Kiesel-Saum direkt am Wash-Rand (0 < wash_dist < 6), r 160-900, in Gruepchen zu 2-4 (bis 400 Stueck)
-    wb = (c.wash_dist > 0) & (c.wash_dist < 6) & (c.r > 160) & (c.r < 900) & ~c.void
+    wb = (c.wash_dist > 0) & (c.wash_dist < 6) & (c.r > PLATEAU_FREE_R + 10) & (c.r < sr(900)) & ~c.void
     iz, ix = np.nonzero(wb)
     sel = rng.choice(len(iz), size=min(len(iz), 4000), replace=False)
     n = 0
@@ -953,8 +973,7 @@ def scattered(p: Placer):
             break
         if rng.uniform() > 0.5 + 0.5 * math.sin(ix[k] * 0.05) * math.cos(iz[k] * 0.04):
             continue
-        x0 = -2304 + 2 + 4 * ix[k]
-        z0 = -2304 + 2 + 4 * iz[k]
+        x0, z0 = cell_xz(ix[k], iz[k])
         for j in range(int(rng.integers(2, 5))):
             x, z = x0 + rng.normal(0, 2.2), z0 + rng.normal(0, 2.2)
             if p.ok_ground(x, z, 30) and p.free(x, z, 0.8):
@@ -965,7 +984,7 @@ def scattered(p: Placer):
     for _ in range(3000):
         if n >= 40:
             break
-        a, r = rng.uniform(0, 360), rng.uniform(320, 1050)
+        a, r = rng.uniform(0, 360), rng.uniform(sr(320), sr(1050))
         x, z = pol(a, r)
         iz_, ix_ = c.idx(x, z)
         if not (6 < c.wash_dist[iz_, ix_] < 20) or c.F[iz_, ix_] > 0.3:
@@ -980,22 +999,25 @@ def scattered(p: Placer):
                 if p.ok_ground(x2, z2, 16) and p.free(x2, z2, 4) and (c.deco_zone_plan[c.idx(x2, z2)] or at_rock(p, x2, z2, 8.0)):
                     p.put("OrganPipe", x2, z2, size_class(p) * 0.7, int(rng.integers(0, 3)), radius=4)
                     n += 1
-    # Kupfer-Patina-Brocken (Ring B): an Schutthalden-Raendern, nicht in Bauzonen
+    # Kupfer-Patina-Brocken (Ring B): an Schutthalden-Raendern, nicht in Bauzonen.
+    # Runde 2: 36 statt 60 und nur noch auf Hindernis-Flaeche (Halde/Fels) - Ring B hat die knappsten Bauflaechen
     n = 0
     for _ in range(4000):
-        if n >= 60:
+        if n >= 36:
             break
-        a, r = rng.uniform(0, 360), rng.uniform(270, 600)
+        a, r = rng.uniform(0, 360), rng.uniform(PLATEAU_FREE_R + 15, sr(600) + 40)
         x, z = pol(a, r)
         iz_, ix_ = c.idx(x, z)
-        if not c.deco_zone_plan[iz_, ix_] and not (c.masks["talus"][iz_, ix_] and at_rock(p, x, z, 4.0)):
+        if not (c.masks["talus"][iz_, ix_] and at_rock(p, x, z, 4.0)):
+            continue
+        if c.obstacle[max(0, iz_ - 3):iz_ + 4, max(0, ix_ - 3):ix_ + 4].mean() < 0.45:
             continue
         if p.ok_ground(x, z, 30, allow_rock=True) and p.free(x, z, 6):
             p.put("CopperRock", x, z, rng.uniform(0.6, 1.4), 0, lean=False, sink=0.6, radius=5)
             n += 1
     # Fossilien in Steilwaenden (Mud/Sandstone-Baender, Ring B-C)
     n = 0
-    walls = (c.masks.get("mesa", np.zeros_like(c.void)) & (c.slope > 55) & (c.r > 260) & (c.r < 1100))
+    walls = (c.masks.get("mesa", np.zeros_like(c.void)) & (c.slope > 55) & (c.r > PLATEAU_FREE_R + 10) & (c.r < sr(1100)))
     iz, ix = np.nonzero(walls)
     if len(iz):
         sel = rng.choice(len(iz), size=min(len(iz), 4000), replace=False)
@@ -1009,8 +1031,7 @@ def scattered(p: Placer):
             if ln < 1e-3:
                 continue
             nxv, nzv = nxv / ln, nzv / ln
-            x = -2304 + 2 + 4 * j
-            z = -2304 + 2 + 4 * i
+            x, z = cell_xz(j, i)
             hi = c.H[i, j]
             lo = p.ground(x + nxv * 6, z + nzv * 6)
             if hi - lo < 12:
@@ -1025,7 +1046,7 @@ def scattered(p: Placer):
     # Nudel-Felder (kniehoch); die Moosflecken sind jetzt Terrain (moss_terrain). Runde 1: 5 -> 2 (Teile sparen)
     for fi in range(2):
         for _ in range(300):
-            a, r = rng.uniform(0, 360), rng.uniform(270, 560)
+            a, r = rng.uniform(0, 360), rng.uniform(PLATEAU_FREE_R + 20, sr(560))
             x0, z0 = pol(a, r)
             if any(math.hypot(x0 - i["x"], z0 - i["z"]) < i["R"] + 60 for i in p.islands):
                 continue
@@ -1042,6 +1063,92 @@ def scattered(p: Placer):
                 k += 1
 
 
+def field_clusters(p: Placer):
+    """Runde 2 (Dichte statt Leere): kleine, kniehohe Gruppen in den freien Ebenen von Ring B-E, Abstand ~40-60 Studs -
+    Kristall-Kluepchen, Kiesel/kleine Brocken, Bueschel, Nudeln. Nichts davon ist Hindernis (keine Kollision, <= ~8
+    Studs hoch), die Bauzonen bleiben also ganz. Nicht in Washes, Wasser, Deko-Inseln, auf dem Plateau."""
+    c = p.c
+    rng = np.random.default_rng(c.seed * 9203 + 41)      # eigener Zufall: aendert die uebrige Deko nicht
+    want = {"B": 70, "C": 110, "D": 100, "E": 55}
+    done = Counter()
+    centers = []
+    cg = defaultdict(list)
+
+    def far(x, z, d):
+        gx, gz = int(x // 64), int(z // 64)
+        for i in (gx - 1, gx, gx + 1):
+            for j in (gz - 1, gz, gz + 1):
+                for (qx, qz) in cg.get((i, j), ()):
+                    if (qx - x) ** 2 + (qz - z) ** 2 < d * d:
+                        return False
+        return True
+
+    for _ in range(30000):
+        if all(done[k] >= v for k, v in want.items()):
+            break
+        a = rng.uniform(0, 360)
+        r = math.sqrt(rng.uniform((PLATEAU_FREE_R + 12) ** 2, (RING_EDGES[-1] - 40) ** 2))
+        ring = ring_of(r)
+        if ring not in want or done[ring] >= want[ring]:
+            continue
+        x, z = pol(a, r)
+        iz, ix = c.idx(x, z)
+        if (c.void[iz, ix] or not np.isnan(c.wl[iz, ix]) or c.slope[iz, ix] > 12 or c.wash_dist[iz, ix] < 3
+                or c.deco_zone_plan[iz, ix] or c.obstacle[iz, ix]):
+            continue
+        if not far(x, z, rng.uniform(36, 52)):
+            continue
+        cg[(int(x // 64), int(z // 64))].append((x, z))
+        centers.append((x, z))
+        done[ring] += 1
+        u = rng.uniform()
+        ne = c.wNE[iz, ix] > 0.5
+        if (ring == "D" and u < 0.6) or (ring == "E" and u < 0.35) or (ring in "BC" and u < 0.14):
+            kind = "crystal"
+        elif u < 0.55:
+            kind = "rocks"
+        elif u < 0.8 and ring != "E":
+            kind = "noodle" if (ring == "C" and not ne) or rng.uniform() < 0.4 else "tuft"
+        else:
+            kind = "tuft"
+        n = int(rng.integers(3, 7))
+        fam = variant_crystal(p, ring)
+        for k in range(n * 3):
+            if n <= 0:
+                break
+            x2, z2 = x + rng.normal(0, 4.5), z + rng.normal(0, 4.5)
+            if not p.ok_ground(x2, z2, 16) or c.deco_zone_plan[c.idx(x2, z2)]:
+                continue
+            if kind == "crystal":
+                s = rng.uniform(0.8, 1.45)
+                if not p.free(x2, z2, 1.3 * s):
+                    continue
+                p.put("CrystalS", x2, z2, s, fam if rng.uniform() < 0.75 else variant_crystal(p, ring), lean=False,
+                      sink=0.3, radius=1.3)
+            elif kind == "rocks":
+                if rng.uniform() < 0.35:
+                    s = rng.uniform(0.55, 0.9)
+                    if not p.free(x2, z2, 1.7 * s):
+                        continue
+                    p.put("Boulder", x2, z2, s, int(rng.integers(0, 3)), lean=False, sink=0.25, radius=1.6, obstacle=False)
+                else:
+                    s = rng.uniform(0.6, 1.5)
+                    if not p.free(x2, z2, 0.7 * s):
+                        continue
+                    p.put("Pebble", x2, z2, s, lean=False, radius=0.8, sink=0.35)
+            elif kind == "noodle":
+                if not p.free(x2, z2, 1.8):
+                    continue
+                p.put("Noodle", x2, z2, rng.uniform(0.6, 0.9), int(rng.choice(4, p=np.array(catalog.NOODLE_W) / 100)),
+                      radius=1.8)
+            else:
+                tuft_clump(p, x2, z2, int(rng.integers(3, 6)), spread=2.5)
+                n -= 2
+            n -= 1
+    c.feat["field_cluster"] = [{"x": x, "z": z} for x, z in centers]
+    return len(centers)
+
+
 def band_blocks(p: Placer, target=120):
     """Runde 1: Schicht-Brocken (6-14 Studs) an Tafelberg-Fuessen und auf dem steilen Teil der Halden, Ring A-D.
     Material/Farbe = Band des naechsten Felsens. Nur auf Hindernis-Flaeche (kostet keine Bauzone)."""
@@ -1049,7 +1156,7 @@ def band_blocks(p: Placer, target=120):
     rng = p.rng
     tal = c.masks.get("talus")
     tq = np.nan_to_num(getattr(c, "talus_q", np.full(c.H.shape, 0.5)), nan=1.0)
-    cand = tal & c.obstacle & (tq < 0.45) & (c.r > 170) & (c.r < 1150) & ~c.void
+    cand = tal & c.obstacle & (tq < 0.45) & (c.r > PLATEAU_FREE_R + 10) & (c.r < sr(1150)) & ~c.void
     iz, ix = np.nonzero(cand)
     if not len(iz):
         return 0
@@ -1058,13 +1165,13 @@ def band_blocks(p: Placer, target=120):
     for k in sel:
         if n >= target:
             break
-        x = -2304 + 2 + 4 * ix[k] + rng.uniform(-1.5, 1.5)
-        z = -2304 + 2 + 4 * iz[k] + rng.uniform(-1.5, 1.5)
+        x, z = cell_xz(ix[k], iz[k])
+        x, z = x + rng.uniform(-1.5, 1.5), z + rng.uniform(-1.5, 1.5)
         s = float(rng.uniform(0.7, 1.5))
         if p.near_obstacle(x, z, 10.0 * s) and rng.uniform() < 0.5:
             continue
         rr = int(math.ceil((4.6 * s + 5.0) / CELL))         # Deko-Zone (Radius + 5) muss auf Hindernis-Flaeche liegen
-        if c.obstacle[max(0, iz[k] - rr):iz[k] + rr + 1, max(0, ix[k] - rr):ix[k] + rr + 1].mean() < 0.85:
+        if c.obstacle[max(0, iz[k] - rr):iz[k] + rr + 1, max(0, ix[k] - rr):ix[k] + rr + 1].mean() < 0.62:
             continue
         if not p.ok_ground(x, z, 38, allow_rock=True) or not p.free(x, z, 5.0 * s):
             continue
@@ -1173,6 +1280,8 @@ def ground_mist(p: Placer, target=95):
     for w in c.feat["water"]:
         if w["kind"].startswith("pot"):
             continue                  # Runde 1: kleine Quelltoepfe bleiben klar (Nebel wuerde sie verdecken)
+        if math.hypot(w["x"], w["z"]) < RING_EDGES[2] + 20:
+            continue                  # Runde 2: Teich/Quelle nahe der Basis klar (Nebel wirkte im Zielblick wie Blasen)
         spots += [(w["x"], w["z"], max(w["R"], 25), 2)]
     for f in c.feat.get("playa", []):
         spots += [(f["x"], f["z"], f["R"] * 0.8, 4)]
@@ -1191,7 +1300,7 @@ def ground_mist(p: Placer, target=95):
                 a, rr = rng.uniform(0, 6.28), R * math.sqrt(rng.uniform(0, 1))
                 x, z = sx + math.cos(a) * rr, sz + math.sin(a) * rr
                 iz, ix = c.idx(x, z)
-                if math.hypot(x, z) < 160 or c.void[iz, ix] or c.wash_dist[iz, ix] < 0 or c.slope[iz, ix] > 18:
+                if math.hypot(x, z) < PLATEAU_FREE_R + 10 or c.void[iz, ix] or c.wash_dist[iz, ix] < 0 or c.slope[iz, ix] > 18:
                     continue
                 y = p.ground(x, z) + rng.uniform(2, 6)
                 if not np.isnan(c.wl[iz, ix]):
@@ -1204,7 +1313,7 @@ def ground_mist(p: Placer, target=95):
         if n >= target:
             break
         a = rng.uniform(0, 360)
-        x, z = pol(a, rng.uniform(1820, 1900))
+        x, z = pol(a, rng.uniform(sr(1820), sr(1900)))
         iz, ix = c.idx(x, z)
         if c.void[iz, ix] or c.slope[iz, ix] > 14 or c.wash_dist[iz, ix] < 0 or c.F[iz, ix] < 0.12:
             continue
@@ -1249,7 +1358,7 @@ def edge_extras(p: Placer):
         if n >= 12:
             break
         a = rng.uniform(0, 360)
-        r = rng.uniform(1990, 2070)
+        r = rng.uniform(sr(1990), sr(2070))
         x, z = pol(a, r)
         iz, ix = c.idx(x, z)
         if c.void[iz, ix] or np.isnan(c.bottom[iz, ix]) or c.mask("float")[iz, ix]:
@@ -1258,19 +1367,21 @@ def edge_extras(p: Placer):
         p.put("CrystalM", x, z, rng.uniform(0.8, 1.8), variant_crystal(p, "D"), y=y, rx=math.pi + rng.uniform(-0.2, 0.2),
               lean=False, mark=False)
         n += 1
-    # Wolken unter der Plattform
+    # Wolken unter der Plattform (Runde 2: halber Radius, ~0,6 x so gross, naeher an der Unterseite)
     for k in range(12):
         a = k * 30 + rng.uniform(-10, 10)
-        r = rng.uniform(1700, 2600)
+        r = rng.uniform(sr(1700), sr(2600))
         x, z = pol(a, r)
-        p.put("Cloud", x, z, rng.uniform(3.0, 7.0), 0, y=rng.uniform(-548, -348), lean=False, mark=False)
+        p.put("Cloud", x, z, rng.uniform(2.0, 4.2), 0, y=rng.uniform(-360, -230), lean=False, mark=False)
     # Nebel in den Nebelbecken
     for f in c.feat.get("fogbasin", []):
         for k in range(3):
             x, z = f["x"] + rng.uniform(-0.4, 0.4) * f["R"], f["z"] + rng.uniform(-0.4, 0.4) * f["R"]
             p.put("FogBall", x, z, rng.uniform(1.4, 2.4), 0, y=p.ground(x, z) + 5, lean=False, mark=False)
-    # Unsichtbare Wand am Rand (r 2008), 64 Stuecke
-    for k in range(64):
-        a = k * 360 / 64
-        x, z = pol(a, 2008)
+    # Unsichtbare Wand am Rand: Runde 2 32 Stuecke (je 200 breit, Abstand 197) auf r 1006 statt 64 auf r 2008
+    from .terrain import RIM_R
+    rb = RIM_R + 16.0
+    for k in range(32):
+        a = k * 360 / 32
+        x, z = pol(a, rb)
         p.put("EdgeBarrier", x, z, 1.0, 0, y=-60.0, yaw=-math.radians(a), lean=False, mark=False)

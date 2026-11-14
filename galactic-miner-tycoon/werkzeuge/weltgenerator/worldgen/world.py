@@ -15,8 +15,8 @@ MAT = {name: i for i, name in enumerate(TERRAIN_MATERIALS)}
 STRATA_FLAG = 32  # Bit im Material-Kanal: Spalte benutzt Gesteinsschichten nach Hoehe
 
 CELL = 4.0          # Studs pro Spalte (= Roblox-Voxelgroesse)
-HALF = 2304.0       # Karte reicht von -HALF bis +HALF in X und Z
-N = int(2 * HALF / CELL)  # 1152 Spalten je Achse
+HALF = 1152.0       # Karte reicht von -HALF bis +HALF in X und Z (Runde 2, Entscheidung 022: vorher 2304)
+N = int(2 * HALF / CELL)  # 576 Spalten je Achse
 HMIN = -512.0       # kleinste speicherbare Hoehe
 HQ = 4.0            # Hoehen-Quantisierung: 1/4 Stud
 VOID = HMIN         # Hoehe <= VOID bedeutet: kein Terrain in dieser Spalte

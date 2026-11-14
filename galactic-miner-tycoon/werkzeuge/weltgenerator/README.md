@@ -10,6 +10,27 @@ worldgen/ (Python)  ──►  src/ServerStorage/WorldBuilder/Data/*.luau  ─�
 
 Eine Quelle, zwei Ausgaben: Was die Vorschau zeigt, baut der WorldBuilder in Studio.
 
+## Massstab (Runde 2, Entscheidung 022: Insel halb so gross)
+Insel-Radius **1000** statt 2000. Zentral in `worldgen/layout.py`: `WORLD_SCALE = 0.5` (alle radialen Masse werden mit
+`sr(alt)` aus den alten Werten abgeleitet, z. B. `sr(1500) = 750`), `PROFILE_SCALE = 0.3` (Hoehen des Ringprofils),
+`PLATEAU_R = 116` / `PLATEAU_FREE_R = 120` (Basis flach und frei, Jus Basis braucht r <= 110), `BUILD_MAX_R = 950`.
+**Objektgroessen bleiben** (Tafelberge, Hoodoos, Baeume, Kristalle, Brocken); nur Ringe, Abstaende, Landmarken-Radien,
+Washes, Randgebirge, Schwebfelsen rueckten zusammen. Raster `HALF = 1152`, `N = 576` (Meta `grid.*` gibt das an den
+Builder weiter, der Builder braucht keine Aenderung).
+
+| Ring | Radius | Erz (022) | Charakter |
+|---|---|---|---|
+| A | 0-125 | Eisen 10-100 | Basis-Plateau (y 0, flach bis r 116) |
+| B | 125-300 | Kupfer 125-350 | Terrakotta-Mesaland: Saturn-Tor (r ~225), Abendbank (182), Teich (168), Quelle (191), Zwillingstuerme (280), Nadelgarten (250) |
+| C | 300-550 | Kohle 300-550 | Asche/Duenen: Vulkan (452, 86 hoch), Bogen (410), Duenen + Wave Suedwest, Lava/Oasen Nordost |
+| D | 550-800 | Kristall 550-800 | Regenbogenland: Regenbogen-Kamm (670), Silberstufen (618), Kristallkathedrale (710), Salzpfannen |
+| E | 800-1000 | Titan 800-1000 | Silberhochland, Titan-Turm (880, 215 hoch), Randgebirge (Kamm r ~984-1010, 32 % niedriger), Balkone (r 990) |
+
+Weitere Folgen von Runde 2: Washes 38-62 breit und kurviger, in Ring B/C flache Sand-Mulden (Ufer bleiben Bauzone);
+die umlaufenden Schichtstufen entfallen (flache Rampen statt Stufenringen, sonst fallen die Bauzonen unter 40 %);
+Ring-Berge, Kaemme, Krater, Geoden, Salzpfannen weniger (Bauzonen je Ring >= 40 % im 16er-Export); dafuer kniehohe
+Gruppen in den Ebenen (`placement.field_clusters`). Unsichtbare Wand 32 Teile auf r 1012.
+
 ## Benutzen
 ```bash
 python3 generate.py              # Welt erzeugen (Luau + Vorschau), ca. 10-15 s, druckt die Pruefwerte
@@ -43,7 +64,7 @@ Interaktiv: `out/` und `preview/` ueber einen beliebigen statischen Server aus d
 ## Datenformat (muss zu `src/ServerStorage/WorldBuilder/init.luau` passen)
 **Koordinaten:** Roblox-Welt, Y nach oben. Basis = (0, 0). Azimut 0° = Norden = −Z, 90° = Osten = +X. Das Basis-Plateau liegt auf **y = 0** (Oberkante der alten Baseplate).
 
-**Raster:** `N = 1152` Spalten je Achse, `CELL = 4` Studs (= Roblox-Voxel), Karte von −2304 bis +2304. Spalte `[iz, ix]` hat ihre Mitte bei `x = −2304 + 2 + 4·ix`, `z = −2304 + 2 + 4·iz`.
+**Raster:** `N = 576` Spalten je Achse, `CELL = 4` Studs (= Roblox-Voxel), Karte von −1152 bis +1152 (Runde 2; vorher 1152 Spalten, ±2304). Spalte `[iz, ix]` hat ihre Mitte bei `x = −1152 + 2 + 4·ix`, `z = −1152 + 2 + 4·iz`.
 
 | Kanal | Typ | Bedeutung |
 |---|---|---|
@@ -67,21 +88,21 @@ Interaktiv: `out/` und `preview/` ueber einen beliebigen statischen Server aus d
 
 **Erweiterungen der Deko-Daten** (der Builder ignoriert unbekannte Felder; was er dafuer tun soll, steht dabei):
 - `PartDef.particles` (in `Templates.luau` als `particles = {...}` am Teil): Wunsch nach einem **ParticleEmitter** an diesem Teil, z. B. Dampf `{kind="steam", rate, lifetime={min,max}, size={start,end}, speed={min,max}, spread, color="#RRGGBB", transparency={start,end}, pulse={min,max}}` (`pulse` = alle 25-40 s kurz staerker). Benutzt von `SteamVent_*` (`kind="steam"`) und `MistEmitter` (`kind="mist"`, ruhige Nebel-Partikel in den Nebelbecken, unsichtbares Traegerteil).
-- `particles.kind = "smoke"` (Runde 1, `VolcanoPlume_*`): Rauchfahne des Vulkans, `{kind="smoke", rate=6, lifetime={12,18}, size={26,85}, speed={10,14}, spread=8, color="#D9CCD6", transparency={0.35,1}}`. **Der Builder muss dafuer die Rauch-Textur setzen** (in `addParticles` die Bedingung `cfg.kind == "steam" or cfg.kind == "mist"` um `or cfg.kind == "smoke"` erweitern), sonst erscheinen Standard-Funken. Wuenschenswert zusaetzlich: `LightInfluence = 1`, leichter Wind (`Acceleration` ~ (2, 0, -0.7) Richtung Az 70).
+- `particles.kind = "smoke"` (Runde 1, `VolcanoPlume_*`): Rauchfahne des Vulkans, `{kind="smoke", rate=7, lifetime={14,22}, size={32,100}, speed={10,14}, spread=8, color="#D9CCD6", transparency={0.3,1}}` (Runde 2 groesser). Der Builder setzt dafuer die Rauch-Textur (`addParticles`, `cfg.kind == "smoke"`). Wuenschenswert zusaetzlich: `LightInfluence = 1`, leichter Wind (`Acceleration` ~ (2, 0, -0.7) Richtung Az 70).
 - Vorlage `VolcanoPlume_*` (Kategorie `Landmark`, Runde 1): unsichtbares Traegerteil (Partikel + PointLight 60/2) und 8 Neon-Keile als Glutrand am oberen Krater-Innenhang; Fusspunkt = Kraterboden-Mitte des grossen Vulkans. Funktioniert mit dem bestehenden Builder (bis auf die Rauch-Textur).
 - Vorlagen `BandBlock_<Material>_*` (Kategorie `Rock`, Runde 1): Schicht-Brocken 6-14 Studs (2 gestapelte Bloecke + Keil) in `Sandstone`/`Slate`/`Limestone` und Bandfarbe, ~120 an Tafelberg-Fuessen (nur auf Hindernis-Flaeche). `RockNeedle_*` (2 Teile, Schaft + Keil-Spitze, 11-22 Studs): ~40 im Nadelgarten.
 - Vorlagen `Boulder_*` (Kategorie `Rock`, 2-3 gedrehte Bloecke/Keile aus `Rock`) und `Pebble_<Material>_*` (Kugel/Keil/Block im Material des Bands: `Sandstone`, `Limestone`, `Slate`, `Mud`, `Rock`; Farbe = Bandfarbe 12 % dunkler, 15 % entsaettigt).
-- Vorlagen `Mist_*` (Kategorie `Mist`): Bodennebel-Schwaden aus 2-3 flachen Ellipsoiden (Hoehe <= 0,15 x Breite, Transparenz 0,88-0,94, ohne Schatten/Kollision), 2-8 Studs ueber Mulden, Teichen, Salzpfannen, Terrassen, Oasen, Nebelbecken und am Fuss des Randgebirges; nie auf dem Plateau (r < 150) oder in Washes.
-- Vorlage `EdgeBarrier` (Kategorie `Barrier`): unsichtbare Wand (Transparency 1, CanCollide true), 64 Stueck im Ring r 2008, Hoehe -60 bis 700. Funktioniert mit dem bestehenden Builder.
+- Vorlagen `Mist_*` (Kategorie `Mist`): Bodennebel-Schwaden aus 2-3 flachen Ellipsoiden (Hoehe <= 0,15 x Breite, Transparenz 0,88-0,94, ohne Schatten/Kollision), 2-8 Studs ueber Mulden, Teichen, Salzpfannen, Terrassen, Oasen, Nebelbecken und am Fuss des Randgebirges; nie auf dem Plateau (r < 130) oder in Washes; Runde 2: nicht an Teich/Quelle nahe der Basis.
+- Vorlage `EdgeBarrier` (Kategorie `Barrier`): unsichtbare Wand (Transparency 1, CanCollide true), Runde 2: 32 Stueck (je 200 breit) im Ring r 1012, Hoehe -60 bis 700. Funktioniert mit dem bestehenden Builder.
 - Kategorien der Vorlagen: `Flora`, `Crystal`, `Rock`, `Feature`, `Landmark`, `Sky` (Wolken unter der Plattform, Nebelkugeln), `Mist` (Bodennebel), `Barrier`. Fuer Streaming sollen die Modelle in Chunk-Modelle je 200 x 200 Studs (nach x/z der Platzierung) sortiert werden.
 
 **Budgets** (der Generator warnt bei Ueberschreitung): hoechstens 25 000 Teile (Handys), <= 120 PointLights, Terrain-Daten < 3 MB Base64. Terrain-Zusatzformen nicht duenner als Durchmesser 8 (Radius >= 4, Block-Kante >= 8), sonst werden sie bei 4-Stud-Voxeln klumpig oder verschwinden; der Generator meldet zu duenne Formen.
 
 **Bauzonen** (`Data/BuildZones.luau`, fuer den Erz-Spawn):
 ```lua
-return { cell = 16, n = 288, origin = -2304, maxRadius = 1900, rows = { "0001110...", ... } }
+return { cell = 16, n = 144, origin = -1152, maxRadius = 950, rows = { "0001110...", ... } }
 ```
-`rows[iz]` ist eine Zeichenkette mit `n` Zeichen; Zeichen `ix` (1-basiert) = `"1"`: die ganze 16x16-Zelle ist Bauzone (Neigung <= 6 Grad, keine Landform, keine Hindernis-Deko, kein Wasser > 0,5, zusammenhaengende Flecken >= 40x40 Studs, per Neigung <= 25 Grad von der Basis erreichbar, r <= 1900). Zellmitte: `x = origin + (ix - 0.5) * cell`, `z = origin + (iz - 0.5) * cell`; die Hoehe per Raycast holen.
+`rows[iz]` ist eine Zeichenkette mit `n` Zeichen; Zeichen `ix` (1-basiert) = `"1"`: die ganze 16x16-Zelle ist Bauzone (Neigung <= 6 Grad, keine Landform, keine Hindernis-Deko, kein Wasser > 0,5, zusammenhaengende Flecken >= 40x40 Studs, per Neigung <= 25 Grad von der Basis erreichbar, r <= 950). Zellmitte: `x = origin + (ix - 0.5) * cell`, `z = origin + (iz - 0.5) * cell`; die Hoehe per Raycast holen.
 
 **Vorschau** (`out/preview/scene.json`): zusaetzlich `preview.cameras` (Kamera-Presets) und `preview.map` (Ringe, Washes, Landmarken fuer die Karte). Die Vorschau rendert das Terrain nach derselben Voxel-Regel wie der Builder (inkl. weicher Materialmischung zwischen Nachbar-Voxeln), Zusatzformen als Koerper (Luft-Formen als Ausschnitt), Deko mit echten Formen, Neon + Bloom, Licht nach `meta.lighting`, Dunst nach Atmosphere. Der orange Block in der Mitte ist nur der Platzhalter der Start-Halle (nicht in den Luau-Daten).
 

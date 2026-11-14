@@ -8,7 +8,8 @@ from PIL import Image
 
 from .materials import BAND_LUT, LAYERS, MATERIAL_COLORS
 from .layout import STRATA_BASE, STRATA_PERIOD
-from .world import CELL, MAT, STRATA_FLAG, TERRAIN_MATERIALS, VOID, World
+from .layout import BUILD_MAX_R, RING_EDGES
+from .world import CELL, HALF, MAT, STRATA_FLAG, TERRAIN_MATERIALS, VOID, World
 
 
 def _hex(h):
@@ -50,8 +51,8 @@ def render(w: World, path, crop=None, scale=1):
     img = np.clip(img, 0, 255).astype(np.uint8)
     if crop is not None:
         x0, z0, x1, z1 = crop
-        i0, i1 = int((x0 + 2304) / 4), int((x1 + 2304) / 4)
-        j0, j1 = int((z0 + 2304) / 4), int((z1 + 2304) / 4)
+        i0, i1 = int((x0 + HALF) / CELL), int((x1 + HALF) / CELL)
+        j0, j1 = int((z0 + HALF) / CELL), int((z1 + HALF) / CELL)
         img = img[j0:j1, i0:i1]
     im = Image.fromarray(img)
     if scale != 1:
@@ -71,9 +72,9 @@ def render_build(w: World, build, path, deco=None):
         a[deco] = a[deco] * 0.4 + np.array([210, 90, 220]) * 0.6
     im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).resize((1728, 1728), Image.NEAREST)
     d = ImageDraw.Draw(im)
-    s = 1728 / 4608
+    s = 1728 / (2 * HALF)
     cx = cy = 864
-    for r in (250, 600, 1100, 1600, 1900, 2000):
+    for r in sorted(set(RING_EDGES[1:] + [int(BUILD_MAX_R)])):
         rr = r * s
         d.ellipse((cx - rr, cy - rr, cx + rr, cy + rr), outline=(255, 255, 255), width=2)
         d.text((cx + rr * 0.71 + 4, cy - rr * 0.71), f"r {r}", fill=(255, 255, 255))

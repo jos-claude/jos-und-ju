@@ -825,7 +825,7 @@ async function main() {
     renderer.setSize(size, size);
     composer.setSize(size, size);
     fxaa.uniforms.resolution.value.set(1 / size, 1 / size);
-    const E = 2400;
+    const E = ((scn.preview && scn.preview.map && scn.preview.map.extent) || -scn.grid.origin) + 48;   // Runde 2: aus dem Raster
     const cam = new THREE.OrthographicCamera(-E, E, E, -E, 10, 30000);
     cam.position.set(0, 12000, 0); cam.up.set(0, 0, -1); cam.lookAt(0, 0, 0); cam.updateProjectionMatrix();
     scene.fog = null;
@@ -852,7 +852,7 @@ async function main() {
     const mp = (scn.preview && scn.preview.map) || {};
     g.lineJoin = 'round';
     // Ringe
-    (mp.rings || [250, 600, 1100, 1600, 2000]).forEach((r, i) => {
+    (mp.rings || [125, 300, 550, 800, 1000]).forEach((r, i) => {
       g.beginPath(); g.setLineDash([10, 8]); g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,0.75)';
       const [cx, cy] = P(0, 0); g.arc(cx, cy, r / (2 * E) * size, 0, Math.PI * 2); g.stroke();
       g.setLineDash([]);
@@ -860,7 +860,7 @@ async function main() {
       g.font = 'bold 18px sans-serif'; g.fillStyle = 'rgba(255,255,255,0.9)'; g.fillText(`r ${r}`, lx + 4, ly - 4);
     });
     const ringNames = mp.ringNames || ['A', 'B', 'C', 'D', 'E'];
-    [125, 425, 850, 1350, 1800].forEach((r, i) => {
+    (mp.ringMids || [62, 212, 425, 675, 900]).forEach((r, i) => {
       const [lx, ly] = P(r * 0.5, r * 0.866);
       g.font = 'bold 26px sans-serif'; g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,0.6)'; g.strokeText(ringNames[i], lx, ly); g.fillStyle = '#fff'; g.fillText(ringNames[i], lx, ly);
     });

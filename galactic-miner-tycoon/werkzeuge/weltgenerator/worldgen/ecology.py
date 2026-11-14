@@ -71,7 +71,7 @@ def compute(c: Ctx):
         iz, ix = c.idx(f["x"], f["z"])
         sp[iz, ix] = True
     d_s = ndi.distance_transform_edt(~sp) * CELL
-    M = np.maximum.reduce([np.exp(-d_f / 45.0), 0.55 * np.exp(-d_t / 25.0) * (c.r > 600), 0.8 * np.exp(-d_s / 60.0)])
+    M = np.maximum.reduce([np.exp(-d_f / 45.0), 0.55 * np.exp(-d_t / 25.0) * (c.r > 300), 0.8 * np.exp(-d_s / 60.0)])
     c.F, c.M, c.S = F.astype(np.float32), M.astype(np.float32), S.astype(np.float32)
     c.wnear = wnear.astype(np.float32)
     c.d_water = d_w.astype(np.float32)

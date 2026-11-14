@@ -7,7 +7,7 @@ import numpy as np
 from numba import njit
 from scipy import ndimage as ndi
 
-from .layout import RING_EDGES, RING_NAMES
+from .layout import BUILD_MAX_R, RING_EDGES, RING_NAMES
 from .world import CELL, N, VOID, World
 
 
@@ -43,8 +43,8 @@ def analyse(w: World, c, deco_zone=None):
     r = c.r
     out = {"rings": {}, "build": build}
     for i, name in enumerate(RING_NAMES):
-        # Ring E wird bis r 1900 gewertet (Randgebirge = Grenze, Entscheidung Art Director)
-        r1 = 1900 if name == "E" else RING_EDGES[i + 1]
+        # Ring E wird bis BUILD_MAX_R gewertet (Randgebirge = Grenze, Entscheidung Art Director; Runde 2: r 950)
+        r1 = BUILD_MAX_R if name == "E" else RING_EDGES[i + 1]
         m = (r >= RING_EDGES[i]) & (r < r1)
         m2 = (r >= RING_EDGES[i]) & (r < RING_EDGES[i + 1]) & ~void
         out["rings"][name] = (float(build[m].mean()), float(build[m2].mean()) if name == "E" else None)
@@ -70,11 +70,11 @@ def analyse(w: World, c, deco_zone=None):
     out["depr_count"] = int(len(np.unique(lab2[small])) - (1 if 0 in lab2[small] else 0)) if small.any() else 0
     out["depr_max"] = float(dep[small].max()) if small.any() else 0.0
     out["depr_steep"] = int((small & (sl > 30)).sum())
-    # Plateau
-    pl = r < 150
+    # Plateau (Runde 2: Jus Basis braucht r <= 110 flach und frei)
+    pl = r < 110
     out["plateau_dev"] = float(np.nanmax(np.abs(h[pl] - np.nanmedian(h[pl]))))
     out["plateau_obst"] = int(obstacle[pl].sum())
-    out["reach_frac"] = float(reach[(~void) & (r < 1880)].mean())
+    out["reach_frac"] = float(reach[(~void) & (r < BUILD_MAX_R - 10)].mean())
     return out
 
 
@@ -157,10 +157,10 @@ def _pflood(h):
 def report_lines(res):
     lines = ["Pruefwerte:"]
     for k, (v, v2) in res["rings"].items():
-        extra = f" (bis r 1900; ganzer Ring bis 2000: {v2 * 100:.0f} %)" if v2 is not None else ""
+        extra = f" (bis r {BUILD_MAX_R:.0f}; ganzer Ring bis {RING_EDGES[-1]}: {v2 * 100:.0f} %)" if v2 is not None else ""
         lines.append(f"  Bauzone Ring {k}: {v * 100:.1f} %{extra}  {'OK' if v >= 0.6 else 'unter 60 %'}")
-    lines.append(f"  Flood-Fill: {res['reach_frac'] * 100:.0f} % der Flaeche bis r 1880 von der Basis erreichbar (Neigung <= 25)")
+    lines.append(f"  Flood-Fill: {res['reach_frac'] * 100:.0f} % der Flaeche bis r {BUILD_MAX_R - 10:.0f} von der Basis erreichbar (Neigung <= 25)")
     lines.append(f"  Wasser: max. Tiefe {res['water_max']:.2f} (<= 4), offene Ufer-Kanten {res['water_leaks']}")
     lines.append(f"  Lokale Mulden ohne Wasser: {res['depr_count']}, max. Tiefe {res['depr_max']:.1f}, Zellen > 30 Grad darin: {res['depr_steep']}")
-    lines.append(f"  Plateau r<150: Abweichung {res['plateau_dev']:.2f}, Hindernis-Zellen {res['plateau_obst']}")
+    lines.append(f"  Plateau r<110: Abweichung {res['plateau_dev']:.2f}, Hindernis-Zellen {res['plateau_obst']}")
     return lines

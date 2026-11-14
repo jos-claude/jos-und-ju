@@ -6,7 +6,7 @@ import math
 import numpy as np
 
 from .ctx import Ctx
-from .layout import DIP_DEG, LEE_DIR, STRATA_BASE, STRATA_PERIOD
+from .layout import DIP_DEG, LEE_DIR, PLATEAU_R, STRATA_BASE, STRATA_PERIOD, sr
 from .noise import smoothstep as ss
 from .world import CELL, MAT, N, STRATA_FLAG, VOID, World
 
@@ -107,7 +107,7 @@ def wind_streaks(c: Ctx, top):
     avoid |= ~np.isnan(c.wl)
     for k, m in enumerate(c.feat.get("mesa", [])):
         wdt = 2.0 * m["Rmin"]
-        L = min(420.0, wdt * c.rng.uniform(3.0, 5.0))
+        L = min(260.0, wdt * c.rng.uniform(2.5, 4.0))          # Runde 2: kuerzer (dichtere Berge, halber Radius)
         x0, z0 = m["x"] + dx * m["Rmin"] * 0.6, m["z"] + dz * m["Rmin"] * 0.6
         sl = c.win(x0 + dx * L / 2, z0 + dz * L / 2, L / 2 + wdt)
         x, z = c.local(sl)
@@ -132,18 +132,18 @@ def assign(c: Ctx):
     sl = slope_deg(np.where(c.void, np.nan, H))
     sl = np.nan_to_num(sl, nan=0.0)
     c.slope = sl
-    rwd = rw + nz.fbm("matring", x, z, 260, 2) * 70.0
+    rwd = rw + nz.fbm("matring", x, z, sr(260), 2) * sr(70.0)
     G, SAND, MUD, ROCK = MAT["Ground"], MAT["Sand"], MAT["Mud"], MAT["Rock"]
     top[:] = G
     # Ring E: Uebergang Ground -> Slate fleckig ueber ~300 Studs
-    ringE = (rwd + nz.fbm("ringEmix", x, z, 120, 3) * 220.0 >= 1640) & ~c.void
+    ringE = (rwd + nz.fbm("ringEmix", x, z, 90, 3) * sr(220.0) >= sr(1640)) & ~c.void
     # Korall-Bodenflecken (Mud) auf ~22 % der Ebenen: Flecken 80-300 Studs, bevorzugt in Mulden, Rand zerfasert
     from scipy import ndimage as ndi
     hs = ndi.gaussian_filter(np.where(c.void, 0.0, H), 8)
     conc = np.clip(ndi.laplace(hs) * 25.0, -1, 1)
     # Runde 1: weniger, groessere und ruhigere Flecken (~12 %), keine Krisel-Raender
     cor = nz.fbm("coral", x, z, 320, 3) + 0.35 * conc + 0.08 * nz.fbm("coralfray", x, z, 40, 2)
-    plains = ~ringE & (c.r > 160) & ~c.void
+    plains = ~ringE & (c.r > PLATEAU_R + 6) & ~c.void
     thr = np.quantile(cor[plains], 0.88) if plains.any() else 1.0
     top[_clean(plains & (cor > thr), 3, 4, 150)] = MUD
     # Ring C Suedwest: Duenenfeld = Sand (weich begrenzt)
@@ -151,12 +151,12 @@ def assign(c: Ctx):
     if dune is not None:
         top[_clean(dune, 6, 8, 400)] = SAND
     # Ring E: Slate (jetzt Lavendel-Rose), grosse Rock-Zonen (Schutt), Schnee in Mulden
-    rockE = ringE & (nz.fbm("rockE", x, z, 500, 2) > 0.12)
+    rockE = ringE & (nz.fbm("rockE", x, z, sr(500), 2) > 0.12)
     top[ringE] = MAT["Slate"]
     top[_clean(rockE, 6, 8, 600)] = ROCK
     if "snow" in c.masks:
         top[_clean(c.masks["snow"] & ringE, 4, 6, 120)] = MAT["Snow"]
-    snowfoot = ringE & (c.r > 1800) & (sl < 12) & (nz.fbm("snowfoot", x, z, 140, 3) > 0.05)
+    snowfoot = ringE & (c.r > sr(1800)) & (sl < 12) & (nz.fbm("snowfoot", x, z, 100, 3) > 0.05)
     top[_clean(snowfoot, 4, 6, 200)] = MAT["Snow"]
     # Sand: Washes (Band mit weichem, geschwungenem Rand), Faecher, Canyonboeden
     wm = (c.wash_dist < -2.0 + 1.5 * nz.fbm("washedge", x, z, 90, 2)) | c.masks.get("wash_arm", np.zeros_like(c.void))
@@ -193,7 +193,8 @@ def assign(c: Ctx):
     # (Randgebirge = "Mega-Tafelberge" derselben Familie wie im Zielbild)
     if "rim" in c.masks and hasattr(c, "rim_rc"):
         # nur bis ~y 170 (verrauscht): Kronen bleiben lavendel (Slate/Rock) -> ruhigerer Hintergrund wie im Zielbild
-        st |= c.masks["rim"] & (sl > 40.0) & (c.r < c.rim_rc) & (H < 170.0 + 30.0 * nz.fbm("rimbandtop", x, z, 160, 2))
+        # Runde 2: Randgebirge 30 % niedriger -> Baender bis y ~120
+        st |= c.masks["rim"] & (sl > 40.0) & (c.r < c.rim_rc) & (H < 120.0 + 22.0 * nz.fbm("rimbandtop", x, z, 110, 2))
     if "foothill" in c.masks:
         st |= c.masks["foothill"]
     if "rim_talus" in c.masks:
@@ -205,7 +206,7 @@ def assign(c: Ctx):
         top[rm] = MAT["Slate"]
         top[rm & (nz.fbm("rimrock", x, z, 300, 2) > 0.2)] = MAT["Rock"]
         # Schnee nur auf flachen Flaechen (< 35 Grad): keine weissen Zickzack-Streifen
-        snowcap = rm & (H > 228.0 + 14.0 * nz.fbm("snowline", x, z, 120, 2)) & (sl < 35)
+        snowcap = rm & (H > 162.0 + 10.0 * nz.fbm("snowline", x, z, 90, 2)) & (sl < 35)
         top[snowcap] = MAT["Snow"]
     c.strata_slope = sl
 

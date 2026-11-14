@@ -158,7 +158,7 @@ def flat_s(c: Ctx, sl, sel, sval):
 
 
 def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nsteps=None, talus=1.0,
-         top_patch=None, base=None, record=True, gully=True, nv=None, rough=None, s_off=0.0):
+         top_patch=None, base=None, record=True, gully=True, nv=None, rough=None, s_off=0.0, wall_deg=8.0):
     """Geschichteter Tafelberg wie im Referenzbild: gestapelte Stufen mit flachen Baenken und fast senkrechten
     Waenden, jede Stufenkante ein abgerundetes Polygon. Stufen liegen auf Bandgrenzen (je Stufe 1-2 Streifen)."""
     rng = c.rng
@@ -228,7 +228,7 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     prev = base
     insvar = 1.0 + 0.15 * c.nz.fbm("insv", x, z, 90, 2)
     rmin = R / math.sqrt(aspect)
-    wws = [max(1.2, (lv - p) * TAN(8)) for lv, p in zip(levels, [base] + levels[:-1])]     # Waende >= 82 Grad
+    wws = [max(1.2, (lv - p) * TAN(wall_deg)) for lv, p in zip(levels, [base] + levels[:-1])]     # Waende >= 82 Grad
     if stage == "mesa" and not small:
         inss = [rng.uniform(9, 16) for _ in levels[:-1]]
         budget = 0.62 * rmin - sum(wws)
@@ -576,7 +576,7 @@ def butte_arch(c: Ctx, m, toward=(0.0, 0.0)):
 HOODOO_NECK = ["Sandstone", "Slate", "Sandstone", "Rock"]
 
 
-def hoodoo(c: Ctx, x0, z0, total, base=None, s_val=None):
+def hoodoo(c: Ctx, x0, z0, total, base=None, s_val=None, no_slate=False):
     """Schlanker Hoodoo: Fuss aus Hoehenkarte (Baender), Koerper als Zylinder-Stapel mit Hals/Wulst,
     Segmentfarben = Schichtband der absoluten Hoehe (Baender laufen ueber alle Hoodoos durch),
     Hut aus hartem Kalkstein, nur wenig breiter als der Hals."""
@@ -629,6 +629,8 @@ def hoodoo(c: Ctx, x0, z0, total, base=None, s_val=None):
         cx += lx * hseg
         cz += lz * hseg
         m = TERRAIN_MATERIALS[int(BAND_LUT[int(math.floor(yc + s_here + STRATA_BASE)) % STRATA_PERIOD])]
+        if no_slate and m == "Slate":
+            m = "Sandstone"           # Runde 2: Nadelgarten weniger magenta (Lavendel-Band -> Rose)
         op_cyl(c, cx, yc, cz, hseg + 0.8, rad, m)
     hat_r = max(6.5, rad * 1.55 + 1.0)                 # Runde 1: deutlich ueberstehender Kalk-Hut
     op_cyl(c, cx, y1 + hat_h / 2, cz, hat_h, hat_r, "Limestone")

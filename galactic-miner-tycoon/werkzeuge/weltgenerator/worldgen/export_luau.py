@@ -118,8 +118,9 @@ def export(world: World, out_dir: Path):
         rows = ["".join("1" if v else "0" for v in row) for row in m]
         body = ("-- Bauzonen-Raster: rows[iz] ist eine Zeichenkette, Zeichen ix (1-basiert) = \"1\" -> Bauzone.\n"
                 "-- Zellmitte: x = origin + (ix - 0.5) * cell, z = origin + (iz - 0.5) * cell. Hoehe per Raycast.\n"
-                "return {\n\tcell = %d,\n\tn = %d,\n\torigin = %s,\n\tmaxRadius = 1900,\n\trows = {\n%s\n\t},\n}\n"
-                % (bz["cell"], bz["n"], num(bz["origin"]), ",\n".join('\t\t"' + r + '"' for r in rows)))
+                "return {\n\tcell = %d,\n\tn = %d,\n\torigin = %s,\n\tmaxRadius = %s,\n\trows = {\n%s\n\t},\n}\n"
+                % (bz["cell"], bz["n"], num(bz["origin"]), num(bz.get("maxRadius", 950)),
+                   ",\n".join('\t\t"' + r + '"' for r in rows)))
         _write(data_dir / "BuildZones.luau", body)
 
     # --- Zusatzformen aus Terrain (Boegen, schwebende Felsen ...) ---
