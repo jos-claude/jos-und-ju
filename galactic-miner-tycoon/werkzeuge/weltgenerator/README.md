@@ -31,6 +31,19 @@ die umlaufenden Schichtstufen entfallen (flache Rampen statt Stufenringen, sonst
 Ring-Berge, Kaemme, Krater, Geoden, Salzpfannen weniger (Bauzonen je Ring >= 40 % im 16er-Export); dafuer kniehohe
 Gruppen in den Ebenen (`placement.field_clusters`). Unsichtbare Wand 32 Teile auf r 1012.
 
+**Runde 3 (feiner Teppich kleiner Torten-Buttes):** `compose.RING_SPEC` C 16 / D 13 / E 5 Formen, je Ring 2 Leitberge in
+alter Groesse (`big`), sonst kleine Trupps (Oe 36-70, Hoehe/Oe ~0,55-0,8, Begleiter Oe 22-36, kurze Halde `talus=0.4`,
+Trupp-eigener Schichtversatz `CAKE_BANDS`, damit Rose/Lavendel/Butter statt des Mud-Sockels sichtbar sind); keine
+Kamin-Saeulen mehr; 1 Mini-Butte in der Halde von L1a (`MINIS_B`, mehr druecken Ring B unter 41 %); Felsbaenke nur
+noch um das Plateau. `materials.BANDS`: 20 Baender, keines dicker als 16 (Periode 240, Mud-Sockel bleibt).
+`landforms.mesa`: Waende 3 Grad, kleine Mesas 3-4 / Buttes 2-3 Stufen, Einzug-Budget `MESA_SMALL_BUDGET`/`BUTTE_BUDGET`.
+Wegenetz `placement.sand_paths` (14 Sand-Linien 10-14 breit, Insel -> Wash oder Insel -> Insel, nur Material);
+Windfahnen nur noch ab Ring D (halb so breit). Haine: 9 Baeume (Mesa-Fuss 8), Leitbaum s 1,3-1,6, Kronen 3 Kugeln,
+1 Wurzel, LeafyGrass `#86CC52`. Neue Vorlagen `BoulderSoft_*` (Leitstueck der Feld-Gruppen, ohne Kollision) und
+`LavaRock_*` (Basalt + Neon-Naht, ~40 in Ring C an Vulkan/Lava, ohne Kollision); `RockNeedle_*` jetzt runde
+Hoodoo-Nadel (2 Zylinder + Kalk-Hut, 3 Teile). Atmosphere Offset 0,35 / `#CDB8DA`; Himmel: Horizont-Schimmer rundum
+und bis ~-8 Grad unter dem Horizont (`sky.SkySpec.horizon_glow_*`, mit `render_sky.py` neu gerendert).
+
 ## Benutzen
 ```bash
 python3 generate.py              # Welt erzeugen (Luau + Vorschau), ca. 10-15 s, druckt die Pruefwerte
@@ -54,7 +67,7 @@ Interaktiv: `out/` und `preview/` ueber einen beliebigen statischen Server aus d
 | `waterforms.py` | Teiche, Sinterterrassen, Salzpfannen, Geoden, Krater, Schwemmfaecher (Wasserboeden auf Vielfachen von 4) |
 | `fields.py` | Vulkan + Lavazungen, Duenen, Wave, Hochland E, Felsbaenke, Lufteinsprengsel |
 | `compose.py` | Reihenfolge und Platzierung aller Landformen (Sichtachsen, Gruppen, Slots) |
-| `materials.py` | Bandstapel (13 Baender, >= 8 Studs, `STRATA_BASE` 4 = Korall-Sockel auf Bodenhoehe), Bodenmaterial: Ground (Staub = Mischfarbe), Korall-Flecken (Mud), Sand in Washes/Faechern/Windfahnen (Lee, Az 70), Schutt (Rock) mit zerfasertem Rand, Ring-E-Uebergang; Kanaele S/D/W |
+| `materials.py` | Bandstapel (Runde 3: 20 Baender, 8-16 Studs, `STRATA_BASE` 4 = Korall-Sockel auf Bodenhoehe), Bodenmaterial: Ground (Staub = Mischfarbe), Korall-Flecken (Mud), Sand in Washes/Faechern/Windfahnen (Lee, Az 70), Schutt (Rock) mit zerfasertem Rand, Ring-E-Uebergang; Kanaele S/D/W |
 | `ecology.py` | Feuchte F, Mineral M, Schatten S (Vorgabe 5.1) |
 | `catalog.py`, `placement.py` | Deko-Vorlagen und Platzierung in Dichte-Inseln. Regeln (Review Stufe 1): matte Materialien (`Plaster`, `Sand`, `Wood`, `Grass`, Gestein, `Glass`, `Neon` nur fuer Lichter), **kein SmoothPlastic**, `Ellipsoid` nur fuer Nebel/Wolken; Kronen als Wolkenform mit dunklerer Unterseite; Moos ist **Terrain** (LeafyGrass/Grass-Flecken), Gras in Hainen kommt von `Terrain.Decoration`; Kiesel im Material des naechsten Felsens (Band in halber Wandhoehe), Brocken-Gruppen (`Boulder`) als mittlere Groesse; Hindernis-Deko nur in Deko-Inseln oder am Fels. Kristalle: kleine/mittlere/Titan aus **undurchsichtigem Glas** (Transparency 0, Handy-Budget) mit hellerer Spitze, Lit-Kristalle mit Neon-Spitze; nur Riesen-Kristalle durchsichtig mit Neon-Kern |
 | `checks.py` | Bauzonen je Ring, Flood-Fill, Wasser, Mulden, Plateau |
@@ -90,7 +103,7 @@ Interaktiv: `out/` und `preview/` ueber einen beliebigen statischen Server aus d
 - `PartDef.particles` (in `Templates.luau` als `particles = {...}` am Teil): Wunsch nach einem **ParticleEmitter** an diesem Teil, z. B. Dampf `{kind="steam", rate, lifetime={min,max}, size={start,end}, speed={min,max}, spread, color="#RRGGBB", transparency={start,end}, pulse={min,max}}` (`pulse` = alle 25-40 s kurz staerker). Benutzt von `SteamVent_*` (`kind="steam"`) und `MistEmitter` (`kind="mist"`, ruhige Nebel-Partikel in den Nebelbecken, unsichtbares Traegerteil).
 - `particles.kind = "smoke"` (Runde 1, `VolcanoPlume_*`): Rauchfahne des Vulkans, `{kind="smoke", rate=7, lifetime={14,22}, size={32,100}, speed={10,14}, spread=8, color="#D9CCD6", transparency={0.3,1}}` (Runde 2 groesser). Der Builder setzt dafuer die Rauch-Textur (`addParticles`, `cfg.kind == "smoke"`). Wuenschenswert zusaetzlich: `LightInfluence = 1`, leichter Wind (`Acceleration` ~ (2, 0, -0.7) Richtung Az 70).
 - Vorlage `VolcanoPlume_*` (Kategorie `Landmark`, Runde 1): unsichtbares Traegerteil (Partikel + PointLight 60/2) und 8 Neon-Keile als Glutrand am oberen Krater-Innenhang; Fusspunkt = Kraterboden-Mitte des grossen Vulkans. Funktioniert mit dem bestehenden Builder (bis auf die Rauch-Textur).
-- Vorlagen `BandBlock_<Material>_*` (Kategorie `Rock`, Runde 1): Schicht-Brocken 6-14 Studs (2 gestapelte Bloecke + Keil) in `Sandstone`/`Slate`/`Limestone` und Bandfarbe, ~120 an Tafelberg-Fuessen (nur auf Hindernis-Flaeche). `RockNeedle_*` (2 Teile, Schaft + Keil-Spitze, 11-22 Studs): ~40 im Nadelgarten.
+- Vorlagen `BandBlock_<Material>_*` (Kategorie `Rock`, Runde 1): Schicht-Brocken 6-14 Studs (2 gestapelte Bloecke + Keil) in `Sandstone`/`Slate`/`Limestone` und Bandfarbe, ~120 an Tafelberg-Fuessen (nur auf Hindernis-Flaeche). `RockNeedle_*` (Runde 3: 3 Teile, runder Schaft aus 2 Zylindern + Kalk-Hut, 10-20 Studs): ~50 im Nadelgarten.
 - Vorlagen `Boulder_*` (Kategorie `Rock`, 2-3 gedrehte Bloecke/Keile aus `Rock`) und `Pebble_<Material>_*` (Kugel/Keil/Block im Material des Bands: `Sandstone`, `Limestone`, `Slate`, `Mud`, `Rock`; Farbe = Bandfarbe 12 % dunkler, 15 % entsaettigt).
 - Vorlagen `Mist_*` (Kategorie `Mist`): Bodennebel-Schwaden aus 2-3 flachen Ellipsoiden (Hoehe <= 0,15 x Breite, Transparenz 0,88-0,94, ohne Schatten/Kollision), 2-8 Studs ueber Mulden, Teichen, Salzpfannen, Terrassen, Oasen, Nebelbecken und am Fuss des Randgebirges; nie auf dem Plateau (r < 130) oder in Washes; Runde 2: nicht an Teich/Quelle nahe der Basis.
 - Vorlage `EdgeBarrier` (Kategorie `Barrier`): unsichtbare Wand (Transparency 1, CanCollide true), Runde 2: 32 Stueck (je 200 breit) im Ring r 1012, Hoehe -60 bis 700. Funktioniert mit dem bestehenden Builder.

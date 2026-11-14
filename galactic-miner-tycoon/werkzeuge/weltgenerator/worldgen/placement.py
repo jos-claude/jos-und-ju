@@ -199,13 +199,14 @@ def variant_crystal(p, ring):
 
 
 def size_class(p, big=0.1):
-    """Groessenklassen 5:4:1 (klein 60-80 %, mittel 100 %, gross 130-160 %); big = Anteil der grossen."""
+    """Groessenklassen 5:4:1 (klein 60-80 %, mittel 100 %, gross 110-130 %); big = Anteil der grossen.
+    Runde 3: gross 1,1-1,3 statt 1,3-1,6 (Objektgroessen passen zur halb so grossen Insel)."""
     u = p.rng.uniform()
     if u < 0.5 * (1.0 - big) / 0.9:
         return p.rng.uniform(0.6, 0.8)
     if u < 1.0 - big:
         return p.rng.uniform(0.9, 1.1)
-    return p.rng.uniform(1.3, 1.6)
+    return p.rng.uniform(1.1, 1.3)
 
 
 # ------------------------------------------------------------------ Bausteine je Art
@@ -218,7 +219,7 @@ def grove_trees(p: Placer, isl, n, scale=1.0, lead=True, cool=False):
     if lead:
         for _ in range(40):
             x, z = cx + p.rng.uniform(-8, 8), cz + p.rng.uniform(-8, 8)
-            s = p.rng.uniform(1.9, 2.4) * scale
+            s = p.rng.uniform(1.3, 1.6) * scale          # Runde 3: Leitbaum 1,3-1,6 statt 1,9-2,4
             if p.ok_ground(x, z, 18) and p.free(x, z, 6 * s):
                 p.put("BalloonTree", x, z, s, variant_tree(p, ring), radius=5.0)
                 placed += 1
@@ -361,11 +362,15 @@ def moss_patch(c, x0, z0, R, h=0.0, core="LeafyGrass", rim="Grass", rng_seed=0):
 
 
 # ------------------------------------------------------------------ Themen
+GROVE_N = 9          # Runde 3: Baeume je Hain (vorher 18) - Zielbild: runde Wiesen mit 6-12 kleinen Ballonbaeumen
+MESA_FOOT_N = 8      # Runde 3: Baeume je Mesa-Fuss-Hain (vorher 12)
+
+
 def theme_grove(p, isl, big=1.0):
     c = p.c
     ring = isl["ring"]
     F = c.F
-    grove_trees(p, isl, int(round(18 * big)))
+    grove_trees(p, isl, int(round(GROVE_N * big)))      # Runde 3: 6-12 kleine Ballonbaeume je Wiese
     scatter(p, isl, "Noodle", int(18 * big), 2.2, cond=lambda iz, ix, x, z: 0.08 < F[iz, ix] < 0.6, rmin=0.4, rmax=1.25,
             var_fn=lambda: int(p.rng.choice(4, p=np.array(catalog.NOODLE_W) / 100)))
     scatter(p, isl, "Lantern", int(6 * big), 2.0, cond=lambda iz, ix, x, z: F[iz, ix] > 0.25, var_fn=_rv(p, 3))
@@ -417,7 +422,7 @@ def theme_pond(p, isl, water):
     lee_isl["x"] = water["x"] + LEE[0] * (water["R"] + 28)
     lee_isl["z"] = water["z"] + LEE[1] * (water["R"] + 28)
     lee_isl["R"] = 34
-    grove_trees(p, lee_isl, 9)
+    grove_trees(p, lee_isl, 7)
     scatter(p, isl, "Lantern", 10, 2.0, cond=lambda iz, ix, x, z: d[iz, ix] < 30, var_fn=_rv(p, 3), rmax=1.2)
     scatter(p, isl, "LanternLit", 1, 2.0, cond=lambda iz, ix, x, z: d[iz, ix] < 25, var_fn=_rv(p, 3))
     boulder_groups(p, isl, 3)
@@ -433,7 +438,7 @@ def theme_spring(p, isl):
 
 def theme_mesa_foot(p, isl):
     c = p.c
-    grove_trees(p, isl, 12)
+    grove_trees(p, isl, MESA_FOOT_N)
     scatter(p, isl, "Mushroom", 6, 2.5, cond=lambda iz, ix, x, z: c.S[iz, ix] > 0.3, var_fn=_rv(p, 4))
     scatter(p, isl, "Mushroom", 3, 2.5, var_fn=_rv(p, 4), rmin=0.7, rmax=1.15)     # Runde 1: Pilz-Saum
     scatter(p, isl, "Noodle", 14, 2.2, var_fn=lambda: int(p.rng.choice(4, p=np.array(catalog.NOODLE_W) / 100)), rmin=0.3, rmax=1.3)
@@ -449,8 +454,8 @@ def theme_hoodoo(p, isl):
     boulder_groups(p, isl, int(p.rng.integers(3, 7)))
     scatter(p, isl, "CrystalS", 2, 2, var_fn=lambda: variant_crystal(p, "B"), lean=False)
     scatter(p, isl, "CopperRock", 2, 5, s_fn=lambda: p.rng.uniform(0.7, 1.3), var_fn=lambda: 0, lean=False)
-    # Runde 1: schlanke Felsnadeln zwischen den Hoodoos (~10 je Gruppe, in kleinen Trupps)
-    scatter(p, isl, "RockNeedle", 10, 2.2, s_fn=lambda: p.rng.uniform(0.8, 1.35), var_fn=_rv(p, 4), lean=False,
+    # Runde 1: schlanke Felsnadeln zwischen den Hoodoos, in kleinen Trupps. Runde 3: 18 statt 10 je Gruppe
+    scatter(p, isl, "RockNeedle", 18, 2.8, s_fn=lambda: p.rng.uniform(0.8, 1.35), var_fn=_rv(p, 4), lean=False,
             sink=0.4, max_slope=26, allow_rock=True, rmax=1.15)
 
 
@@ -639,6 +644,8 @@ def plan_islands(p: Placer):
         iz, ix = c.idx(x, z)
         if c.wash_dist[iz, ix] < 25 or c.void[iz, ix] or any(math.hypot(x - i["x"], z - i["z"]) < 90 for i in p.islands):
             continue
+        if math.hypot(x, z) < RING_EDGES[2] + 30:
+            continue                # Runde 3: Ring-C-Hain bleibt in Ring C (Lee zeigt teils nach innen; Ring B ist knapp)
         p.island(x, z, 42, "mesa_foot", ground="grass")
         ncm += 1
     # Ring C: Oasen, Duenen-Haine, Bogen
@@ -704,8 +711,102 @@ def plan_islands(p: Placer):
                 c.H[sl] += np.where(dry & (dw > 14), A * ss(1.1, 0.05, q) * ss(14, 30, dw), 0.0)
     spring_pots(p)
     moss_terrain(p)
+    sand_paths(p)
     dz &= c.r > PLATEAU_FREE_R
     c.deco_zone_plan = dz
+
+
+def _seg_dist(x, z, pts):
+    """Abstand jedes Punkts (x, z) zur Polylinie pts (k x 2)."""
+    d = np.full(x.shape, np.inf)
+    for (ax, az), (bx, bz) in zip(pts[:-1], pts[1:]):
+        vx, vz = bx - ax, bz - az
+        L2 = vx * vx + vz * vz
+        t = np.clip(((x - ax) * vx + (z - az) * vz) / max(L2, 1e-9), 0, 1)
+        d = np.minimum(d, np.hypot(x - ax - t * vx, z - az - t * vz))
+    return d
+
+
+def sand_paths(p: Placer, n=14):
+    """Runde 3 (L3 Wegenetz, Zielbild: helle Pfade zwischen Hainen, Teichen und Washes): von Hain-/Teich-/Mesa-Fuss-
+    Inseln in Ring B-D je eine schmale Sand-Linie (Breite 10-14, leichtes Maeandern) zum naechsten Wash; ist der Weg
+    dorthin versperrt oder zu lang, zur naechsten Nachbar-Insel. Zusammen hoechstens n Linien.
+    Nur Material, keine Hoehe (Bauzonen bleiben). Nicht ueber Fels, Halden, Wasser, steile Stellen oder das Plateau."""
+    from scipy import ndimage as ndi
+    c = p.c
+    rng = np.random.default_rng(c.seed * 5303 + 17)      # eigener Zufall
+    wash = (c.wash_dist < -2.0) & ~c.void
+    if not wash.any():
+        return 0
+    _, (wz, wx) = ndi.distance_transform_edt(~wash, return_indices=True)
+    body = c.mask("mesa") | c.mask("spire") | c.mask("fin") | c.mask("hoodoo_foot") | c.mask("volcano")
+    rock = c.strata | body | c.mask("talus")
+    themes = ("grove", "pond", "mesa_foot", "spring", "oasis")
+    cand = [i for i in p.islands if i["theme"] in themes and RING_EDGES[1] <= math.hypot(i["x"], i["z"]) < RING_EDGES[4]]
+    cand.sort(key=lambda i: math.hypot(i["x"], i["z"]))
+    c.feat["path"] = []
+    linked = set()
+
+    def paint(x0, z0, x1, z1):
+        L0 = math.hypot(x1 - x0, z1 - z0)
+        if L0 < 12:
+            return False
+        ux, uz = (x1 - x0) / L0, (z1 - z0) / L0
+        k = max(6, int(L0 / 8))
+        t = np.linspace(0, 1, k + 1)
+        amp = min(12.0, 0.1 * L0) * rng.uniform(0.6, 1.0)
+        ph, fr = rng.uniform(0, 2 * math.pi), rng.uniform(0.8, 1.6)
+        off = amp * np.sin(2 * math.pi * fr * t + ph) * np.sin(math.pi * t)
+        pts = np.column_stack([x0 + (x1 - x0) * t - uz * off, z0 + (z1 - z0) * t + ux * off])
+        # nicht durch Felskoerper, Wasser oder ueber das Plateau (Halden duerfen gestreift werden, dort bleibt Schutt)
+        for (px, pz) in np.linspace(pts[0], pts[-1], max(8, int(L0 / 4)))[1:-1]:
+            jz, jx = c.idx(px, pz)
+            if body[jz, jx] or not np.isnan(c.wl[jz, jx]) or c.void[jz, jx] or math.hypot(px, pz) < PLATEAU_FREE_R + 10:
+                return False
+        hw = rng.uniform(10, 14) / 2
+        sl = c.win(pts[:, 0].mean(), pts[:, 1].mean(), L0 / 2 + hw + 16)
+        x, z = c.local(sl)
+        dist = _seg_dist(x, z, pts) + 1.6 * c.nz.fbm("pathedge", x, z, 14, 2)
+        m = (dist < hw) & ~c.void[sl] & np.isnan(c.wl[sl]) & ~rock[sl] & (c.slope[sl] < 14) & (c.r[sl] > PLATEAU_FREE_R + 8)
+        if m.sum() < 6:
+            return False
+        set_mat(c, sl, m, "Sand")
+        c.mask("path")[sl] |= m
+        c.feat["path"].append({"x0": float(x0), "z0": float(z0), "x1": float(x1), "z1": float(z1)})
+        return True
+
+    def edge(i, tx, tz, f=0.7):
+        dx, dz = tx - i["x"], tz - i["z"]
+        L = max(math.hypot(dx, dz), 1e-6)
+        return i["x"] + dx / L * i["R"] * f, i["z"] + dz / L * i["R"] * f
+
+    # 1) jede Insel zum naechsten Wash
+    for i in cand:
+        if len(c.feat["path"]) >= n:
+            break
+        iz, ix = c.idx(i["x"], i["z"])
+        tx, tz = cell_xz(wx[iz, ix], wz[iz, ix])
+        L = math.hypot(tx - i["x"], tz - i["z"])
+        if i["R"] * 0.9 <= L <= 240 and paint(*edge(i, tx, tz), tx, tz):
+            linked.add(id(i))
+    # 2) Netz: Inseln ohne Weg (danach alle) zur naechsten Nachbar-Insel (60-200 Studs)
+    for rnd in (0, 1):
+        for i in cand:
+            if len(c.feat["path"]) >= n:
+                break
+            if rnd == 0 and id(i) in linked:
+                continue
+            nb = sorted((j for j in cand if j is not i), key=lambda j: math.hypot(j["x"] - i["x"], j["z"] - i["z"]))
+            for j in nb[:3]:
+                d = math.hypot(j["x"] - i["x"], j["z"] - i["z"])
+                if not (60 <= d <= 200) or (id(i), id(j)) in linked or (id(j), id(i)) in linked:
+                    continue
+                x0, z0 = edge(i, j["x"], j["z"])
+                x1, z1 = edge(j, i["x"], i["z"])
+                if paint(x0, z0, x1, z1):
+                    linked.update({id(i), (id(i), id(j))})
+                    break
+    return len(c.feat["path"])
 
 
 def spring_pots(p: Placer, n=8):
@@ -860,7 +961,7 @@ def base_ring(p: Placer):
     clumps = 0
     hall = lambda x, z: abs(x) < 42 and 18 < z < 72          # Start-Halle (Jus Place) freihalten
     for _ in range(6000):
-        if clumps >= 48:
+        if clumps >= 32:                                  # Runde 3: 32 statt 48 Klumpen (Teile sparen)
             break
         a = rng.uniform(0, 360)
         r = rng.uniform(PLATEAU_R, 200) if rng.uniform() < 0.75 else rng.uniform(40, PLATEAU_R)
@@ -1069,7 +1170,7 @@ def field_clusters(p: Placer):
     Studs hoch), die Bauzonen bleiben also ganz. Nicht in Washes, Wasser, Deko-Inseln, auf dem Plateau."""
     c = p.c
     rng = np.random.default_rng(c.seed * 9203 + 41)      # eigener Zufall: aendert die uebrige Deko nicht
-    want = {"B": 70, "C": 110, "D": 100, "E": 55}
+    want = {"B": 85, "C": 135, "D": 115, "E": 55}      # Runde 3: etwas dichter (Teile-Budget frei, kein Hindernis)
     done = Counter()
     centers = []
     cg = defaultdict(list)
@@ -1113,6 +1214,20 @@ def field_clusters(p: Placer):
             kind = "tuft"
         n = int(rng.integers(3, 7))
         fam = variant_crystal(p, ring)
+        # Runde 3 (L5): je Gruppe ein lesbares Leitstueck ohne Kollision, <= 8 Studs hoch - Kristall (nur Ring C-E,
+        # Ring A/B hoechstens Mini-Kristalle) oder ein Brocken, bei dem auch der Hauptblock nicht kollidiert
+        if p.ok_ground(x, z, 16):
+            if kind == "crystal" and ring in "CDE":
+                t = p.groups["CrystalS"][int(rng.integers(0, len(p.groups["CrystalS"])))]
+                s = min(rng.uniform(1.4, 1.6), 8.0 / max(tmpl_top(t), 1.0))
+                if p.free(x, z, 1.4 * s):
+                    p.put("CrystalS", x, z, s, fam, tmpl=t, lean=False, sink=0.3, radius=1.4)
+            else:
+                t = p.groups["BoulderSoft"][int(rng.integers(0, len(p.groups["BoulderSoft"])))]
+                s = min(rng.uniform(1.2, 1.6), 8.0 / max(tmpl_top(t), 1.0))
+                if p.free(x, z, 1.9 * s):
+                    p.put("BoulderSoft", x, z, s, int(rng.integers(0, 3)), tmpl=t, lean=False, sink=0.25, radius=1.9,
+                          obstacle=False)
         for k in range(n * 3):
             if n <= 0:
                 break
@@ -1146,7 +1261,56 @@ def field_clusters(p: Placer):
                 n -= 2
             n -= 1
     c.feat["field_cluster"] = [{"x": x, "z": z} for x, z in centers]
+    lava_rocks(p)
     return len(centers)
+
+
+def tmpl_top(t):
+    """Hoechster Punkt einer Vorlage ueber dem Fusspunkt (s = 1)."""
+    top = 0.0
+    for q in t.parts:
+        sz = np.asarray(q.size, float)
+        if q.shape == "Ball":
+            ext = sz[0] / 2
+        else:
+            ext = 0.5 * float(np.abs(np.asarray(q.rot)[1, :]) @ sz)
+        top = max(top, q.pos[1] + ext)
+    return top
+
+
+def lava_rocks(p: Placer, target=40):
+    """Runde 3 (L5): ~40 Lava-Brocken (Basalt + gluehender Neon-Keil) in Gruepchen zu 2-4 in Ring C, am Fuss des
+    Vulkans und neben den Lavazungen. Kniehoch, ohne Kollision (Bauzonen bleiben)."""
+    from scipy import ndimage as ndi
+    c = p.c
+    rng = np.random.default_rng(c.seed * 6131 + 23)      # eigener Zufall
+    hot = c.mask("lava") | c.mask("volcano")
+    if not hot.any():
+        return 0
+    dist = ndi.distance_transform_edt(~hot) * CELL
+    cand = (dist > 3) & (dist < 36) & (c.r > RING_EDGES[2]) & (c.r < RING_EDGES[3]) & ~c.void & np.isnan(c.wl) \
+        & (c.slope < 14) & (c.wash_dist > 4)
+    iz, ix = np.nonzero(cand)
+    if not len(iz):
+        return 0
+    sel = rng.choice(len(iz), size=min(len(iz), 3000), replace=False)
+    n = 0
+    groups = []
+    for k in sel:
+        if n >= target:
+            break
+        x0, z0 = cell_xz(ix[k], iz[k])
+        if any((x0 - gx) ** 2 + (z0 - gz) ** 2 < 30 ** 2 for gx, gz in groups):
+            continue
+        groups.append((x0, z0))
+        for j in range(int(rng.integers(2, 5))):
+            x, z = (x0, z0) if j == 0 else (x0 + rng.normal(0, 4.0), z0 + rng.normal(0, 4.0))
+            s = rng.uniform(1.0, 1.4) if j == 0 else rng.uniform(0.6, 1.0)
+            if not p.ok_ground(x, z, 16, allow_rock=True) or not p.free(x, z, 2.2 * s):
+                continue
+            p.put("LavaRock", x, z, s, int(rng.integers(0, 2)), lean=False, sink=0.3, radius=2.2, obstacle=False)
+            n += 1
+    return n
 
 
 def band_blocks(p: Placer, target=120):

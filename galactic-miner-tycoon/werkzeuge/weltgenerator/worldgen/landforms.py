@@ -157,8 +157,12 @@ def flat_s(c: Ctx, sl, sel, sval):
     c.S_local_w[sl] = np.where(sel, 1.0, c.S_local_w[sl])
 
 
+MESA_SMALL_BUDGET = 0.32     # Runde 3: Einzug-Budget kleiner Mesas (x rmin)
+BUTTE_BUDGET = 0.3           # Runde 3: Einzug-Budget der Buttes (x rmin)
+
+
 def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nsteps=None, talus=1.0,
-         top_patch=None, base=None, record=True, gully=True, nv=None, rough=None, s_off=0.0, wall_deg=8.0):
+         top_patch=None, base=None, record=True, gully=True, nv=None, rough=None, s_off=0.0, wall_deg=3.0):
     """Geschichteter Tafelberg wie im Referenzbild: gestapelte Stufen mit flachen Baenken und fast senkrechten
     Waenden, jede Stufenkante ein abgerundetes Polygon. Stufen liegen auf Bandgrenzen (je Stufe 1-2 Streifen)."""
     rng = c.rng
@@ -178,14 +182,16 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     vx, vz = make_poly(c, cx, cz, max(R - rr, R * 0.5), aspect, rot, nv=nv or (int(rng.integers(6, 9)) if rough else None),
                        jitter=0.17 if rough else 0.07)
     d = poly_sdf(x, z, vx, vz) - rr
-    d = d + c.nz.fbm("mesaedge", x, z, 70, 2) * 1.3 + (c.nz.fbm("mesaedge2", x, z, 22, 2) * 2.2 if rough else 0.0)
+    # Runde 3: Rauheit mit der Groesse skalieren (kleine Buttes sonst sternfoermig/kegelig)
+    d = d + c.nz.fbm("mesaedge", x, z, 70, 2) * 1.3 + (c.nz.fbm("mesaedge2", x, z, 22, 2) * 2.2 * min(1.0, R / 22.0) if rough else 0.0)
     Hl = c.H[sl]
     if base is None:
         foot = d < 0
         base = float(np.percentile(Hl[foot], 35)) if foot.any() else float(c.h_at(cx, cz))
     sc = float(s_smooth(c, np.array(cx), np.array(cz))) + s_off
     if nsteps is None:
-        nsteps = (int(rng.integers(2, 5)) if R >= 50 else int(rng.integers(2, 4))) if stage == "mesa" else int(rng.integers(1, 3))
+        # Runde 3 (Torte statt Kuehlturm): kleine Mesas 3-4 Stufen, Buttes 2-3
+        nsteps = (int(rng.integers(2, 5)) if R >= 50 else int(rng.integers(3, 5))) if stage == "mesa" else int(rng.integers(2, 4))
     bounds = band_boundaries(base + height * 0.6, base + height * 1.15, sc, min_band=4)
     top = min(bounds, key=lambda b: abs(b[0] - (base + height)))[0] if bounds else base + height
     # aufeinanderfolgende Bandgrenzen von unten nach oben; Stufen < 7 Studs zusammenlegen
@@ -218,7 +224,7 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
         gw = cosv ** 2 * keep * has_fan      # breite, flache Schuttkegel nur unter einem Teil der Rinnen
         rmin0 = R / math.sqrt(aspect)
         g = g * ss(0.3 * rmin0, 0.65 * rmin0, np.hypot(x - cx, z - cz))   # Rinnen nur am Rand, keine Loecher oben
-        gd = rng.uniform(3.0, 4.5) if rough else rng.uniform(3.0, 6.0)
+        gd = rng.uniform(2.0, 3.0) * min(1.0, R / 22.0) if rough else rng.uniform(3.0, 6.0)   # Runde 3: flachere Rinnen
     else:
         g = np.zeros_like(s)
         gw = g
@@ -228,23 +234,26 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     prev = base
     insvar = 1.0 + 0.15 * c.nz.fbm("insv", x, z, 90, 2)
     rmin = R / math.sqrt(aspect)
-    wws = [max(1.2, (lv - p) * TAN(wall_deg)) for lv, p in zip(levels, [base] + levels[:-1])]     # Waende >= 82 Grad
+    wws = [max(1.2, (lv - p) * TAN(wall_deg)) for lv, p in zip(levels, [base] + levels[:-1])]     # Runde 3: Waende ~87 Grad
     if stage == "mesa" and not small:
         inss = [rng.uniform(9, 16) for _ in levels[:-1]]
         budget = 0.62 * rmin - sum(wws)
     elif stage == "mesa":
-        inss = [rng.uniform(4, 8) for _ in levels[:-1]]
-        budget = 0.4 * rmin - sum(wws)
+        # Runde 3: breitere Stufen-Baenke (Torte); Budget 0,32 x rmin statt der vorgeschlagenen 0,5: bei 4-Stud-Voxeln
+        # wird ein Oe-50-Berg mit 0,5 x rmin Einzug zum gestreiften Kegel, mit 0,32 bleibt er eine Trommel mit Absaetzen
+        inss = [rng.uniform(5, 9) for _ in levels[:-1]]
+        budget = MESA_SMALL_BUDGET * rmin - sum(wws)
     else:
-        inss = [rng.uniform(2, 4) for _ in levels[:-1]]
-        budget = 0.3 * rmin - sum(wws)
+        # Runde 3: Buttes mit sichtbaren Stufen-Baenken (vorher 2-4 / 0,3 x rmin -> bei 4-Stud-Voxeln unsichtbar)
+        inss = [rng.uniform(3, 5) for _ in levels[:-1]]
+        budget = BUTTE_BUDGET * rmin - sum(wws)
     if inss and sum(inss) > budget:                # Oberseite bleibt breit (keine Spitze)
         f = max(budget, 0.0) / sum(inss)
         inss = [v * f for v in inss]
     for i, lv in enumerate(levels):
         dh = lv - prev
         ww = wws[i]
-        s_eff = s - g * gd * (1.0 + 0.6 * i / max(1, len(levels) - 1))
+        s_eff = s - g * gd * (1.0 + (0.25 if rough else 0.6) * i / max(1, len(levels) - 1))
         ramp = np.clip((s_eff - inset * insvar) / ww, 0, 1)
         h = h + dh * ramp
         prev = lv

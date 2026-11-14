@@ -128,12 +128,13 @@ def band_pebble_color(hexc):
 
 # ------------------------------------------------------------------ Arten
 def crown(center, D, role, rng, full=True, mat="Sand"):
-    """Wolkenform: Hauptkugel + 2 Nebenkugeln (leicht unterhalb, ueberlappend) + dunklere Unterseiten-Kugel."""
+    """Wolkenform: Hauptkugel + 1 Nebenkugel (leicht unterhalb, ueberlappend) + dunklere Unterseiten-Kugel.
+    Runde 3: 3 statt 4 Kugeln (rundere Ballon-Kronen wie im Zielbild, Teile sparen)."""
     center = np.asarray(center, float)
     parts = [ball(center, D, role, mat)]
     if full:
         a0 = rng.uniform(0, 2 * math.pi)
-        for i in range(2):
+        for i in range(1):
             a = a0 + i * rng.uniform(2.2, 3.4)
             d = D * rng.uniform(0.55, 0.7)
             off = (D + d) / 2 * rng.uniform(0.65, 0.75)
@@ -150,8 +151,8 @@ def balloon_tree(rng, k):
     d0 = rng.uniform(0.95, 1.35)
     nseg = 4 if n_st < 3 else 3
     spread = rng.uniform(0, 2 * math.pi)
-    # Wurzeln: 3 kurze Zylinder, 40 Grad geneigt, halb im Boden
-    for i in range(3):
+    # Wurzeln: Runde 3 nur noch 1 kurzer Zylinder (40 Grad geneigt, halb im Boden), Teile sparen
+    for i in range(1):
         a = spread + i * 2.09 + rng.uniform(-0.3, 0.3)
         dr = np.array([math.cos(a) * math.cos(math.radians(40)), -math.sin(math.radians(40)), math.sin(a) * math.cos(math.radians(40))])
         L = rng.uniform(1.5, 2.5)
@@ -197,14 +198,15 @@ def noodle(rng, k):
         az = az0 + i * 2 * math.pi / n + rng.uniform(-0.3, 0.3)
         o = np.array([math.cos(az), 0, math.sin(az)])
         hh = H * rng.uniform(0.75, 1.15)
-        prof = [(0.0, 0.0), (0.1, 0.5), (0.34, 0.86), (0.52, 0.66)] if (i + k) % 2 == 0 else \
-               [(0.0, 0.0), (0.16, 0.42), (0.42, 0.72), (0.5, 0.48)]
+        # Runde 3 (Teile sparen): 2 statt 3 Segmente je Ranke, Endkugel bleibt
+        prof = [(0.0, 0.0), (0.12, 0.62), (0.46, 0.8)] if (i + k) % 2 == 0 else \
+               [(0.0, 0.0), (0.18, 0.52), (0.48, 0.62)]
         pts = [o * a * hh + UP * b * hh for a, b in prof]
         pts[0] = pts[0] - UP * 0.6                              # unterster Teil halb im Boden
-        for j in range(3):
-            parts.append(cyl(pts[j], pts[j + 1], (1.4 - 0.18 * j) * (0.9 if i else 1.0), "base" if j == 0 else "main", "Plaster"))
+        for j in range(2):
+            parts.append(cyl(pts[j], pts[j + 1], (1.4 - 0.22 * j) * (0.9 if i else 1.0), "base" if j == 0 else "main", "Plaster"))
         if i == 0:
-            parts.append(ball(pts[3], 1.6, "tip", "Plaster"))
+            parts.append(ball(pts[2], 1.6, "tip", "Plaster"))
     variants = [{"main": cc, "base": cooler(cc, 0.18), "tip": lighter(cc, 0.2)} for cc in NOODLE]
     return Template(f"Noodle_{k}", "Flora", parts, variants)
 
@@ -240,7 +242,7 @@ def crystal(rng, k, size="small", lit=False):
         b, L = rng.uniform(1.6, 2.6), rng.uniform(8, 14)
     else:
         b, L = rng.uniform(5, 8), rng.uniform(38, 60)
-    n = 3 + k % 3
+    n = (2 + k % 2) if size == "small" else 3 + k % 3        # Runde 3: kleine Kristalle 2-3 statt 3-5 Prismen
     parts = []
     az0 = rng.uniform(0, 2 * math.pi)
     for i in range(n):
@@ -261,7 +263,7 @@ def crystal(rng, k, size="small", lit=False):
                         collide=(size != "small" and i == 0), light=light, core=(giant and i == 0),
                         tip_mat="Neon" if (lit and not giant and i == 0) else None, tip=(giant or i == 0))
     # 1-2 Fussbrocken in Gesteinsfarbe: der Kristall waechst aus dem Fels
-    for j in range(1 + k % 2):
+    for j in range(1 if size == "small" else 1 + k % 2):     # Runde 3: kleine Kristalle nur 1 Fussbrocken
         a = az0 + 2.5 + j * 2.0
         rr = b * (1.1 + 0.4 * j)
         fs = b * rng.uniform(1.2, 1.8)
@@ -443,6 +445,31 @@ def boulder(rng, k):
     return Template(f"Boulder_{k}", "Rock", parts, [{"main": C("#BE9690")}, {"main": C("#C99E94")}, {"main": C("#B58C92")}])
 
 
+def boulder_soft(base: Template, k):
+    """Runde 3: Leitstueck der Feld-Gruppen - wie Boulder, aber ohne Kollision (auch der Hauptblock), kniehoch."""
+    from dataclasses import replace
+    parts = [replace(q, collide=False) for q in base.parts]
+    return Template(f"BoulderSoft_{k}", "Rock", parts, base.variants)
+
+
+def lava_rock(rng, k):
+    """Runde 3: Lava-Brocken (Ring C, Vulkan/Lavafelder): dunkler Basalt-Brocken + gluehender Neon-Keil im Spalt."""
+    sz = np.array([rng.uniform(3.4, 4.6), rng.uniform(2.2, 3.0), rng.uniform(3.0, 4.0)])
+    yaw = rng.uniform(0, math.pi)
+    R = angles(rng.uniform(-0.2, 0.2), yaw, rng.uniform(-0.2, 0.2))
+    parts = [block((0, sz[1] * 0.32, 0), tuple(sz), "main", R, "Basalt")]
+    if k % 2 == 0:
+        s2 = sz * np.array([0.6, 0.75, 0.65])
+        a = yaw + rng.uniform(0.8, 1.6)
+        parts.append(wedge((math.cos(a) * sz[0] * 0.45, s2[1] * 0.35, math.sin(a) * sz[0] * 0.45), tuple(s2), "main",
+                           rot_y(-a), "Basalt"))
+    # gluehende Naht quer ueber die Oberseite (Keil ragt ~1/4 seiner Hoehe aus dem Brocken)
+    parts.append(wedge((0.0, sz[1] * 0.32 + sz[1] * 0.42, 0.0), (sz[0] * 0.3, sz[1] * 0.5, sz[2] * 0.95), "glow", R, "Neon",
+                       cast_shadow=False))
+    return Template(f"LavaRock_{k}", "Rock", parts, [{"main": C("#3E3440"), "glow": C("#FF8A3D")},
+                                                     {"main": C("#463A48"), "glow": C("#FF9A4A")}])
+
+
 def band_block(rng, k, mat):
     """Runde 1: Felsbrocken aus dem Schichtstapel (6-14 Studs bei s 0,7-1,5): zwei gestapelte Bloecke + Keil im
     Material und in der Farbe des Bands (Mittelgroesse zwischen Kiesel/Brocken und Tafelberg, Zielbild-Mittelfeld)."""
@@ -464,19 +491,26 @@ def band_block(rng, k, mat):
     return Template(f"BandBlock_{mat}_{k}", "Rock", parts, variants)
 
 
-NEEDLE = [(C("#EEA0A2"), C("#F4D49A")), (C("#D2AACE"), C("#F2B6B8")), (C("#F1CF94"), C("#DDB6DA")),
-          (C("#E896A8"), C("#F6E0B0"))]
+# Runde 3: Koerper Kalk/Lavendel (unten/oben je ein Band), Hut Kalk-Creme
+NEEDLE = [(C("#D2AACE"), C("#F1CF94"), C("#F6E2B4")), (C("#F1CF94"), C("#D8B2D4"), C("#F7E7C2")),
+          (C("#DDB6DA"), C("#EEA0A2"), C("#F4D49A")), (C("#E9C68E"), C("#CDA6CC"), C("#F8E8C4"))]
 
 
 def rock_needle(rng, k):
-    """Runde 1: schlanke Felsnadel fuer den Nadelgarten (2 Teile): gedrehter Schaft + Keil-Spitze, 11-22 Studs."""
-    H = rng.uniform(9, 17)
-    b = rng.uniform(2.6, 3.4)
-    tilt = angles(rng.uniform(-0.05, 0.05), math.pi / 4 + rng.uniform(-0.2, 0.2), rng.uniform(-0.05, 0.05))
-    parts = [block((0, H / 2 - 0.6, 0), (b, H, b), "body", tilt, "Sandstone", collide=True)]
-    th = rng.uniform(3.5, 5.5)
-    parts.append(wedge((0, H - 0.6 + th / 2 - 0.1, 0), (b * 0.9, th, b * 0.9), "tip", tilt, "Limestone"))
-    variants = [{"body": body, "tip": tip} for body, tip in NEEDLE]
+    """Runde 3: Hoodoo-Nadel wie im Zielbild (3 Teile): runder Schaft aus 2 Zylindern (oben 0,65 x so dick, anderes
+    Band) + flacher, ueberstehender Kalk-Hut. 10-17 Studs."""
+    H = rng.uniform(9, 15)
+    b = rng.uniform(2.8, 3.6)
+    h1 = H * rng.uniform(0.5, 0.62)
+    lean = rng.uniform(0, 2 * math.pi)
+    tilt = math.radians(rng.uniform(1, 4))
+    top = np.array([math.cos(lean) * math.sin(tilt) * H, H, math.sin(lean) * math.sin(tilt) * H])
+    mid = top * (h1 / H)
+    parts = [cyl((0, -0.8, 0), mid + UP * 0.2, b, "body", "Limestone", collide=True),
+             cyl(mid - UP * 0.1, top, b * 0.65, "body2", "Limestone")]
+    th = rng.uniform(1.1, 1.6)
+    parts.append(cyl(top - UP * 0.15, top + UP * th, b * rng.uniform(1.25, 1.5), "tip", "Limestone"))
+    variants = [{"body": body, "body2": body2, "tip": tip} for body, body2, tip in NEEDLE]
     return Template(f"RockNeedle_{k}", "Rock", parts, variants)
 
 
@@ -618,6 +652,7 @@ def build_catalog(rng):
         "Mushroom": [add(mushroom(rng, k)) for k in range(4)],
         "OrganPipe": [add(organ_pipe(rng, k)) for k in range(4)],
         "Boulder": [add(boulder(rng, k)) for k in range(4)],
+        "LavaRock": [add(lava_rock(np.random.default_rng(4410 + k), k)) for k in range(3)],
         "SteamVent": [add(steam_vent(rng, k)) for k in range(2)],
         "Reeds": [add(reeds(rng, k)) for k in range(4)],
         "PearlCactus": [add(pearl_cactus(rng, k)) for k in range(3)] + [add(pearl_cactus(rng, 3, True))],
@@ -631,4 +666,5 @@ def build_catalog(rng):
         "EdgeBarrier": [add(edge_barrier())], "TitanVein": [add(titan_vein_segment())],
         "Mist": [add(mist(rng, k)) for k in range(4)], "MistEmitter": [add(mist_emitter())],
     }
+    groups["BoulderSoft"] = [add(boulder_soft(tp, k)) for k, tp in enumerate(groups["Boulder"])]
     return t, groups

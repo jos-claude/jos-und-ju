@@ -6,6 +6,8 @@
 - **Status:** offen
 - **Meilenstein:** M1
 
+> **Nachtrag 14.11. (Jos' Claude):** Die 6 Bilder wurden in Runde 3 neu gerendert (Horizont ohne dunkles Band). Bitte die aktuelle Version aus `assets/himmel/` hochladen.
+
 ## Ziel
 Der Weltraum-Himmel von Insel 1 (Saturn, Monde, Nebelband) ist im Place zu sehen statt des blauen Roblox-Standardhimmels.
 

@@ -7,7 +7,7 @@ import numpy as np
 
 from . import fields, landforms as lf, terrain, waterforms as wf
 from .ctx import Ctx
-from .layout import PLATEAU_R, ang_diff, pol, sr
+from .layout import PLATEAU_FREE_R, PLATEAU_R, STRATA_BASE, STRATA_PERIOD, ang_diff, pol, sr
 from .materials import s_smooth
 from .noise import smoothstep as ss
 
@@ -222,20 +222,29 @@ def hoodoo_garden(c: Ctx):
         return not (claimed[sl_] & ~bench_claim[sl_] & circ_).any()
 
     # Runde 2: 3 Gruppen unterschiedlicher Groesse (R 24-54) auf 1/4 der Flaeche statt 6 gleich grosser
-    groups = []
-    tries = 0
     radii = [rng.uniform(46, 54), rng.uniform(32, 40), rng.uniform(24, 30)]
-    while len(groups) < len(radii) and tries < 3000:
-        tries += 1
-        ga = a0 + rng.uniform(-40, 38)
-        gr = rng.uniform(sr(385) - 10, sr(615) + 5)
-        gx, gz = pol(ga, gr)
-        grad_ = radii[len(groups)]
-        if any(math.hypot(gx - q[0], gz - q[1]) < grad_ + q[2] + 26 for q in groups):
-            continue
-        if not hoodoo_free(gx, gz, 22):
-            continue
-        groups.append((gx, gz, grad_))
+    # Runde 3: bis zu 12 Anlaeufe, bis alle 3 Gruppen Platz haben (die freie Flaeche ist knapp; ein ungluecklich
+    # gesetzter erster Trupp liess sonst die dritte Gruppe ausfallen)
+    best = []
+    for _attempt in range(12):
+        groups = []
+        tries = 0
+        while len(groups) < len(radii) and tries < 3000:
+            tries += 1
+            ga = a0 + rng.uniform(-40, 38)
+            gr = rng.uniform(sr(385) - 10, sr(615) + 5)
+            gx, gz = pol(ga, gr)
+            grad_ = radii[len(groups)]
+            if any(math.hypot(gx - q[0], gz - q[1]) < grad_ + q[2] + 26 for q in groups):
+                continue
+            if not hoodoo_free(gx, gz, 22):
+                continue
+            groups.append((gx, gz, grad_))
+        if len(groups) > len(best):
+            best = groups
+        if len(best) == len(radii):
+            break
+    groups = best
     count = 0
     area = sum(g[2] ** 2 for g in groups) or 1.0
 
@@ -306,6 +315,10 @@ def hoodoo_garden(c: Ctx):
 
 
 # ------------------------------------------------------------------ Tafelberg-Gruppen je Ring
+# Runde 3: Startpunkte (y_eff am Fuss) fuer kleine Trupps: Rose-Lavendel-Butter, Rose-Lavendel-Butter-Lavendel,
+# Rose-Butter-Rose-Lavendel, Butter-Lavendel-Rose (siehe materials.BANDS)
+CAKE_BANDS = (17.0, 119.0, 167.0, 45.0)
+MINIS_B = 1                 # Runde 3: Mini-Buttes in den Halden von L1a/L0/L1b; je weiterer Mini faellt Ring B unter 41 %
 RING_SPEC = {
     # n Berge, r-Bereich, Leit-Durchmesser, Hoehe ueber Umland
     # Runde 2 (Entscheidung 022): Radien x 0,5, Bergzahl ~0,6 x (Flaeche nur noch 1/4, Bauzonen >= 40 % je Ring),
@@ -314,9 +327,12 @@ RING_SPEC = {
     # Runde 1: Mittelfeld dichter (B 9 -> 13, C 8 -> 12). Runde 2: Ring B ist mit den Landmarken (Saturn-Tor, Abendbank,
     # Zwillingstuerme, Nadelgarten, Teich, Quelle) schon voll -> nur 3 kleine Mesas mit kleinen Begleitern
     "B": dict(n=0, r=(sr(310), sr(590)), lead=(44, 70), h=(30, 70), comp=(20, 36)),
-    "C": dict(n=8, r=(sr(640), sr(1070)), lead=(70, 125), h=(30, 80)),
-    "D": dict(n=6, r=(sr(1150), sr(1480)), lead=(60, 110), h=(45, 100)),
-    "E": dict(n=3, r=(sr(1620), sr(1840)), lead=(50, 90), h=(35, 80)),
+    # Runde 3 (Zielbild: feiner Teppich vieler kleiner Torten-Buttes): je Ring 2 Leitberge in alter Groesse ("big"),
+    # alle weiteren Gruppen klein (Oe 36-70, Hoehe/Oe 0,5-0,8), in Trupps zu 2-5, Abstand ~1-1,5 Oe
+    # Begleiter Oe >= 22 (vorgeschlagen 16-28): kleiner zerfallen sie bei 4-Stud-Voxeln zu Kegeln
+    "C": dict(n=16, r=(sr(640), sr(1070)), lead=(36, 60), h=(16, 36), comp=(22, 32), big=dict(lead=(70, 125), h=(30, 80))),
+    "D": dict(n=13, r=(sr(1150), sr(1480)), lead=(40, 70), h=(20, 45), comp=(24, 36), big=dict(lead=(60, 110), h=(45, 100))),
+    "E": dict(n=5, r=(sr(1620), sr(1840)), lead=(40, 70), h=(20, 45), comp=(24, 36), big=dict(lead=(50, 90), h=(35, 80))),
 }
 
 
@@ -326,6 +342,7 @@ def mesa_groups(c: Ctx, ring, sector=None):
     placed = 0
     tries = 0
     r0, r1 = spec["r"]
+    leads = 0
     while placed < spec["n"] and tries < 900:
         tries += 1
         r = math.sqrt(rng.uniform(r0 * r0, r1 * r1))
@@ -335,32 +352,60 @@ def mesa_groups(c: Ctx, ring, sector=None):
         if sight_block(a, r):
             continue
         gx, gz = pol(a, r)
-        lead_d = rng.uniform(*spec["lead"]) * (0.7 if rng.uniform() < 0.4 else 1.0)
+        # Runde 3: die ersten 2 Leitberge je Ring in alter Groesse, danach kleine Torten-Buttes
+        big = "big" in spec and leads < 2
+        if big or "big" not in spec:
+            sp_lead, sp_h = (spec["big"]["lead"], spec["big"]["h"]) if big else (spec["lead"], spec["h"])
+            lead_d = rng.uniform(*sp_lead) * (0.7 if rng.uniform() < 0.4 else 1.0)
+        else:
+            sp_h = spec["h"]
+            lead_d = rng.uniform(*spec["lead"])
+        small = "big" in spec and not big
         # Runde 2: weichere Pruefung - der Berg selbst braucht freien Grund, sein Rand darf in den Anspruchs-Saum
         # anderer Formen reichen (nicht in deren Fels). Sonst passt bei 1/4 der Flaeche kaum noch ein Berg.
         if r - lead_d * 0.62 - 10 < PLATEAU_R + 8:
             continue
         if not _free_soft(c, gx, gz, lead_d * 0.45, lead_d * 0.62 + 10, wash_margin=16):
             continue
-        hgt = rng.uniform(*spec["h"])
+        if small:
+            # Hoehe/Oe ~0,5-0,8 wie im Zielbild (keine Kuehltuerme)
+            hgt = float(np.clip(lead_d * rng.uniform(0.55, 0.8), max(sp_h[0], 22.0), sp_h[1]))
+        else:
+            hgt = rng.uniform(*sp_h)
         claimed = c.mask("claimed")
         before = claimed.copy()
-        lf.mesa(c, gx, gz, lead_d, hgt, stage="mesa", top_patch=_patch(c, ring))
+        s_off = 0.0
+        if small:
+            # Runde 3: Trupp-eigener Schichtversatz (wie im Nadelgarten): der Fuss liegt nicht im roten Mud-Sockel,
+            # sichtbar sind 3-4 bunte Baender (Rose/Lavendel/Butter) -> Torte
+            tgt = CAKE_BANDS[int(rng.integers(0, len(CAKE_BANDS)))]
+            s_off = (tgt - (float(c.h_at(gx, gz)) + STRATA_BASE + float(s_smooth(c, np.array(gx), np.array(gz))))) % STRATA_PERIOD
+            lf.mesa(c, gx, gz, lead_d, hgt, stage="mesa", top_patch=_patch(c, ring), talus=0.4, s_off=s_off)
+        else:
+            lf.mesa(c, gx, gz, lead_d, hgt, stage="mesa", top_patch=_patch(c, ring))
         placed += 1
-        # Begleiter: Runde 1 mehr (2-3), kleiner (Oe 26-55) und naeher (22-60) -> Gruppen statt Einzelberge;
-        # selten eine Kamin-Saeule (10 %)
-        # (Ring D/E: alte Werte, dort ist kein Mittelfeld und die Bauzonen sind knapp)
+        leads += 1
+        # Begleiter: Runde 1 mehr (2-3), kleiner (Oe 26-55) und naeher (22-60) -> Gruppen statt Einzelberge.
+        # Runde 3: keine Kamin-Saeulen mehr (wirkten wie Kuehltuerme); kleine Gruppen = Trupps zu 2-5, dicht beisammen
+        # (Abstand Mitte-Mitte ~1-1,5 Oe), Begleiter mit Hoehe/Oe 0,6-0,95 und kurzer Halde
+        # (Ring D/E bei den Leitbergen: alte Werte, dort ist kein Mittelfeld und die Bauzonen sind knapp)
         mid = ring in ("A", "B", "C")
-        ncomp = int(rng.integers(2, 4)) if mid else int(rng.integers(1, 3))
+        if small:
+            ncomp = int(rng.integers(1, 5))
+        else:
+            ncomp = int(rng.integers(2, 4)) if mid else int(rng.integers(1, 3))
         for k in range(ncomp):
             if placed >= spec["n"]:
                 break
             for _ in range(20):
                 ang = rng.uniform(0, 2 * math.pi)
-                spire_ = rng.uniform() < 0.10
                 d_rng = spec.get("comp", (26, 55) if mid else (42, 75))
-                d = rng.uniform(*d_rng) if not spire_ else rng.uniform(12, 20)
-                dist = lead_d / 2 + d / 2 + (rng.uniform(22, 60) if mid else rng.uniform(36, 95))
+                d = rng.uniform(*d_rng)
+                if small:
+                    gap = rng.uniform(4, 0.45 * (lead_d + d) / 2 + 6)
+                else:
+                    gap = rng.uniform(22, 60) if mid else rng.uniform(36, 95)
+                dist = lead_d / 2 + d / 2 + gap
                 bx, bz = gx + dist * math.cos(ang), gz + dist * math.sin(ang)
                 br = math.hypot(bx, bz)
                 ba = math.degrees(math.atan2(bx, -bz)) % 360
@@ -370,14 +415,60 @@ def mesa_groups(c: Ctx, ring, sector=None):
                 # verschmelzen), aber nicht im Fels eines anderen Bergs
                 if not _free_in_group(c, bx, bz, d * 0.7 + 12, d * 0.5 + 6, claimed & ~before, wash_margin=16):
                     continue
-                if spire_:
-                    lf.spire(c, bx, bz, d, rng.uniform(3, 6), rng.uniform(34, 95) * (0.7 if ring == "A" else 1.0))
+                if "big" in spec:
+                    # >= 2 Baender hoch (4-Stud-Voxel), sonst wirkt der Begleiter wie ein Erdhuegel
+                    bh = max(19.0, d * rng.uniform(0.7, 1.0))
+                    so = 0.0
+                    if small:
+                        # gleicher Stapel wie der Leitberg (Baender laufen im Trupp durch)
+                        so = (s_off + float(s_smooth(c, np.array(gx), np.array(gz))) + float(c.h_at(gx, gz))
+                              - float(s_smooth(c, np.array(bx), np.array(bz))) - float(c.h_at(bx, bz))) % STRATA_PERIOD
+                    lf.mesa(c, bx, bz, d, bh, stage="butte", talus=0.4, s_off=so)
                 else:
                     bh = min(d / rng.uniform(0.55, 0.95), spec["h"][1] * 1.1)
                     lf.mesa(c, bx, bz, d, bh, stage="butte")
                 placed += 1
                 break
     return placed
+
+
+def ring_b_minis(c: Ctx, n_max=3):
+    """Runde 3: 2-3 Mini-Buttes (Oe 22-32) als Begleiter in der Halde von Saturn-Tor (L1a/L1b) und Abendbank (L0).
+    Stehen auf der eigenen Halde der Landmarke (kostet kaum Bauzone), nie im Wash, im Tor oder vor der Basis."""
+    rng = c.rng
+    lm = {f["key"]: f for f in c.feat["landmark"]}
+    done = 0
+    for key in ("L1a", "L0", "L1b"):
+        if done >= n_max or key not in lm:
+            continue
+        f = lm[key]
+        ms = [m for m in c.feat["mesa"] if math.hypot(m["x"] - f["x"], m["z"] - f["z"]) < 2.0]
+        if not ms:
+            continue
+        m = ms[0]
+        for _ in range(60):
+            d = rng.uniform(24, 32)
+            ang = rng.uniform(0, 2 * math.pi)
+            dist = m["R"] * rng.uniform(0.75, 0.95) + d / 2 + rng.uniform(0, 6)
+            x, z = m["x"] + dist * math.cos(ang), m["z"] + dist * math.sin(ang)
+            r = math.hypot(x, z)
+            a = math.degrees(math.atan2(x, -z)) % 360
+            # nach aussen (nicht zwischen Landmarke und Basis), nicht in Sichtachsen
+            if r < math.hypot(m["x"], m["z"]) + 4 or r - d / 2 - 12 < PLATEAU_FREE_R + 30 or sight_block(a, r):
+                continue
+            sl, circ = _circle(c, x, z, d * 0.5 + 8)
+            if c.void[sl][circ].any() or (c.wash_dist[sl][circ] < 14).any() or (~np.isnan(c.wl[sl]) & circ).any():
+                continue
+            slb, cb = _circle(c, x, z, d * 0.5 + 2)
+            if (c.mask("mesa")[slb] & cb).any() or (c.mask("spire")[slb] & cb).any():
+                continue
+            # Mitte muss auf der Halde der Landmarke liegen (Halden verschmelzen)
+            if not c.mask("talus")[c.idx(x, z)] and not c.obstacle[c.idx(x, z)]:
+                continue
+            lf.mesa(c, x, z, d, max(19.0, d * rng.uniform(0.7, 0.9)), stage="butte", talus=0.4, nsteps=2)
+            done += 1
+            break
+    return done
 
 
 def _free_soft(c: Ctx, x, z, rad_core, rad, wash_margin=16.0):
@@ -912,8 +1003,10 @@ def build_landforms(c: Ctx):
         counts["mesas_" + ring] = mesa_groups(c, ring, sector)
     c.stage("mesas_C")
     counts["mesas_C"] = ring_c_mesas(c)
+    c.stage("minis_B")
+    counts["minis_B"] = ring_b_minis(c, MINIS_B)
     c.stage("spires")
-    counts["spires"] = spires(c, 5)
+    counts["spires"] = spires(c, 0)        # Runde 3: keine Kamin-Saeulen (Kuehlturm-Look)
     c.stage("ring_e")
     counts["ribs_E"], counts["spires_E"] = ring_e_features(c)
     counts["niches"], counts["butte_arches"] = niches_and_arches(c)

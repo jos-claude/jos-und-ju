@@ -764,7 +764,10 @@ class SkySpec:
     horizon_glow: str = "#F2A07C"
     horizon_glow_alpha: float = 0.25
     horizon_glow_height: float = 6.0
-    horizon_glow_az: tuple = (180.0, 320.0)
+    # Runde 3 (Horizont): Schimmer auf dem ganzen Kreis (vorher Az 180-320) und bis ~-8 Grad unter den Horizont, in
+    # der Farbe der Atmosphaere (Lighting.Atmosphere.Color) -> kein dunkles Void-Band hinter dem Randgebirge
+    horizon_glow_az: tuple = (0.0, 360.0)
+    horizon_glow_below: str = "#CDB8DA"
     sun_disc_deg: float = 2.0
     sun_glow_deg: float = 12.0
     sun_glow: str = "#FFB070"
@@ -1084,17 +1087,22 @@ class SkyModel:
         col += st * (ext * (1.0 - 0.65 * dust))[:, None]
         # Horizont-Gluehen (Pfirsich) zwischen Az 180 und 320
         a0, a1 = sp.horizon_glow_az
-        w_az = smoothstep(a0, a0 + 30.0, az) * (1 - smoothstep(a1 - 30.0, a1, az))
+        if a1 - a0 >= 360.0:
+            w_az = np.ones_like(az)
+        else:
+            w_az = smoothstep(a0, a0 + 30.0, az) * (1 - smoothstep(a1 - 30.0, a1, az))
         sun_az = az_el_from_dir(self.sun_dir)[0]
         daz = np.abs((az - sun_az + 180.0) % 360.0 - 180.0)
         w_az = w_az * (0.75 + 0.25 * np.exp(-(daz / 35.0) ** 2))
         h = sp.horizon_glow_height
         e = el - 0.6
+        # unter dem Horizont: kraeftiger (bis 2,2-fach), haelt bis -4 Grad und laeuft bis -14 Grad aus (-8: ~0,36)
         w_el = np.where(e >= 0, np.exp(-e / (h * 0.40)) * (0.82 + 0.18 * np.exp(-e / 0.8)),
-                        np.exp(-0.5 * (e / 2.2) ** 2))
-        ga = sp.horizon_glow_alpha * w_az * w_el
-        glow = hex_lin(sp.horizon_glow)
-        col = col * (1 - ga[:, None]) + glow[None, :] * ga[:, None]
+                        (1.0 + 1.2 * smoothstep(0.0, -3.0, e)) * (1.0 - smoothstep(-4.0, -14.0, e)))
+        ga = np.clip(sp.horizon_glow_alpha * w_az * w_el, 0.0, 0.9)
+        tb = smoothstep(0.0, -4.0, e)[:, None]
+        glow = hex_lin(sp.horizon_glow)[None, :] * (1 - tb) + hex_lin(sp.horizon_glow_below)[None, :] * tb
+        col = col * (1 - ga[:, None]) + glow * ga[:, None]
         # Sonnen-Glow bis 12 Grad (+ breiter, sehr schwacher Hof)
         ang_s = np.degrees(np.arccos(np.clip(d @ self.sun_dir, -1, 1)))
         r = sp.sun_disc_deg / 2.0

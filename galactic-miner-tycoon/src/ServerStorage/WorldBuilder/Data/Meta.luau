@@ -35,7 +35,11 @@ return {
 			},
 			{
 				"Sandstone",
-				28,
+				14,
+			},
+			{
+				"Slate",
+				14,
 			},
 			{
 				"Limestone",
@@ -43,11 +47,19 @@ return {
 			},
 			{
 				"Slate",
-				24,
+				12,
 			},
 			{
 				"Sandstone",
-				20,
+				12,
+			},
+			{
+				"Mud",
+				10,
+			},
+			{
+				"Sandstone",
+				10,
 			},
 			{
 				"Limestone",
@@ -59,7 +71,11 @@ return {
 			},
 			{
 				"Sandstone",
-				26,
+				13,
+			},
+			{
+				"Slate",
+				13,
 			},
 			{
 				"Limestone",
@@ -67,7 +83,11 @@ return {
 			},
 			{
 				"Slate",
-				28,
+				14,
+			},
+			{
+				"Sandstone",
+				14,
 			},
 			{
 				"Limestone",
@@ -75,11 +95,19 @@ return {
 			},
 			{
 				"Sandstone",
-				24,
+				12,
+			},
+			{
+				"Slate",
+				12,
 			},
 			{
 				"Mud",
-				24,
+				12,
+			},
+			{
+				"Sandstone",
+				12,
 			},
 		},
 	},
@@ -96,7 +124,7 @@ return {
 		Basalt = Color3.fromRGB(74, 61, 80),
 		CrackedLava = Color3.fromRGB(255, 176, 122),
 		Grass = Color3.fromRGB(162, 216, 96),
-		LeafyGrass = Color3.fromRGB(92, 196, 164),
+		LeafyGrass = Color3.fromRGB(134, 204, 82),
 		Snow = Color3.fromRGB(246, 240, 242),
 		Ice = Color3.fromRGB(207, 230, 238),
 		Glacier = Color3.fromRGB(169, 216, 232),
@@ -127,8 +155,8 @@ return {
 		},
 		Atmosphere = {
 			Density = 0.17,
-			Offset = 0.2,
-			Color = Color3.fromRGB(226, 182, 196),
+			Offset = 0.35,
+			Color = Color3.fromRGB(205, 184, 218),
 			Decay = Color3.fromRGB(124, 106, 160),
 			Glare = 0.25,
 			Haze = 1,

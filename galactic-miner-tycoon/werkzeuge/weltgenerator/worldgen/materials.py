@@ -6,15 +6,18 @@ import math
 import numpy as np
 
 from .ctx import Ctx
-from .layout import DIP_DEG, LEE_DIR, PLATEAU_R, STRATA_BASE, STRATA_PERIOD, sr
+from .layout import DIP_DEG, LEE_DIR, PLATEAU_R, RING_EDGES, STRATA_BASE, STRATA_PERIOD, sr
 from .noise import smoothstep as ss
 from .world import CELL, MAT, N, STRATA_FLAG, VOID, World
 
 # Schichtband-Stapel, Periode 240, y_eff = y + STRATA_BASE + S (Review "ein Gesteinsstapel, drei Zustaende"):
-# 13 Baender, 4 warme Farbfamilien (Rose, Lavendel-Rose, Korall, Butter), mindestens 8 Studs, kein Mint und kein Weiss.
+# 4 warme Farbfamilien (Rose, Lavendel-Rose, Korall, Butter), mindestens 8 Studs, kein Mint und kein Weiss.
+# Runde 3 (Torte statt Kuehlturm): kein Band dicker als 16 - die 20-28er-Baender sind je in zwei Haelften mit
+# Farbwechsel geteilt (20 Baender); Periode 240 und der Korall-Sockel (Mud 16 auf Bodenhoehe) bleiben.
 BANDS = [
-    ("Mud", 16), ("Sandstone", 28), ("Limestone", 10), ("Slate", 24), ("Sandstone", 20), ("Limestone", 8),
-    ("Mud", 12), ("Sandstone", 26), ("Limestone", 8), ("Slate", 28), ("Limestone", 12), ("Sandstone", 24), ("Mud", 24),
+    ("Mud", 16), ("Sandstone", 14), ("Slate", 14), ("Limestone", 10), ("Slate", 12), ("Sandstone", 12), ("Mud", 10),
+    ("Sandstone", 10), ("Limestone", 8), ("Mud", 12), ("Sandstone", 13), ("Slate", 13), ("Limestone", 8), ("Slate", 14),
+    ("Sandstone", 14), ("Limestone", 12), ("Sandstone", 12), ("Slate", 12), ("Mud", 12), ("Sandstone", 12),
 ]
 BAND_LUT = np.zeros(STRATA_PERIOD, np.uint8)
 BAND_TOPS = []  # (Grenze oben, Material darunter)
@@ -41,7 +44,8 @@ MATERIAL_COLORS = {
     # Vorschlag #A65A4C wirkte in der Vorschau zu dunkel-karminrot, darum etwas heller/waermer)
     "Ground": "#FFAA7A", "Sand": "#F7D5A6", "Mud": "#EE9470", "Sandstone": "#EEA0A2", "Limestone": "#F1CF94",
     "Slate": "#D2AACE", "Rock": "#CDA49E", "Salt": "#F8ECE2", "Concrete": "#B2E0D0", "Basalt": "#4A3D50",
-    "CrackedLava": "#FFB07A", "Grass": "#A2D860", "LeafyGrass": "#5CC4A4", "Snow": "#F6F0F2", "Ice": "#CFE6EE",
+    # Runde 3: LeafyGrass gelbgruen (#5CC4A4 -> #86CC52) - runde gelbgruene Wiesen unter den Hainen wie im Zielbild
+    "CrackedLava": "#FFB07A", "Grass": "#A2D860", "LeafyGrass": "#86CC52", "Snow": "#F6F0F2", "Ice": "#CFE6EE",
     "Glacier": "#A9D8E8", "Asphalt": "#B4644E",
 }
 
@@ -106,6 +110,9 @@ def wind_streaks(c: Ctx, top):
             avoid |= c.masks[name]
     avoid |= ~np.isnan(c.wl)
     for k, m in enumerate(c.feat.get("mesa", [])):
+        # Runde 3: in Ring A-C keine Windfahnen (dort liegt das Wegenetz), aussen nur halb so breit
+        if math.hypot(m["x"], m["z"]) < RING_EDGES[3]:
+            continue
         wdt = 2.0 * m["Rmin"]
         L = min(260.0, wdt * c.rng.uniform(2.5, 4.0))          # Runde 2: kuerzer (dichtere Berge, halber Radius)
         x0, z0 = m["x"] + dx * m["Rmin"] * 0.6, m["z"] + dz * m["Rmin"] * 0.6
@@ -114,7 +121,7 @@ def wind_streaks(c: Ctx, top):
         al = (x - x0) * dx + (z - z0) * dz
         ac = (x - x0) * -dz + (z - z0) * dx + c.nz.fbm("streakw%d" % k, x, z, 90, 2) * wdt * 0.25
         t = np.clip(al / L, 0, 1)
-        hw = 0.3 * wdt * (1 - t) ** 0.6 * (0.7 + 0.3 * np.sin(np.pi * np.clip(al / (0.25 * L), 0, 1)))
+        hw = 0.15 * wdt * (1 - t) ** 0.6 * (0.7 + 0.3 * np.sin(np.pi * np.clip(al / (0.25 * L), 0, 1)))
         fray = c.nz.fbm("streakf%d" % k, x, z, 16, 2) * 0.5 + 0.5
         m_ = (al > 0) & (al < L) & (np.abs(ac) < hw) & (fray > 0.25 + 0.7 * t) & ~avoid[sl]
         v = top[sl]

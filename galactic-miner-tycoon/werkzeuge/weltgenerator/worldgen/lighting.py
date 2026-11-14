@@ -43,7 +43,8 @@ def lighting_meta():
         },
         "Atmosphere": {
             # Runde 1 (Art-Director): weniger Dunst, mauve-rosa statt Staubfarbe -> Mittelfeld und Rand bleiben kontrastreich
-            "Density": 0.17, "Offset": 0.2, "Color": RGB("#E2B6C4"), "Decay": RGB("#7C6AA0"), "Glare": 0.25, "Haze": 1.0,
+            # Runde 3 (Horizont): Offset 0,2 -> 0,35 und Lavendel-Rose, damit der Dunst das Void hinter dem Kamm deckt
+            "Density": 0.17, "Offset": 0.35, "Color": RGB("#CDB8DA"), "Decay": RGB("#7C6AA0"), "Glare": 0.25, "Haze": 1.0,
         },
         "Bloom": {"Intensity": 0.35, "Size": 30, "Threshold": 1.5},
         "ColorCorrection": {"Brightness": 0.0, "Contrast": 0.14, "Saturation": 0.12, "TintColor": RGB("#FFF2E8")},
