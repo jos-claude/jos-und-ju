@@ -158,7 +158,7 @@ def flat_s(c: Ctx, sl, sel, sval):
 
 
 def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nsteps=None, talus=1.0,
-         top_patch=None, base=None, record=True, gully=True, nv=None, rough=None):
+         top_patch=None, base=None, record=True, gully=True, nv=None, rough=None, s_off=0.0):
     """Geschichteter Tafelberg wie im Referenzbild: gestapelte Stufen mit flachen Baenken und fast senkrechten
     Waenden, jede Stufenkante ein abgerundetes Polygon. Stufen liegen auf Bandgrenzen (je Stufe 1-2 Streifen)."""
     rng = c.rng
@@ -183,7 +183,7 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
     if base is None:
         foot = d < 0
         base = float(np.percentile(Hl[foot], 35)) if foot.any() else float(c.h_at(cx, cz))
-    sc = float(s_smooth(c, np.array(cx), np.array(cz)))
+    sc = float(s_smooth(c, np.array(cx), np.array(cz))) + s_off
     if nsteps is None:
         nsteps = (int(rng.integers(2, 5)) if R >= 50 else int(rng.integers(2, 4))) if stage == "mesa" else int(rng.integers(1, 3))
     bounds = band_boundaries(base + height * 0.6, base + height * 1.15, sc, min_band=4)
@@ -297,7 +297,10 @@ def mesa(c: Ctx, cx, cz, diam, height, stage="mesa", aspect=None, rot=None, nste
 
 
 def spire(c: Ctx, cx, cz, base_d, tip_d, height, base=None):
-    rb, rt = base_d / 2, tip_d / 2
+    """Kamin-Saeule (Runde 1): oben mindestens 0,55 x Fussradius breit, flache Kuppe mit ueberstehender Kalk-Kappe
+    (wie die Kaminfelsen im Zielbild) statt einer Nadelspitze."""
+    rb = base_d / 2
+    rt = max(tip_d / 2, 0.55 * rb)
     pad = rb * 2.2 + 6
     sl = c.win(cx, cz, pad)
     x, z = c.local(sl)
@@ -325,8 +328,10 @@ def spire(c: Ctx, cx, cz, base_d, tip_d, height, base=None):
     c.obstacle[sl] |= body | tm
     claim(c, sl, rho < tal_r + 14)
     flat_s(c, sl, rho < tal_r, float(s_smooth(c, np.array(cx), np.array(cz))))
-    c.feat["spire"].append({"x": cx, "z": cz, "R": rb, "base": base, "top": base + height})
-    return base + height
+    # Kalk-Kappe: Scheibe 4 hoch, 2,5 Studs Ueberstand (Radius >= 4 fuer die Voxel)
+    op_cyl(c, cx, base + height + 1.0, cz, 4.0, max(MIN_OP_R, rt + 2.5), "Limestone")
+    c.feat["spire"].append({"x": cx, "z": cz, "R": rb, "base": base, "top": base + height + 3.0})
+    return base + height + 3.0
 
 
 # ------------------------------------------------------------------ Danxia-Kamm
@@ -501,11 +506,77 @@ def arch(c: Ctx, cx, cz, yaw_deg, span, clear, thick=16.0, wall_h=None):
     return base
 
 
+# ------------------------------------------------------------------ Nischen und Butte-Bogen (Runde 1)
+def _wall_foot(c: Ctx, m, dx, dz):
+    """Erste Felswand-Zelle vom Haldenrand nach innen (Richtung -d). Gibt (x, z, Hoehe der Halde davor) zurueck."""
+    body = c.mask("mesa")
+    dist = m["R"] + m["talus"] + 4.0
+    while dist > 2.0:
+        x, z = m["x"] + dx * dist, m["z"] + dz * dist
+        if body[c.idx(x, z)]:
+            xo, zo = x + dx * 5.0, z + dz * 5.0
+            return x, z, float(c.h_at(xo, zo))
+        dist -= 2.0
+    return None
+
+
+def niche(c: Ctx, m, toward=(0.0, 0.0), r=7.0, spread=35.0, rng=None):
+    """Nische (Luft-Kugel r >= 6) an der Wandbasis eines Tafelbergs, knapp ueber der Halde (schneidet sie nicht).
+    Sucht im Faecher +-spread Grad um die Richtung zum Punkt toward eine Wandstelle mit genug Fels darueber."""
+    rng = rng or c.rng
+    r = max(6.0, r)
+    base_a = math.atan2(toward[1] - m["z"], toward[0] - m["x"])
+    for da in sorted(np.radians(np.linspace(-spread, spread, 9)), key=abs):
+        a = base_a + da
+        dx, dz = math.cos(a), math.sin(a)
+        wf = _wall_foot(c, m, dx, dz)
+        if wf is None:
+            continue
+        wx, wz, h_out = wf
+        cx, cz = wx + dx * r * 0.1, wz + dz * r * 0.1   # Mitte knapp vor der Wand -> halbe Kuppel als Nische
+        yc = h_out + r                       # Kugel-Unterkante = Haldenoberkante an der Wand
+        # Fels darueber pruefen: Felszellen um einen Punkt 0,6 r hinter der Wand
+        tx, tz = wx - dx * r * 0.6, wz - dz * r * 0.6
+        sl = c.win(tx, tz, r + 4)
+        lx, lz = c.local(sl)
+        inside = ((lx - tx) ** 2 + (lz - tz) ** 2 < (0.8 * r) ** 2) & c.mask("mesa")[sl]
+        if inside.sum() < 4 or float(c.H[sl][inside].min()) < yc + r + 5.0:
+            continue                          # zu wenig Fels ueber der Nische (erste Stufe zu niedrig)
+        op_ball(c, cx, yc, cz, r, "Air")
+        c.feat["niche"].append({"x": cx, "z": cz, "y": yc, "r": r})
+        return True
+    return False
+
+
+def butte_arch(c: Ctx, m, toward=(0.0, 0.0)):
+    """Durchbruch (Luft-Zylinder, Achse zur Basis) durch eine schmale Butte: Felsbogen mit >= 8 Studs Fels darueber."""
+    R0 = m["R0"]
+    rr = max(6.0, 0.38 * R0)
+    if 0.88 * R0 / math.sqrt(m["aspect"]) - rr < 5.0:
+        return False                          # Seitenpfeiler waeren zu duenn
+    a = math.atan2(toward[1] - m["z"], toward[0] - m["x"])
+    dx, dz = math.cos(a), math.sin(a)
+    feet = [_wall_foot(c, m, dx, dz), _wall_foot(c, m, -dx, -dz)]
+    if any(f is None for f in feet):
+        return False
+    h_out = max(f[2] for f in feet)
+    yc = h_out + rr + 1.0
+    if m["top"] < yc + rr + 8.0:
+        return False
+    d = np.array([dx, 0.0, dz])
+    up = np.array([0.0, 1.0, 0.0])
+    R = np.column_stack([up, d, np.cross(up, d)])
+    L = 2.0 * m["R"] + 24.0
+    op_cyl(c, m["x"], yc, m["z"], L, rr, "Air", R)
+    c.feat["butte_arch"].append({"x": m["x"], "z": m["z"], "y": yc, "r": rr})
+    return True
+
+
 # ------------------------------------------------------------------ Hoodoo
 HOODOO_NECK = ["Sandstone", "Slate", "Sandstone", "Rock"]
 
 
-def hoodoo(c: Ctx, x0, z0, total, base=None):
+def hoodoo(c: Ctx, x0, z0, total, base=None, s_val=None):
     """Schlanker Hoodoo: Fuss aus Hoehenkarte (Baender), Koerper als Zylinder-Stapel mit Hals/Wulst,
     Segmentfarben = Schichtband der absoluten Hoehe (Baender laufen ueber alle Hoodoos durch),
     Hut aus hartem Kalkstein, nur wenig breiter als der Hals."""
@@ -515,6 +586,7 @@ def hoodoo(c: Ctx, x0, z0, total, base=None):
     rng = c.rng
     rf = rng.uniform(8.0, 10.5)
     hf = rng.uniform(6, 11) * min(1.0, total / 45 + 0.5)
+    hf = min(hf, max(3.0, 0.35 * total))      # Runde 1: kurze Saeulen (12-24) mit niedrigem Fuss
     sl = c.win(x0, z0, rf * 2.4)
     x, z = c.local(sl)
     rho = np.hypot(x - x0, z - z0) * (1 + 0.1 * c.nz.fbm("hdf", x, z, 8, 1))
@@ -526,14 +598,19 @@ def hoodoo(c: Ctx, x0, z0, total, base=None):
     hfoot = np.where(rho < rf * 1.4, base + hf * prof, -1e9)
     tal = np.where(q < 1, base + rf * 0.3 * (1 - q) ** 1.5, -1e9)
     hn = np.maximum(hfoot, tal)
+    # Runde 1 (Fehler behoben): Masken VOR dem Schreiben (Hl ist eine Sicht auf c.H); vorher blieben Fuss/Halde leer
+    foot_m = (hfoot >= tal) & (hfoot > Hl + 0.5)
+    tal_m = (tal > hfoot) & (tal > Hl + 0.3)
     c.H[sl] = np.maximum(Hl, hn)
-    c.mask("hoodoo_foot")[sl] |= (hfoot >= tal) & (hfoot > Hl + 0.5)
-    c.mask("talus")[sl] |= (tal > hfoot) & (tal > Hl + 0.3)
+    c.mask("hoodoo_foot")[sl] |= foot_m
+    c.mask("talus")[sl] |= tal_m
     c.obstacle[sl] |= rho < rf * 1.15
-    s_here = int(round(float(s_smooth(c, np.array(x0), np.array(z0))))) % STRATA_PERIOD
-    hat_h = rng.uniform(3.5, 5.0)
+    sv = float(s_smooth(c, np.array(x0), np.array(z0))) if s_val is None else s_val
+    s_here = int(round(sv)) % STRATA_PERIOD
+    # Runde 1: dickerer Hut (4-6); bei kurzen Saeulen (12-24) bleibt der Fuss niedrig, der Koerper >= 4 Studs
+    hat_h = rng.uniform(4.0, 6.0)
     y0 = base + hf - 1.0
-    y1 = base + total - hat_h
+    y1 = max(base + total - hat_h, y0 + 4.0)
     r0 = rng.uniform(4.8, 6.0)                 # Roblox-Voxel 4 Studs: Hals mindestens Durchmesser 8
     nb = rng.choice([1.0, 1.5, 2.0])
     ph = rng.uniform(0, 2 * math.pi)
@@ -553,7 +630,7 @@ def hoodoo(c: Ctx, x0, z0, total, base=None):
         cz += lz * hseg
         m = TERRAIN_MATERIALS[int(BAND_LUT[int(math.floor(yc + s_here + STRATA_BASE)) % STRATA_PERIOD])]
         op_cyl(c, cx, yc, cz, hseg + 0.8, rad, m)
-    hat_r = max(MIN_HAT_R, rad + rng.uniform(1.5, 2.5))
+    hat_r = max(6.5, rad * 1.55 + 1.0)                 # Runde 1: deutlich ueberstehender Kalk-Hut
     op_cyl(c, cx, y1 + hat_h / 2, cz, hat_h, hat_r, "Limestone")
     rb = max(MIN_OP_R, hat_r * 0.6)
     op_ball(c, cx, y1 + hat_h - rb + 1.4, cz, rb, "Limestone")

@@ -215,7 +215,8 @@ def rim(c: Ctx):
     # Review: ruhigere Grate (sharp 1,3, Zacken halbiert) und weiche Terrassen -> "Mega-Tafelberge" derselben Familie
     peaks = np.clip(nz.ridged("rimpk", px, pz, 230, 3, sharp=1.3), 0, 1)
     teeth = nz.ridged("rimteeth", px, pz, 60, 2, sharp=1.3)
-    hc = 118.0 + 125.0 * massif + 120.0 * peaks ** 1.8 * (0.25 + 0.75 * massif) + 7.0 * teeth
+    # Runde 1: Zacken 7 -> 3 (ruhigere Kronen wie im Zielbild)
+    hc = 118.0 + 125.0 * massif + 120.0 * peaks ** 1.8 * (0.25 + 0.75 * massif) + 3.0 * teeth
     step = 26.0
     k = np.floor(hc / step)
     f = np.clip((hc - k * step) / step, 0, 1)
@@ -232,13 +233,17 @@ def rim(c: Ctx):
     H = c.H
     hb = H
     # Innenseite: gestufte Wand mit Rinnen und Spornen; Sporne laufen als Grate ins Hochland
-    gully = nz.ridged("rimgully", px, pz, 55, 2, sharp=1.6)
+    # Runde 1: breitere, flachere Rinnen (Skala 55 -> 140, Amplitude 22 -> 9) und breitere Simse: liest sich als gestufte
+    # Mega-Tafelberge statt als feine Riffelwand. Vorschlag war Stufe 26 / Wand 6 / Sims 14; das schiebt den Wandfuss
+    # ~65 Studs nach innen (Ring E verliert ~14 % Bauzone). Darum 28 / 4 / 10: Verhaeltnis 0,5 bleibt innerhalb der
+    # Schutthalde (Fuss bei 0,525 x Wandhoehe) -> keine Bauflaeche verloren.
+    gully = nz.ridged("rimgully", px, pz, 140, 2, sharp=1.6)
     t = rc - r
     spur = np.maximum(0.0, nz.ridged("rimspur", px, pz, 190, 2, sharp=3.0) - 0.35) / 0.65
     spur_len = 55.0 * spur ** 1.5
-    t_eff = np.maximum(0.0, t + 6.0 * nz.fbm("rimledge", x, z, 40, 2) + 22.0 * (gully - 0.5) * ss(0, 60, t))
+    t_eff = np.maximum(0.0, t + 6.0 * nz.fbm("rimledge", x, z, 40, 2) + 9.0 * (gully - 0.5) * ss(0, 60, t))
     t_spur = np.maximum(0.0, t - spur_len)
-    drop = np.minimum(_staircase(t_eff, 30.0, 6.0, 7.0), _staircase(t_spur, 30.0, 6.0, 7.0) + spur_len * 0.9)
+    drop = np.minimum(_staircase(t_eff, 28.0, 4.0, 10.0), _staircase(t_spur, 28.0, 4.0, 10.0) + spur_len * 0.9)
     h_in = hc - drop
     tfoot = np.maximum(1.0, (hc - hb) / 2.6)
     tal_h = 0.13 * (hc - hb)
@@ -269,7 +274,44 @@ def rim(c: Ctx):
     c.bottom = np.where(deep, np.minimum(bottom, c.H - 20.0), c.bottom)
     c.obstacle |= rim_m | tal_m
     c.feat["rim_rc"] = rc
+    rim_arches(c)
     _balconies(c)
+
+
+RIM_ARCH_AZ = (70.0, 120.0, 300.0)
+
+
+def rim_arches(c: Ctx):
+    """Runde 1: drei Felsfenster im Kamm (Luft-Zylinder r 18-26, Achse radial), 14+ Studs Fels darueber.
+    Von innen sieht man durch das Fenster den Himmel hinter dem Rand (Bogen-Silhouette wie im Zielbild)."""
+    from .landforms import op_cyl
+    rng = np.random.default_rng(c.seed * 4001 + 17)     # eigener Zufall: aendert den Rest der Welt nicht
+    for a0 in RIM_ARCH_AZ:
+        best = None
+        # hoechste Kammstelle im Umkreis +-6 Grad: dort ist der Bogen am deutlichsten und bleibt dick genug
+        for da in np.linspace(-6, 6, 13):
+            a = a0 + da
+            iz, ix = c.idx(*pol(a, RIM_R))
+            hc = float(c.rim_hc[iz, ix])
+            if best is None or hc > best[1]:
+                best = (a, hc, float(c.rim_rc[iz, ix]))
+        a, hc, rc = best
+        rr = float(rng.uniform(18.0, 26.0))
+        x, z = pol(a, rc + 2.0)
+        # Oberkante nach dem niedrigsten Kammpunkt ueber dem Fenster (Kamm ist zackig): >= 14 Studs Fels darueber
+        sl = c.win(x, z, rr)
+        lx, lz = c.local(sl)
+        disk = (lx - x) ** 2 + (lz - z) ** 2 < rr * rr
+        h_low = float(np.percentile(c.H[sl][disk], 15)) if disk.any() else hc
+        yc = min(hc, h_low) - 14.0 - rr
+        if yc - rr < BALCONY_FLOOR:          # zu niedriger Kamm: kein Fenster
+            continue
+        d = np.array([math.sin(math.radians(a)), 0.0, -math.cos(math.radians(a))])
+        xc = np.array([0.0, 1.0, 0.0])
+        zc = np.cross(xc, d)
+        R = np.column_stack([xc, d, zc])     # lokale Y-Achse = radial
+        op_cyl(c, x, yc, z, 170.0, rr, "Air", R)
+        c.feat["rim_arch"].append({"az": a, "x": x, "z": z, "y": yc, "r": rr})
 
 
 def foothills(c: Ctx, n=16):
@@ -282,7 +324,12 @@ def foothills(c: Ctx, n=16):
         a = rng.uniform(0, 360)
         if min(abs(ang_diff(a, b)) for b in BALCONY_AZ) < 9 or min(abs(ang_diff(a, w)) for w in c.L.washes) < 8:
             continue
-        r = rng.uniform(1870, 1915)
+        # Runde 1: Abstand zur oertlichen Kammlinie statt fester Radius (vorher r 1870-1915): Vorberge ueberschneiden
+        # immer den Kamm und ragen nicht weit in die Bauflaechen von Ring E
+        px, pz = pol(a, RIM_R)
+        rc = float(np.clip(RIM_R + c.nz.fbm("rimrc", np.array(px), np.array(pz), 600, 3) * 80.0
+                           + c.nz.fbm("rimrc2", np.array(px), np.array(pz), 160, 2) * 20.0, 1955.0, 2015.0))
+        r = rc - rng.uniform(55, 95)
         x0, z0 = pol(a, r)
         if c.mask("claimed")[c.idx(x0, z0)]:
             continue
@@ -302,6 +349,7 @@ def foothills(c: Ctx, n=16):
         m = hn > c.H[sl] - 0.01
         m &= q < 1.35
         c.mask("rim")[sl] |= m & (prof > 2)
+        c.mask("foothill")[sl] |= m & (prof > 2)
         c.obstacle[sl] |= m & (prof > 4)
         c.feat["foothill"].append({"x": x0, "z": z0, "R": R})
         done += 1

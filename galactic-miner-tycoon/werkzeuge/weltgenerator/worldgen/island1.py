@@ -44,12 +44,17 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
     zoneA = (c.rw > 185) & (c.rw < 255) & ~c.mask("claimed") & (c.wash_dist > 5)
     zoneB = (c.rw > 270) & (c.rw < 600) & ~c.mask("claimed") & (c.wash_dist > 5)
     zoneD = (c.rw > 1150) & (c.rw < 1560) & ~c.mask("claimed") & (c.wash_dist > 5)
+    c.stage("outcrops")
     fields.outcrops(c, zoneA, 0.03, (2.0, 4.0), "outA")
     fields.outcrops(c, zoneB, 0.02, (2.5, 5.0), "outB")
     fields.outcrops(c, zoneD, 0.02, (3.0, 6.0), "outD")
+    c.stage("low_floating_stones")
     fields.low_floating_stones(c, 30)
+    c.stage("foothills")
     terrain.foothills(c, 10)
+    c.stage("rim")
     terrain.rim(c)
+    c.stage("floating_rocks")
     terrain.floating_rocks(c)
     log("Rand, Balkone, Schwebfelsen")
     from .landforms import check_ops
@@ -58,6 +63,7 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
     if thin:
         print(f"  WARNUNG: {len(thin)} Zusatzformen duenner als Durchmesser 8 (werden in Roblox klumpig): "
               + ", ".join(sorted({o['op'] + '/' + o['material'] for o in thin})))
+    c.stage("materials")
     materials.assign(c)
     materials.apply_overrides(c)
     log("Materialien")
@@ -68,7 +74,7 @@ def build(seed: int = SEED, verbose: bool = True, deco: bool = True) -> World:
         p = placement.Placer(c, w)
         placement.plan_islands(p)
         materials.apply_overrides(c)
-        log(f"Oekologie-Karten, {len(p.islands)} Deko-Inseln")
+        log(f"Oekologie-Karten, {len(p.islands)} Deko-Inseln, {len(c.feat.get('spring_pot', []))} Quelltoepfe")
     materials.finalize(c, w)
     w.ctx = c
     log("Kanaele")

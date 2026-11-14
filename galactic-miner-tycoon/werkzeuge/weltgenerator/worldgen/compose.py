@@ -8,6 +8,7 @@ import numpy as np
 from . import fields, landforms as lf, terrain, waterforms as wf
 from .ctx import Ctx
 from .layout import ang_diff, pol
+from .materials import s_smooth
 from .noise import smoothstep as ss
 
 # Sichtachsen von der Basis: hier keine hohen Formen (Mesas, Spitzen, Kaemme)
@@ -122,7 +123,9 @@ def landmarks(c: Ctx):
         a = da + rng.uniform(-12, 12)
         Rv = 230
         sx, sz = vx + Rv * 0.5 * math.sin(math.radians(a)), vz - Rv * 0.5 * math.cos(math.radians(a))
-        fields.lava_tongue(c, sx, sz, a, rng.uniform(220, 460), rng.uniform(30, 50), name="tongue%d" % k, own=own)
+        # Runde 1: Zungen laufen jetzt wirklich (Masken-Fehler in fields.volcano behoben); Laenge so, dass sie am
+        # Kegelfuss enden (vorher 220-460 geplant, kamen aber nie ueber 4 Schritte hinaus)
+        fields.lava_tongue(c, sx, sz, a, rng.uniform(150, 210), rng.uniform(30, 50), name="tongue%d" % k, own=own)
     # L4 Bogen (Duenenland)
     s4 = S["L4"]
     ax, az_ = s4.xz
@@ -186,6 +189,32 @@ def hoodoo_garden(c: Ctx):
             break
         lf.fin(c, p0, p1, rng.uniform(7, 10), rng.uniform(24, 52), windows=int(rng.integers(1, 3)), name="fin%d" % k)
         fins += 1
+    # Runde 1: Schichtversatz +50 im Garten -> Butter/Lavendel/Rose im Saeulenkoerper statt des roten Mud-Sockels
+    S_OFF = 50.0
+    # 4-6 flache Felsbaenke (Oe 40-70, h 8-14) zwischen den Saeulen; Hoodoos duerfen darauf/daneben stehen
+    claimed = c.mask("claimed")
+    before = claimed.copy()
+    benches = 0
+    for _ in range(400):
+        if benches >= int(rng.integers(4, 7)):
+            break
+        ba, br = a0 + rng.uniform(-30, 28), rng.uniform(395, 610)
+        bx, bz = pol(ba, br)
+        bd = rng.uniform(40, 70)
+        if not lf.is_free(c, bx, bz, bd * 0.5 + 10, wash_margin=14):
+            continue
+        g = float(c.h_at(bx, bz))
+        lf.mesa(c, bx, bz, bd, rng.uniform(8, 14), stage="butte", aspect=rng.uniform(1.1, 1.6), nsteps=1, talus=0.4,
+                gully=False, s_off=S_OFF)
+        benches += 1
+    bench_claim = claimed & ~before
+
+    def hoodoo_free(x, z, rad):
+        sl_, circ_ = _circle(c, x, z, rad)
+        if (c.wash_dist[sl_][circ_] < 10).any() or c.void[sl_][circ_].any():
+            return False
+        return not (claimed[sl_] & ~bench_claim[sl_] & circ_).any()
+
     groups = []
     tries = 0
     while len(groups) < 6 and tries < 2000:
@@ -195,32 +224,52 @@ def hoodoo_garden(c: Ctx):
         gx, gz = pol(ga, gr)
         if any(math.hypot(gx - q[0], gz - q[1]) < 112 for q in groups):
             continue
-        if not lf.is_free(c, gx, gz, 26, wash_margin=10):
+        if not hoodoo_free(gx, gz, 26):
             continue
         groups.append((gx, gz, rng.uniform(40, 62)))
     count = 0
     area = sum(g[2] ** 2 for g in groups) or 1.0
+
+    def tall_of():
+        u = rng.uniform()
+        if u < 0.35:
+            return rng.uniform(12, 24)
+        if u < 0.80:
+            return rng.uniform(26, 50)
+        return rng.uniform(55, 90)
+
     for gi, (gx, gz, grad) in enumerate(groups):
-        n = int(round(96 * grad ** 2 / area)) + int(rng.integers(-2, 3))
+        # Runde 1: 65 statt 96 Saeulen, in Untergruppen zu 3-6 (Abstand 14-20) mit Luecken dazwischen
+        n = int(round(65 * grad ** 2 / area))
+        sg = float(s_smooth(c, np.array(gx), np.array(gz))) + S_OFF
         pts = []
-        for _ in range(n * 30):
+        for _sub in range(40):
             if len(pts) >= n:
                 break
             ang = rng.uniform(0, 2 * math.pi)
-            rr = (grad + 8) * math.sqrt(rng.uniform(0, 1))
-            hx, hz = gx + rr * math.cos(ang), gz + rr * math.sin(ang)
-            if any(math.hypot(hx - p[0], hz - p[1]) < rng.uniform(22, 30) for p in pts):
+            rr = grad * math.sqrt(rng.uniform(0, 1))
+            sx_, sz_ = gx + rr * math.cos(ang), gz + rr * math.sin(ang)
+            if any(math.hypot(sx_ - p[0], sz_ - p[1]) < 30 for p in pts):
                 continue
-            if c.wash_dist[c.idx(hx, hz)] < 10 or c.mask("claimed")[c.idx(hx, hz)]:
-                continue
-            pts.append((hx, hz))
+            m = min(int(rng.integers(3, 7)), n - len(pts))
+            sub = []
+            for _ in range(m * 25):
+                if len(sub) >= m:
+                    break
+                a2, r2 = rng.uniform(0, 2 * math.pi), rng.uniform(0, 12 + 4 * m)
+                hx, hz = sx_ + r2 * math.cos(a2), sz_ + r2 * math.sin(a2)
+                if any(math.hypot(hx - p[0], hz - p[1]) < rng.uniform(14, 20) for p in pts + sub):
+                    continue
+                if c.wash_dist[c.idx(hx, hz)] < 10 or (claimed[c.idx(hx, hz)] and not bench_claim[c.idx(hx, hz)]):
+                    continue
+                sub.append((hx, hz))
+            pts += sub
         for k, (hx, hz) in enumerate(pts):
-            tall = rng.uniform(30, 68) if rng.uniform() > 0.12 else rng.uniform(72, 90)
-            if k == 0:
-                tall = rng.uniform(70, 90)
-            lf.hoodoo(c, hx, hz, tall)
+            tall = tall_of() if k else rng.uniform(62, 90)      # je Gruppe eine hohe Leitsaeule
+            lf.hoodoo(c, hx, hz, tall, s_val=sg)
             count += 1
         sl, circ = _circle(c, gx, gz, grad + 14)
+        lf.flat_s(c, sl, circ & c.mask("hoodoo_foot")[sl], sg)
         lf.claim(c, sl, circ)
         c.feat["hoodoo_group"].append({"x": gx, "z": gz, "R": grad})
     # Finnen mit Fenstern am Aussenrand jeder Gruppe (Erosionsfolge Plateau -> Finne -> Fenster -> Hoodoo)
@@ -247,8 +296,9 @@ def hoodoo_garden(c: Ctx):
 RING_SPEC = {
     # n Berge, r-Bereich, Leit-Durchmesser, Hoehe ueber Umland
     "A": dict(n=4, r=(215, 300), lead=(70, 105), h=(26, 52)),
-    "B": dict(n=9, r=(310, 590), lead=(90, 170), h=(45, 105)),
-    "C": dict(n=8, r=(640, 1070), lead=(90, 160), h=(30, 85)),
+    # Runde 1: Mittelfeld dichter (B 9 -> 13, C 8 -> 12)
+    "B": dict(n=13, r=(310, 590), lead=(90, 170), h=(45, 105)),
+    "C": dict(n=12, r=(640, 1070), lead=(90, 160), h=(30, 85)),
     "D": dict(n=12, r=(1150, 1480), lead=(70, 160), h=(50, 120)),
     "E": dict(n=6, r=(1620, 1840), lead=(60, 120), h=(40, 95)),
 }
@@ -273,24 +323,31 @@ def mesa_groups(c: Ctx, ring, sector=None):
         if not lf.is_free(c, gx, gz, lead_d * 0.62 + 14, wash_margin=18):
             continue
         hgt = rng.uniform(*spec["h"])
+        claimed = c.mask("claimed")
+        before = claimed.copy()
         lf.mesa(c, gx, gz, lead_d, hgt, stage="mesa", top_patch=_patch(c, ring))
         placed += 1
-        # Begleiter (Rhythmus 1-2-1): Buttes, manchmal eine Spitze
-        ncomp = int(rng.integers(1, 3))
+        # Begleiter: Runde 1 mehr (2-3), kleiner (Oe 26-55) und naeher (22-60) -> Gruppen statt Einzelberge;
+        # selten eine Kamin-Saeule (10 %)
+        # (Ring D/E: alte Werte, dort ist kein Mittelfeld und die Bauzonen sind knapp)
+        mid = ring in ("A", "B", "C")
+        ncomp = int(rng.integers(2, 4)) if mid else int(rng.integers(1, 3))
         for k in range(ncomp):
             if placed >= spec["n"]:
                 break
             for _ in range(20):
                 ang = rng.uniform(0, 2 * math.pi)
-                spire_ = rng.uniform() < 0.25
-                d = rng.uniform(42, 75) if not spire_ else rng.uniform(12, 20)
-                dist = lead_d / 2 + d / 2 + rng.uniform(36, 95)
+                spire_ = rng.uniform() < 0.10
+                d = (rng.uniform(26, 55) if mid else rng.uniform(42, 75)) if not spire_ else rng.uniform(12, 20)
+                dist = lead_d / 2 + d / 2 + (rng.uniform(22, 60) if mid else rng.uniform(36, 95))
                 bx, bz = gx + dist * math.cos(ang), gz + dist * math.sin(ang)
                 br = math.hypot(bx, bz)
                 ba = math.degrees(math.atan2(bx, -bz)) % 360
                 if br < r0 - 20 or br > r1 + 40 or sight_block(ba, br) or (sector and not sector(ba, br)):
                     continue
-                if not lf.is_free(c, bx, bz, d * 0.7 + 12, wash_margin=16):
+                # Runde 1: Begleiter duerfen in der Halde/dem Anspruchsbereich der eigenen Gruppe stehen (Halden
+                # verschmelzen), aber nicht im Fels eines anderen Bergs
+                if not _free_in_group(c, bx, bz, d * 0.7 + 12, d * 0.5 + 6, claimed & ~before, wash_margin=16):
                     continue
                 if spire_:
                     lf.spire(c, bx, bz, d, rng.uniform(3, 6), rng.uniform(34, 95) * (0.7 if ring == "A" else 1.0))
@@ -300,6 +357,17 @@ def mesa_groups(c: Ctx, ring, sector=None):
                 placed += 1
                 break
     return placed
+
+
+def _free_in_group(c: Ctx, x, z, rad, rad_body, group_claim, wash_margin=16.0):
+    sl, circ = _circle(c, x, z, rad)
+    if not circ.any() or c.void[sl][circ].any() or (c.wash_dist[sl][circ] < wash_margin).any():
+        return False
+    if (c.mask("claimed")[sl] & ~group_claim[sl] & circ).any():
+        return False
+    slb, cb = _circle(c, x, z, rad_body)
+    rock = c.mask("mesa")[slb] | c.mask("spire")[slb]
+    return not (rock & cb).any()
 
 
 def _patch(c, ring):
@@ -522,7 +590,8 @@ def hollows(c: Ctx):
     for ring, r0, r1, water in plan:
         for _ in range(300):
             r, a = rng.uniform(r0, r1), rng.uniform(0, 360)
-            dmt = rng.uniform(60, 120) if ring in "BC" else rng.uniform(90, 230)
+            # Runde 1: Ring D/E max. 180 statt 230 (haelt die Bauzonen nach dem neuen Zufallsstrom)
+            dmt = rng.uniform(60, 120) if ring in "BC" else rng.uniform(90, 180)
             x, z = pol(a, r)
             if lf.is_free(c, x, z, dmt * 0.8 + 10, wash_margin=10):
                 wf.crater(c, x, z, dmt, water=water, name="crater%d" % len(c.feat["crater"]))
@@ -676,7 +745,8 @@ def small_cones(c: Ctx, n=6):
 def ring_c_mesas(c: Ctx):
     def sector(a, r):
         d1 = min(abs(ang_diff(a, 130)), abs(ang_diff(a, 295)))
-        return d1 < 28 or (c.wNE[c.idx(*pol(a, r))] < 0.5 and r < 760)
+        # Runde 1: zusaetzlich Az 0-60 (Mittelfeld im Zielbild-Blick); die Sichtachse Az 40 haelt sight_block frei
+        return d1 < 28 or (c.wNE[c.idx(*pol(a, r))] < 0.5 and r < 760) or (a % 360) <= 60
     return mesa_groups(c, "C", sector)
 
 
@@ -723,7 +793,7 @@ def lava_flows(c: Ctx):
             own = np.zeros(c.H.shape, bool)
             vs = c.win(v["x"], v["z"], v["Rv"] * 1.3)
             own[vs] = c.mask("volcano")[vs]
-            fields.lava_tongue(c, sx, sz, a, rng.uniform(140, 300), rng.uniform(22, 36), name="ct%d" % n, own=own)
+            fields.lava_tongue(c, sx, sz, a, v["Rv"] * rng.uniform(0.6, 1.0), rng.uniform(22, 36), name="ct%d" % n, own=own)
             n += 1
     fis = 0
     for _ in range(300):
@@ -741,30 +811,77 @@ def lava_flows(c: Ctx):
     return n
 
 
+def niches_and_arches(c: Ctx):
+    """Runde 1: 8-10 Nischen an Tafelberg-Waenden (Ring A-C, zur Basis hin) und 3 Bogen durch schmale Buttes."""
+    rng = np.random.default_rng(c.seed * 6007 + 3)      # eigener Zufall
+    ms = [m for m in c.feat["mesa"] if 200 < math.hypot(m["x"], m["z"]) < 1100]
+    order = rng.permutation(len(ms))
+    target = int(rng.integers(8, 11))
+    n_n = 0
+    for i in order:
+        if n_n >= target:
+            break
+        m = ms[i]
+        if m["top"] - m["base"] < 22 or m["R0"] < 18:
+            continue
+        r = float(rng.uniform(6, 9))
+        if lf.niche(c, m, r=r, spread=70.0, rng=rng) or (r > 6.5 and lf.niche(c, m, r=6.0, spread=70.0, rng=rng)):
+            n_n += 1
+    n_a = 0
+    buttes = sorted([m for m in ms if m["stage"] == "butte" and m["R0"] <= 22 and m["top"] - m["base"] >= 30],
+                    key=lambda m: math.hypot(m["x"], m["z"]))
+    for m in buttes:
+        if n_a >= 3:
+            break
+        if lf.butte_arch(c, m):
+            n_a += 1
+    return n_n, n_a
+
+
 def build_landforms(c: Ctx):
     """Reihenfolge: Washes -> grosse Landmarken -> Becken -> Felder -> Berge -> Faecher."""
     setup_washes(c)
     carve(c)
     fields.highland(c)
     landmarks(c)
+    # ab hier eigener Zufallsstrom je Stufe (c.stage): eine geaenderte Stufe verschiebt die anderen nicht mehr
+    c.stage("hoodoo_garden")
     n_hd, n_fin = hoodoo_garden(c)
+    c.stage("waters")
     waters(c)
+    c.stage("ridges")
     ridges(c)
+    c.stage("ring_de_landmarks")
     ring_de_landmarks(c)
+    c.stage("wave")
     fields.wave(c, *pol(212 + c.u(-3, 3), 775), rx=170, rz=80, rot_deg=c.u(0, 180))
+    c.stage("massifs")
     n_cyn = massifs(c)
+    c.stage("oases_c")
     oases_c(c)
+    c.stage("faults")
     faults(c)
+    c.stage("hollows")
     hollows(c)
+    c.stage("small_cones")
     small_cones(c)
+    c.stage("tunnels")
     n_tun = tunnels(c)
     counts = {"hoodoos": n_hd, "fins": n_fin, "canyons": n_cyn, "tunnels": n_tun}
     for ring in ("A", "B", "D", "E"):
+        c.stage("mesas_" + ring)
         counts["mesas_" + ring] = mesa_groups(c, ring)
+    c.stage("mesas_C")
     counts["mesas_C"] = ring_c_mesas(c)
+    c.stage("spires")
     counts["spires"] = spires(c, 6)
+    c.stage("ring_e")
     counts["ribs_E"], counts["spires_E"] = ring_e_features(c)
+    counts["niches"], counts["butte_arches"] = niches_and_arches(c)
+    c.stage("lava_flows")
     lava_flows(c)
+    c.stage("dunes")
     fields.dunes(c)
+    c.stage("fans")
     counts["fans"] = fans(c)
     return counts

@@ -67,6 +67,13 @@ class Ctx:
         gz, gx = np.gradient(h, CELL)
         return np.degrees(np.arctan(np.hypot(gx, gz)))
 
+    def stage(self, name: str):
+        """Eigener Zufallsstrom je Bau-Stufe (Runde 1): Aenderungen an einer Stufe wuerfeln die spaeteren Stufen nicht
+        mehr neu durch (vorher teilten sich alle Stufen c.rng). Gleicher Seed + Name -> gleiche Folge."""
+        import zlib
+        self.rng = np.random.default_rng([self.seed, zlib.crc32(name.encode())])
+        return self.rng
+
     def u(self, a=0.0, b=1.0, size=None):
         return self.rng.uniform(a, b, size)
 

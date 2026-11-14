@@ -87,7 +87,8 @@ def tilt_dir(azr, tilt):
 
 # ------------------------------------------------------------------ Farben (Vorgabe 5.2)
 # Review: gedaempfte, matte Farben (L 0,55-0,80, Saettigung <= 0,6); jede Pflanze mit dunklerer Unterseite
-CROWNS = [C("#52C6BE"), C("#B8DA6C"), C("#86D4B4"), C("#74B2DC"), C("#EFA4AE"), C("#EFD478")]
+# Runde 1: Kronen ~15-20 % satter (Zielbild: kraeftiges Tuerkis und Gelbgruen)
+CROWNS = [C("#3FC9C4"), C("#BEE04C"), C("#78D6AF"), C("#60ABDE"), C("#F196A3"), C("#F1D161")]
 CROWN_W = [35, 35, 15, 7, 5, 3]
 CROWNS_E = [C("#A8D2EA"), C("#BCAEE8"), C("#C4CCE0")]
 TRUNKS = [C("#7E5A68"), C("#6E5262")]
@@ -208,7 +209,7 @@ def noodle(rng, k):
     return Template(f"Noodle_{k}", "Flora", parts, variants)
 
 
-def _prism(base, d, b, L, role, mat="Glass", tr=0.0, collide=False, light=None, core=False, tip_mat=None):
+def _prism(base, d, b, L, role, mat="Glass", tr=0.0, collide=False, light=None, core=False, tip_mat=None, tip=True):
     """Kristall-Prisma: Glas-Block + Dachfirst-Spitze (45 Grad gedrehter Block, hellere Farbe), optional Neon-Kern.
     Handy-Budget: nur Riesen-/Landmarken-Kristalle sind durchsichtig (tr > 0) und haben einen Neon-Kern; kleine und
     mittlere sind undurchsichtiges Glas (Transparency 0 = guenstig), Leitwirkung ueber hellere Spitzen."""
@@ -218,12 +219,13 @@ def _prism(base, d, b, L, role, mat="Glass", tr=0.0, collide=False, light=None, 
     c = np.asarray(base, float) + d * L / 2
     body = block(c, (b, L, b), role, R, mat, transparency=tr, collide=collide, light=light if not core else None,
                  cast_shadow=False, reflectance=0.08 if mat == "Glass" else 0.0)
-    tipR = R @ angles(math.pi / 4, 0, 0)
-    tc = np.asarray(base, float) + d * L
-    tm = tip_mat or mat
-    tip = block(tc, (b, b * 0.72, b * 0.72), role + "_tip", tipR, tm, transparency=tr if tm != "Neon" else 0.0,
-                cast_shadow=False, reflectance=0.08 if tm == "Glass" else 0.0)
-    out = [body, tip]
+    out = [body]
+    if tip:
+        tipR = R @ angles(math.pi / 4, 0, 0)
+        tc = np.asarray(base, float) + d * L
+        tm = tip_mat or mat
+        out.append(block(tc, (b, b * 0.72, b * 0.72), role + "_tip", tipR, tm, transparency=tr if tm != "Neon" else 0.0,
+                         cast_shadow=False, reflectance=0.08 if tm == "Glass" else 0.0))
     if core:
         out.append(block(np.asarray(base, float) + d * L * 0.45, (b * 0.45, L * 0.8, b * 0.45), "core", R, "Neon",
                          transparency=0.25, cast_shadow=False, light=light))
@@ -254,9 +256,10 @@ def crystal(rng, k, size="small", lit=False):
             light = {"range": 22 if size != "giant" else 55, "brightness": 1.2 if size != "giant" else 1.5, "role": "core"}
         giant = size == "giant"
         # Lit-Kristalle (mittel): Spitze des Hauptprismas aus Neon -> Bloom nur dort; sonst undurchsichtiges Glas
+        # Runde 1 (Teile sparen): Dachfirst-Spitze nur am Hauptprisma (ausser Riesen-Kristallen)
         parts += _prism(base, d, bi, Li, "c1" if i % 2 == 0 else "c2", tr=0.35 if giant else 0.0,
                         collide=(size != "small" and i == 0), light=light, core=(giant and i == 0),
-                        tip_mat="Neon" if (lit and not giant and i == 0) else None)
+                        tip_mat="Neon" if (lit and not giant and i == 0) else None, tip=(giant or i == 0))
     # 1-2 Fussbrocken in Gesteinsfarbe: der Kristall waechst aus dem Fels
     for j in range(1 + k % 2):
         a = az0 + 2.5 + j * 2.0
@@ -440,6 +443,43 @@ def boulder(rng, k):
     return Template(f"Boulder_{k}", "Rock", parts, [{"main": C("#BE9690")}, {"main": C("#C99E94")}, {"main": C("#B58C92")}])
 
 
+def band_block(rng, k, mat):
+    """Runde 1: Felsbrocken aus dem Schichtstapel (6-14 Studs bei s 0,7-1,5): zwei gestapelte Bloecke + Keil im
+    Material und in der Farbe des Bands (Mittelgroesse zwischen Kiesel/Brocken und Tafelberg, Zielbild-Mittelfeld)."""
+    base_c = C(ROCKS[mat])
+    w, h, d = rng.uniform(7.5, 9.5), rng.uniform(3.6, 4.6), rng.uniform(6.0, 7.5)
+    yaw = rng.uniform(0, math.pi)
+    parts = [block((0, h * 0.42, 0), (w, h, d), "main", angles(rng.uniform(-0.06, 0.06), yaw, rng.uniform(-0.06, 0.06)), mat,
+                   collide=True)]
+    w2, h2, d2 = w * rng.uniform(0.6, 0.75), h * rng.uniform(0.75, 0.95), d * rng.uniform(0.6, 0.8)
+    off = np.array([rng.uniform(-0.15, 0.15) * w, h * 0.92 + h2 * 0.42, rng.uniform(-0.12, 0.12) * d])
+    parts.append(block(off, (w2, h2, d2), "upper", angles(rng.uniform(-0.08, 0.08), yaw + rng.uniform(-0.5, 0.5),
+                                                          rng.uniform(-0.08, 0.08)), mat))
+    a = yaw + rng.uniform(1.2, 2.0)
+    ws = np.array([rng.uniform(3.5, 4.5), h * rng.uniform(0.8, 1.1), rng.uniform(4.0, 5.5)])
+    parts.append(wedge((math.cos(a) * w * 0.5, ws[1] * 0.4, math.sin(a) * w * 0.5), tuple(ws), "main", rot_y(-a + math.pi / 2),
+                       mat))
+    variants = [{"main": darker(base_c, 0.06), "upper": lighter(base_c, 0.08)},
+                {"main": darker(base_c, 0.12), "upper": base_c}]
+    return Template(f"BandBlock_{mat}_{k}", "Rock", parts, variants)
+
+
+NEEDLE = [(C("#EEA0A2"), C("#F4D49A")), (C("#D2AACE"), C("#F2B6B8")), (C("#F1CF94"), C("#DDB6DA")),
+          (C("#E896A8"), C("#F6E0B0"))]
+
+
+def rock_needle(rng, k):
+    """Runde 1: schlanke Felsnadel fuer den Nadelgarten (2 Teile): gedrehter Schaft + Keil-Spitze, 11-22 Studs."""
+    H = rng.uniform(9, 17)
+    b = rng.uniform(2.6, 3.4)
+    tilt = angles(rng.uniform(-0.05, 0.05), math.pi / 4 + rng.uniform(-0.2, 0.2), rng.uniform(-0.05, 0.05))
+    parts = [block((0, H / 2 - 0.6, 0), (b, H, b), "body", tilt, "Sandstone", collide=True)]
+    th = rng.uniform(3.5, 5.5)
+    parts.append(wedge((0, H - 0.6 + th / 2 - 0.1, 0), (b * 0.9, th, b * 0.9), "tip", tilt, "Limestone"))
+    variants = [{"body": body, "tip": tip} for body, tip in NEEDLE]
+    return Template(f"RockNeedle_{k}", "Rock", parts, variants)
+
+
 def copper_rock(rng, k):
     """Kupfer-Brocken: 2-3 gedrehte Bloecke/Keile, Patina als flache Scheiben."""
     D = rng.uniform(5, 7)
@@ -529,6 +569,35 @@ def titan_vein_segment():
                     [{"main": C("#9BE8FF")}])
 
 
+BAND_BLOCK_MATS = ("Sandstone", "Slate", "Limestone")
+
+
+def volcano_plume(k, rc, depth, rf):
+    """Runde 1: Rauchfahne + Glutrand fuer den Vulkan (an die Kratergroesse angepasst, Fusspunkt = Kraterboden-Mitte).
+    1 unsichtbares Traegerteil mit Rauch-Partikeln (kind "smoke") und PointLight, 8 Neon-Keile am oberen Kraterhang."""
+    # Groesse 26 -> 85 (Vorschlag war 18 -> 55; im Zielbild ist die Fahne oben so breit wie der Kegel)
+    smoke = {"kind": "smoke", "rate": 6, "lifetime": [12, 18], "size": [26, 85], "speed": [10, 14], "spread": 8,
+             "color": "#D9CCD6", "transparency": [0.35, 1.0]}
+    light = {"range": 60, "brightness": 2.0, "role": "ember"}
+    parts = [block((0, 3.0, 0), (4, 4, 4), "ember", None, "Plastic", transparency=1.0, cast_shadow=False,
+                   particles=smoke, light=light)]
+    t = 0.62                                                   # Lage auf dem Innenhang (0 = Boden, 1 = Kraterrand)
+    rr = rf + (rc - rf) * t
+    y = depth * (3 * t * t - 2 * t ** 3) + 2.2                 # Krater-Profil wie fields.volcano (smoothstep) + halbe Keilhoehe
+    slope = math.atan(depth * 6 * t * (1 - t) / max(rc - rf, 1.0))
+    for i in range(8):
+        a = i * math.pi / 4 + 0.2
+        # Keil: Unterseite liegt auf dem Hang, Schraege zeigt zur Kratermitte und nach oben (lokal +Z = hangaufwaerts)
+        R = rot_y(math.pi / 2 - a) @ angles(-slope, 0, 0)
+        parts.append(wedge((math.cos(a) * rr, y, math.sin(a) * rr), (rng_w(i), 4.0, (rc - rf) * 0.5), "glow", R, "Neon",
+                           cast_shadow=False))
+    return Template(f"VolcanoPlume_{k}", "Landmark", parts, [{"ember": C("#FF9A4A"), "glow": C("#FFB05A")}])
+
+
+def rng_w(i):
+    return 14.0 + 4.0 * ((i * 37) % 5) / 4.0
+
+
 def build_catalog(rng):
     t = {}
 
@@ -554,6 +623,8 @@ def build_catalog(rng):
         "Fossil": [add(fossil(rng, k)) for k in range(2)],
         **{"Pebble_" + m: [add(pebble(rng, k, m)) for k in range(3)] for m in ROCKS},
         "CopperRock": [add(copper_rock(rng, k)) for k in range(3)],
+        **{"BandBlock_" + m: [add(band_block(rng, k, m)) for k in range(3)] for m in BAND_BLOCK_MATS},
+        "RockNeedle": [add(rock_needle(rng, k)) for k in range(4)],
         "Tuft": [add(tuft(rng, k)) for k in range(5)],
         "Cloud": [add(cloud())], "FogBall": [add(fog_ball())], "LightBeam": [add(light_beam())],
         "EdgeBarrier": [add(edge_barrier())], "TitanVein": [add(titan_vein_segment())],

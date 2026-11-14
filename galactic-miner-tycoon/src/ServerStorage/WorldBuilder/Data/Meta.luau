@@ -23,6 +23,7 @@ return {
 			Limestone = "Limestone",
 			Sandstone = "Sandstone",
 			Concrete = "Salt",
+			Asphalt = "Basalt",
 		},
 	},
 	strata = {
@@ -83,9 +84,9 @@ return {
 		},
 	},
 	materialColors = {
-		Ground = Color3.fromRGB(248, 182, 140),
+		Ground = Color3.fromRGB(255, 170, 122),
 		Sand = Color3.fromRGB(247, 213, 166),
-		Mud = Color3.fromRGB(236, 142, 116),
+		Mud = Color3.fromRGB(238, 148, 112),
 		Sandstone = Color3.fromRGB(238, 160, 162),
 		Limestone = Color3.fromRGB(241, 207, 148),
 		Slate = Color3.fromRGB(210, 170, 206),
@@ -94,11 +95,12 @@ return {
 		Concrete = Color3.fromRGB(178, 224, 208),
 		Basalt = Color3.fromRGB(74, 61, 80),
 		CrackedLava = Color3.fromRGB(255, 176, 122),
-		Grass = Color3.fromRGB(178, 208, 142),
-		LeafyGrass = Color3.fromRGB(134, 194, 166),
+		Grass = Color3.fromRGB(162, 216, 96),
+		LeafyGrass = Color3.fromRGB(92, 196, 164),
 		Snow = Color3.fromRGB(246, 240, 242),
 		Ice = Color3.fromRGB(207, 230, 238),
 		Glacier = Color3.fromRGB(169, 216, 232),
+		Asphalt = Color3.fromRGB(180, 100, 78),
 	},
 	water = {
 		WaterColor = Color3.fromRGB(95, 227, 214),
@@ -124,12 +126,12 @@ return {
 			Technology = Enum.Technology.ShadowMap,
 		},
 		Atmosphere = {
-			Density = 0.28,
+			Density = 0.17,
 			Offset = 0.2,
-			Color = Color3.fromRGB(242, 191, 166),
+			Color = Color3.fromRGB(226, 182, 196),
 			Decay = Color3.fromRGB(124, 106, 160),
 			Glare = 0.25,
-			Haze = 1.5,
+			Haze = 1,
 		},
 		Bloom = {
 			Intensity = 0.35,
@@ -138,8 +140,8 @@ return {
 		},
 		ColorCorrection = {
 			Brightness = 0,
-			Contrast = 0.08,
-			Saturation = 0.04,
+			Contrast = 0.14,
+			Saturation = 0.12,
 			TintColor = Color3.fromRGB(255, 242, 232),
 		},
 		SunRays = {
@@ -207,5 +209,5 @@ return {
 		S = 1,
 		D = 3,
 	},
-	waterLevels = {-38.25, -34.25, -34, -30.5, -29.75, -27, -26.25, -25.75, -22.5, -22.25, -22, -21.75, -18.5, -18.25, -18, -14.5, -14, -11, -10.25, -10, -9.5, -5, -2, 2},
+	waterLevels = {-42, -38.5, -38.25, -38, -34.5, -34.25, -34, -30.25, -30, -27, -26, -22.5, -22.25, -22, -21.75, -18.5, -18.25, -14.5, -14.25, -14, -11, -10.5, -10.25, -10, -9.5, -6, -5, -2, 2},
 }

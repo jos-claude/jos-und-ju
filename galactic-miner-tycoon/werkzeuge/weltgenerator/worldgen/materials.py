@@ -31,16 +31,18 @@ LAYERS = {
         "Ground": "Mud", "Grass": "Ground", "LeafyGrass": "Mud", "Sand": "Sandstone", "Mud": "Mud",
         "Basalt": "Basalt", "CrackedLava": "Basalt", "Salt": "Salt", "Snow": "Slate", "Ice": "Glacier",
         "Glacier": "Glacier", "Slate": "Slate", "Rock": "Rock", "Limestone": "Limestone", "Sandstone": "Sandstone",
-        "Concrete": "Salt",
+        "Concrete": "Salt", "Asphalt": "Basalt",
     },
 }
 
 # Review-Palette: Boden = Mischfarbe der Gesteine, Schutt (Rock) verbindet Fels und Boden, Akzente nur bei Leben
 MATERIAL_COLORS = {
-    "Ground": "#F8B68C", "Sand": "#F7D5A6", "Mud": "#EC8E74", "Sandstone": "#EEA0A2", "Limestone": "#F1CF94",
+    # Runde 1: Boden waermer/gesaettigter (Ground, Mud), Haine satter (Grass, LeafyGrass), Vulkankegel Asphalt (rotbraun;
+    # Vorschlag #A65A4C wirkte in der Vorschau zu dunkel-karminrot, darum etwas heller/waermer)
+    "Ground": "#FFAA7A", "Sand": "#F7D5A6", "Mud": "#EE9470", "Sandstone": "#EEA0A2", "Limestone": "#F1CF94",
     "Slate": "#D2AACE", "Rock": "#CDA49E", "Salt": "#F8ECE2", "Concrete": "#B2E0D0", "Basalt": "#4A3D50",
-    "CrackedLava": "#FFB07A", "Grass": "#B2D08E", "LeafyGrass": "#86C2A6", "Snow": "#F6F0F2", "Ice": "#CFE6EE",
-    "Glacier": "#A9D8E8",
+    "CrackedLava": "#FFB07A", "Grass": "#A2D860", "LeafyGrass": "#5CC4A4", "Snow": "#F6F0F2", "Ice": "#CFE6EE",
+    "Glacier": "#A9D8E8", "Asphalt": "#B4644E",
 }
 
 
@@ -139,10 +141,11 @@ def assign(c: Ctx):
     from scipy import ndimage as ndi
     hs = ndi.gaussian_filter(np.where(c.void, 0.0, H), 8)
     conc = np.clip(ndi.laplace(hs) * 25.0, -1, 1)
-    cor = nz.fbm("coral", x, z, 210, 3) + 0.35 * conc + 0.22 * nz.fbm("coralfray", x, z, 14, 2)
+    # Runde 1: weniger, groessere und ruhigere Flecken (~12 %), keine Krisel-Raender
+    cor = nz.fbm("coral", x, z, 320, 3) + 0.35 * conc + 0.08 * nz.fbm("coralfray", x, z, 40, 2)
     plains = ~ringE & (c.r > 160) & ~c.void
-    thr = np.quantile(cor[plains], 0.78) if plains.any() else 1.0
-    top[_clean(plains & (cor > thr), 1, 2, 30)] = MUD
+    thr = np.quantile(cor[plains], 0.88) if plains.any() else 1.0
+    top[_clean(plains & (cor > thr), 3, 4, 150)] = MUD
     # Ring C Suedwest: Duenenfeld = Sand (weich begrenzt)
     dune = c.masks.get("dune_zone")
     if dune is not None:
@@ -156,7 +159,7 @@ def assign(c: Ctx):
     snowfoot = ringE & (c.r > 1800) & (sl < 12) & (nz.fbm("snowfoot", x, z, 140, 3) > 0.05)
     top[_clean(snowfoot, 4, 6, 200)] = MAT["Snow"]
     # Sand: Washes (Band mit weichem, geschwungenem Rand), Faecher, Canyonboeden
-    wm = (c.wash_dist < -2.0 + 3.0 * nz.fbm("washedge", x, z, 90, 2)) | c.masks.get("wash_arm", np.zeros_like(c.void))
+    wm = (c.wash_dist < -2.0 + 1.5 * nz.fbm("washedge", x, z, 90, 2)) | c.masks.get("wash_arm", np.zeros_like(c.void))
     top[_clean(wm, 3, 5, 120)] = SAND
     if "wash_bar" in c.masks:
         top[_clean(c.masks["wash_bar"], 1, 2, 12)] = G
@@ -186,6 +189,15 @@ def assign(c: Ctx):
                  "geode", "crater_floor", "ramp", "wash_floor", "rim"):
         if name in c.masks:
             st &= ~c.masks[name]
+    # Runde 1: Gesteinsbaender auch auf der steilen Innenwand des Randgebirges und auf den Vorbergen
+    # (Randgebirge = "Mega-Tafelberge" derselben Familie wie im Zielbild)
+    if "rim" in c.masks and hasattr(c, "rim_rc"):
+        # nur bis ~y 170 (verrauscht): Kronen bleiben lavendel (Slate/Rock) -> ruhigerer Hintergrund wie im Zielbild
+        st |= c.masks["rim"] & (sl > 40.0) & (c.r < c.rim_rc) & (H < 170.0 + 30.0 * nz.fbm("rimbandtop", x, z, 160, 2))
+    if "foothill" in c.masks:
+        st |= c.masks["foothill"]
+    if "rim_talus" in c.masks:
+        st &= ~c.masks["rim_talus"]
     if "rim_talus" in c.masks:
         top[c.masks["rim_talus"]] = MAT["Rock"]
     if "rim" in c.masks:

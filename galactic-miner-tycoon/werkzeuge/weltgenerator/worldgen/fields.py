@@ -48,10 +48,13 @@ def volcano(c: Ctx, cx, cz, top, crater_d, west_az=None, name="volcano", small=F
     hv = np.where(q < 0.999, hv, -1e9)
     Hl = c.H[sl]
     new = np.maximum(Hl, hv)
-    c.H[sl] = new
+    # Runde 1 (Fehler behoben): Hl ist eine Sicht auf c.H -> body VOR dem Schreiben bestimmen. Vorher war body immer
+    # leer: kein Kegel-Material (Boden + Schicht-Flecken), keine Vulkan-Maske, Lavazungen starben nach 4 Schritten.
     body = (hv > Hl + 0.5) & (rho < Rv_a)
+    c.H[sl] = new
     c.mask("volcano")[sl] |= body
-    set_mat(c, sl, body, "Basalt")
+    # Runde 1: Kegel aus Asphalt (rotbraun, MATERIAL_COLORS), Basalt bleibt den Lavafeldern
+    set_mat(c, sl, body, "Asphalt" if not small else "Mud")   # Kleinvulkane korall (stehlen dem Hauptkegel nicht die Show)
     set_mat(c, sl, rho < rf + 2, "CrackedLava")
     c.obstacle[sl] |= body
     claim(c, sl, rho < Rv_a * 1.05 + 10)

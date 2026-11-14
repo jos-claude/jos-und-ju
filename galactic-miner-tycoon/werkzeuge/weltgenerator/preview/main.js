@@ -23,13 +23,13 @@ const NEON_GAIN = 1.55;
 const ALBEDO = {
   Ground: [0.56, 0.545, 0.49], Mud: 0.6, Sand: 0.8, Sandstone: 0.85, Limestone: 0.88, Slate: 0.7, Rock: 0.68, Salt: 0.92,
   Concrete: 0.82, Basalt: 0.75, CrackedLava: 0.65, Grass: 0.66, LeafyGrass: 0.62, Snow: 0.95, Ice: 0.9, Glacier: 0.85,
-  Plaster: 0.92, Wood: 0.6, Plastic: 1, SmoothPlastic: 1, Neon: 1, Glass: 1,
+  Asphalt: 0.7, Plaster: 0.92, Wood: 0.6, Plastic: 1, SmoothPlastic: 1, Neon: 1, Glass: 1,
 };
 const albedo = (m) => { const a = ALBEDO[m] ?? 0.85; return Array.isArray(a) ? a : [a, a, a]; };
 // Koernung der Roblox-Texturen (Helligkeits-Rauschen, nur in der Naehe sichtbar)
 const GRAIN = { Ground: 0.16, Mud: 0.16, Sand: 0.10, Sandstone: 0.14, Limestone: 0.12, Slate: 0.18, Rock: 0.2, Salt: 0.06,
   Concrete: 0.1, Basalt: 0.2, CrackedLava: 0.1, Grass: 0.22, LeafyGrass: 0.22, Snow: 0.04, Ice: 0.05, Glacier: 0.06,
-  Plaster: 0.07, Wood: 0.18 };
+  Asphalt: 0.2, Plaster: 0.07, Wood: 0.18 };
 
 const deg = (d) => d * Math.PI / 180;
 const lin = (c) => new THREE.Color().setRGB(c[0] / 255, c[1] / 255, c[2] / 255, THREE.SRGBColorSpace);
@@ -617,7 +617,7 @@ async function main() {
             const lc = lin(colors[p.light.role || p.role] || [255, 255, 255]);
             lightList.push({ p: lp, range: Math.min(60, p.light.range * s), c: lc, b: p.light.brightness });
           }
-          if (p.particles) steamPuffs.push({ p: new THREE.Vector3(p.pos[0] * s, p.pos[1] * s, p.pos[2] * s).applyMatrix4(mPlace), s });
+          if (p.particles) steamPuffs.push({ p: new THREE.Vector3(p.pos[0] * s, p.pos[1] * s, p.pos[2] * s).applyMatrix4(mPlace), s, cfg: p.particles });
         }
       }
     }
@@ -657,12 +657,36 @@ async function main() {
       scene.add(im);
     }
     // Dampf als Platzhalter (der Builder setzt echte ParticleEmitter)
-    if (steamPuffs.length) {
+    // Rauch (kind "smoke", Vulkan): grosse Ballen nach Partikel-Groesse/-Steigweg, leicht mit dem Wind (Lee Az 70)
+    const smokePuffs = steamPuffs.filter((sp) => sp.cfg && sp.cfg.kind === 'smoke');
+    if (smokePuffs.length) {
+      const NS = 11;
+      const sm = new THREE.MeshLambertMaterial({ color: new THREE.Color(0.82, 0.78, 0.82), transparent: true, opacity: 0.5, depthWrite: false });
+      const im = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 16, 10), sm, smokePuffs.length * NS);
+      let i = 0;
+      for (const sp of smokePuffs) {
+        const c = sp.cfg;
+        const rise = 0.5 * (c.speed[0] + c.speed[1]) * 0.5 * (c.lifetime[0] + c.lifetime[1]) * sp.s;
+        const wx = Math.sin(deg(70)), wz = -Math.cos(deg(70));
+        for (let k = 0; k < NS; k++) {
+          const t = k / (NS - 1);
+          const r = 0.5 * (c.size[0] + (c.size[1] - c.size[0]) * t) * sp.s * (0.85 + 0.3 * Math.sin(k * 2.3));
+          const drift = rise * 0.35 * t * t;
+          tmp.compose(new THREE.Vector3(sp.p.x + wx * drift + Math.sin(k * 1.9) * r * 0.25, sp.p.y + 6 + rise * t,
+            sp.p.z + wz * drift + Math.cos(k * 1.3) * r * 0.25), new THREE.Quaternion(), new THREE.Vector3(r, r * 0.9, r));
+          im.setMatrixAt(i++, tmp);
+        }
+      }
+      im.renderOrder = 4;
+      scene.add(im);
+    }
+    const steamOnly = steamPuffs.filter((sp) => !(sp.cfg && sp.cfg.kind === 'smoke'));
+    if (steamOnly.length) {
       const pm = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.1, 1.08, 1.12), transparent: true, opacity: 0.16, depthWrite: false });
-      const n = steamPuffs.length * 7;
+      const n = steamOnly.length * 7;
       const im = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), pm, n);
       let i = 0;
-      for (const sp of steamPuffs) for (let k = 0; k < 7; k++) {
+      for (const sp of steamOnly) for (let k = 0; k < 7; k++) {
         const r = (2 + k * 1.4) * sp.s;
         tmp.compose(new THREE.Vector3(sp.p.x + Math.sin(k * 1.7) * k * 0.8, sp.p.y + 2 + k * 4.2 * sp.s, sp.p.z + Math.cos(k * 2.1) * k * 0.8 + k * 0.6),
           new THREE.Quaternion(), new THREE.Vector3(r, r, r));

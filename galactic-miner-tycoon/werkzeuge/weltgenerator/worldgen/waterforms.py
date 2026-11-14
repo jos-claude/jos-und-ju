@@ -29,7 +29,7 @@ def _ellipse(c, x, z, cx, cz, a, b, rot, wob=0.08, name="ell", scale=30):
 
 
 def pond(c: Ctx, cx, cz, diam, depth, rot=None, floor_mat="Mud", bank_mat="LeafyGrass", ring_mat="Grass",
-         shore=None, name="pond"):
+         shore=None, name="pond", ring_w=18.0):
     R = diam / 2
     rot = rot if rot is not None else c.u(0, math.pi)
     pad = R * 1.3 + 40
@@ -55,7 +55,7 @@ def pond(c: Ctx, cx, cz, diam, depth, rot=None, floor_mat="Mud", bank_mat="Leafy
     set_mat(c, sl, (inner > bank * 0.4), floor_mat)
     wob = 9.0 * c.nz.fbm(name + "g", x, z, 30, 3)
     set_mat(c, sl, (inner <= bank * 0.4) & (inner > -6 + wob * 0.5), bank_mat)
-    set_mat(c, sl, (inner <= -6 + wob * 0.5) & (inner > -24 + wob * 1.6), ring_mat)
+    set_mat(c, sl, (inner <= -6 + wob * 0.5) & (inner > -6 - ring_w + wob * 1.6 * ring_w / 18.0), ring_mat)
     c.mask("pond")[sl] |= inner > -4
     c.obstacle[sl] |= inner > -2
     claim(c, sl, inner > -30)
