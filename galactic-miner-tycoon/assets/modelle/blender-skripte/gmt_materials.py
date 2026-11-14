@@ -30,6 +30,13 @@ MATERIALS = {
     "OreRock": ("#8A766A", "rock"),       # Erzbrocken
     "OreRockDark": ("#3E3631", "rock"),   # Erzhaufen-Grundkoerper
     "Cyan": ("#3FF5E3", "neon"),
+    # Spitzhacke (bauplaene/spitzhacke.md), passend zu oreColors im Code
+    "Rust": ("#A65A35", "paint"),         # Kopf der Rost-Hacke
+    "RustDark": ("#5E3524", "paint"),     # Block und Stiel der Rost-Hacke
+    "Copper": ("#D9853F", "steel"),       # Bolzen der Stahl-Hacke
+    "Crystal": ("#BE6EF0", "neon"),       # Kristall-Spitze (= Erzfarbe Kristall)
+    "Titan": ("#C8D6E4", "steel"),        # Kopf der Titan-Hacke (= Erzfarbe Titan)
+    "SteelMid": ("#5E656D", "steel"),     # Stiel der Spitzhacke (zwischen SteelDark und SteelGrey)
     "Glass": ("#BFD3DC", "glass"),
     "GlassDark": ("#4E5D66", "glass"),
 }

@@ -163,6 +163,26 @@ Diese Prompts sind noch nicht auf den neuen Stil angepasst. Bitte vor der Nutzun
 
 Ein Astronaut ist nicht nötig: Der Spieler behält seinen normalen Roblox-Skin.
 
+## Higgsfield-Bilder (14.11.2026)
+Erzeugt von Jos' Claude über die Higgsfield-API (`marketing-studio/image`, 2K, je ca. 0,26 $, mit unseren Bildern als Stil-Vorlage). Prompts, Einstellungen und Request-IDs stehen in `bilder/higgsfield-jobs-2026-11-14.json`, so lassen sie sich wiederholen.
+
+| Objekt | Datei |
+|---|---|
+| Spitzhacken, alle 5 (Seite und schräg) | `bilder/ausruestung/spitzhacken-reihe-01.jpg` |
+| Spitzhacke Stahl (Modellblatt) | `bilder/ausruestung/spitzhacke-stahl-01.jpg` |
+| Spitzhacken-Köpfe (Seite und oben) | `bilder/ausruestung/spitzhacken-koepfe-01.jpg` |
+| Rucksack, 5 Stufen | `bilder/ausruestung/rucksack-01.jpg` |
+| Bohrer Kupfer, Kohle, Kristall, Titan | `bilder/gebaeude/bohrer-varianten-01.jpg` |
+| Lager-Kästen für alle 5 Erze | `bilder/gebaeude/lager-kasten-varianten-01.jpg` |
+| Kauffeld (3 Zustände) | `bilder/gebaeude/kauffeld-01.jpg` |
+| Band-Sammler | `bilder/gebaeude/band-sammler-01.jpg` |
+| Basis-Deko außen (8 Teile) | `bilder/gebaeude/basis-deko-01.jpg` |
+| Schmiede (Raum 2) | `bilder/raeume/schmiede-01.jpg` |
+| Maschinenhalle (Raum 3) | `bilder/raeume/maschinenhalle-01.jpg` |
+| Garage (Raum 4) | `bilder/raeume/garage-01.jpg` |
+| Forschungslabor (Raum 5) | `bilder/raeume/labor-01.jpg` |
+
+
 ---
 
 ## Heimatplanet: Varianten mit mehr Weltraum-Look (12.11.2026)

@@ -4,6 +4,8 @@
 - **Spiel-Werte:** `../../../spiel/16-raeume-und-spitzhacke.md` (Schmiede: Spitzhacke und Rucksack verbessern, Teleportfeld zur Lobby)
 - **Raum im Code:** `src/ReplicatedStorage/Shared/Config/BaseLayout.luau` (`forge`, `pads`), Greybox in `GreyboxShop.buildForge`
 - **Gehört zu:** `spitzhacke.md`
+- **Referenzbild (Higgsfield, 14.11.):** `../../../referenz/bilder/raeume/schmiede-01.jpg`, zeigt genau diese Aufteilung (Esse hinten links, Amboss-Station links, Werkbank rechts, Teleporter hinten Mitte, Werkzeugwand hinten rechts).
+- **Achtung (14.11.):** Ju hat die Kauffelder in `BaseLayout.luau` verschoben: Spitzhacke (37,5 | 41), Rucksack (50,5 | 41), Lobby (44 | 51). Die Positionen unten stammen noch vom alten Stand (36 | 44, 52 | 44, 44 | 53) und müssen vor dem Blender-Bau angepasst werden.
 
 ## Route: Blender-Skript, nicht Tripo
 Alles hier sind Möbel und Maschinen mit festen Maßen (Amboss, Werkbank, Ofen, Plattform). Das ist prozedural, wie Lager-Kasten und Basis. Geplant ist ein Skript `blender-skripte/build_forge.py` mit **einem Modell pro Möbelstück**. Die Raumhülle (Wände, Dach, Tür) gehört **nicht** zu diesem Bauplan.

@@ -1,0 +1,204 @@
+{
+ "_info": "Higgsfield-API (marketing-studio/image), 14.11.2026, je ca. 0,26 $. Erzeugt mit ~/Desktop/Github/higgsfield-api/generate.ts. 'refs' = Stil-Vorlagen (relativ zu galactic-miner-tycoon/).",
+ "jobs": {
+  "band-sammler-01": {
+   "bild": "referenz/bilder/gebaeude/band-sammler-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/foerderband-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "16:9",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-fe01-72cb-8720-d3259ef9c406",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our conveyor belts: match their style, colors, rails and belt exactly. Layout: one single model sheet divided into a grid of 7 panels separated by thin white lines. All 7 panels show the exact same object with identical design, proportions and colors. Top row: (1) large isometric 3/4 perspective view from front-left above, (2) straight orthographic front view, (3) straight orthographic side view. Bottom row: (4) straight orthographic top-down view, (5) medium close-up 3/4 view of the most important part, (6) and (7) two small macro close-ups of the smaller details. Orthographic views must be perfectly straight with no perspective distortion, exactly 90 degrees, so the shapes can be measured and rebuilt in Blender. Object: a conveyor belt merger that joins three incoming conveyor belts into one: a chunky square orange housing on four short steel legs, three input openings (left, back and right) and one output opening at the front, each opening framed in steel, a short stub of the dark grey conveyor belt with yellow arrow markings plugged into every opening (arrows pointing into the merger on the three inputs and out of it on the output), a hazard stripe band around the bottom of the housing, a small glowing cyan light on top and a few grey ore chunks coming out on the output belt. Maximum about 15 distinct parts."
+  },
+  "basis-deko-01": {
+   "bild": "referenz/bilder/gebaeude/basis-deko-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/basis-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "16:9",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-fe17-7a7e-a129-8102164001ca",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our finished game style: match its colors, materials, shading, bevels, bolts, hazard stripes and level of detail exactly. Use it only as a style reference unless the object text says otherwise. The attached image shows our base exterior. Layout: one single image, a neat grid of eight small props in two rows of four, all at the same scale, same camera (isometric 3/4 view from front-left above), evenly spaced, each on the plain background. Object: a decoration kit for the outside of a space colony base, each prop made of very few simple parts: (1) a satellite dish on a steel post with a small cyan light, (2) a tilted dark blue solar panel on an orange stand, (3) a stack of two orange cargo crates with steel corners and hazard stripes, (4) three orange fuel barrels with a cyan band, (5) a tall cylindrical steel fuel tank with orange bands and a small ladder, (6) a pipe junction with a big orange valve wheel, (7) a steel lamp post with a round orange beacon light on top, (8) a short safety railing segment with yellow posts and steel rails."
+  },
+  "bohrer-varianten-01": {
+   "bild": "referenz/bilder/gebaeude/bohrer-varianten-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/bohrer-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "16:9",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-fe3e-747a-b837-444df2ac57f9",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nLayout: one single image, four mining drills in a row from left to right, same camera (isometric 3/4 view from front-left above), same size, evenly spaced, each standing on its own small low-poly ore mound. Object: exactly the same mining drill machine as in the attached reference image, with the identical shape, parts and proportions: orange body, steel base plate with hazard stripes, motor housing with vent, glass buffer tank, side drill with a spiral bit, round output port. The orange body, the steel base and the hazard stripes stay the same on all four. Only the accent parts change color (the band under the motor housing, the collar rings of the drill, the spiral drill bit, the status light) and the ore in the mound and in the glass tank: (1) copper drill: copper-colored accents with teal-green patina, ore mound of copper rock with teal-green patina chunks; (2) coal drill: dark graphite accents with a warm orange glow line, ore mound of black coal with glowing orange cracks; (3) crystal drill: violet accents, a softly glowing purple status light, ore mound with pink-purple glowing crystal chunks; (4) titanium drill: pale silvery-blue titanium accents with a thin cyan glow edge, ore mound of silvery blue metallic chunks."
+  },
+  "garage-01": {
+   "bild": "referenz/bilder/raeume/garage-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/basis-01.jpg",
+    "referenz/bilder/gebaeude/bohrer-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "4:3",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da71-0022-7329-a35e-e2323361b713",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our finished game style: match its colors, materials, shading, bevels, bolts, hazard stripes and level of detail exactly. Use it only as a style reference unless the object text says otherwise. The attached images show our base exterior and our drill machine. Scene: an isometric cutaway diorama of one room inside a modular space colony base, seen from above at 45 degrees with the front wall and the roof removed. Rectangular room with orange wall panels in thick steel frames, a steel tread-plate floor, steel pillars in the corners. The room is a garage for a small moon rover, the rover itself is not shown. The front has a wide open roll-up door with a dark grey shutter rolled up and yellow-black hazard stripes on the door frame. Center: an empty parking bay with yellow floor markings and a big round low lift platform with a glowing cyan ring, ready for a vehicle. Left wall: a rover upgrade station with a dark steel plinth with hazard stripes and an orange back panel with steel X-struts and a cyan light strip; on it a chunky rover engine block on a stand, a big knobby wheel on a rack, an orange turbo canister and a small round radar scanner dish. Right wall: a steel pegboard with oversized chunky tools (wrench, screwdriver, hammer), a stack of three fat rubber tires, an orange fuel pump with a black hose. Back wall: a charging station with a thick cable and a cyan plug, a few orange crates. In front of the upgrade station a flat square walk-on buy pad with a hazard-striped border and a cyan glowing outline. Two orange industrial lamps hang from above. Clean readable layout, no UI."
+  },
+  "kauffeld-01": {
+   "bild": "referenz/bilder/gebaeude/kauffeld-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/bohrer-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "16:9",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-fe95-7812-8763-bbc205eb3320",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our finished game style: match its colors, materials, shading, bevels, bolts, hazard stripes and level of detail exactly. Use it only as a style reference unless the object text says otherwise. Layout: one single model sheet with two rows separated by a thin white line. Top row: the same buy pad in three states side by side, isometric 3/4 view from front-left above. Bottom row: (4) straight orthographic top-down view and (5) straight orthographic front view of state 1, no perspective. Object: a square walk-on buy pad for a Roblox tycoon base (players buy things by stepping on it), very flat, only ankle high, about seven units wide: a dark steel square floor plate, a thick slightly raised border with yellow-black hazard stripes and bolted steel corner pieces, an inner square outline that glows, and at the back edge a small low steel pedestal with a blank dark screen (no text). State (1) affordable: inner outline glowing cyan, a small cyan hologram of a mining drill hovering above the center. State (2) too expensive: the same pad with the inner outline glowing warm orange, the hologram dimmed. State (3) locked: the same pad completely in flat grey, no glow, a simple grey padlock shape hovering above."
+  },
+  "labor-01": {
+   "bild": "referenz/bilder/raeume/labor-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/basis-01.jpg",
+    "referenz/bilder/gebaeude/bohrer-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "4:3",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-ff06-719b-9b5c-9d44db28d1e1",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our finished game style: match its colors, materials, shading, bevels, bolts, hazard stripes and level of detail exactly. Use it only as a style reference unless the object text says otherwise. The attached images show our base exterior and our drill machine. Scene: an isometric cutaway diorama of one room inside a modular space colony base, seen from above at 45 degrees with the front wall and the roof removed. Rectangular room with orange wall panels in thick steel frames, a steel tread-plate floor, steel pillars in the corners. The room is a friendly research lab, a bit brighter with some white wall panels between the orange ones. Back wall center: a big research console, a dark steel desk with chunky colored buttons and a large flat screen showing a simple glowing cyan tech tree diagram made of round icons connected by lines (no text). Left wall: a white lab bench with a row of glass jars containing ore samples (grey-brown iron, teal-green copper, black coal, pink crystal) and a chunky steel scanner with a cyan lens. Right side: a crystal analyzer machine, an orange base with a glass cylinder in which a pink-purple crystal floats inside a glowing cyan scan ring, and next to it a steel server cabinet with small blinking cyan lights. In front of the console a flat square walk-on buy pad with a hazard-striped border and a cyan glowing outline. Two white-orange lamps hang from above. Clean readable layout, no UI."
+  },
+  "lager-kasten-varianten-01": {
+   "bild": "referenz/bilder/gebaeude/lager-kasten-varianten-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/lager-kasten-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "16:9",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-fe07-7a4c-ac9e-fb3e443ce4a7",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nLayout: one single image, five storage bins in a row from left to right, same camera (isometric 3/4 view from front-left above), same size, evenly spaced. Object: exactly the same ore storage bin as in the attached reference image, with identical shape, parts and proportions: steel frame with bolts, big glass front wall, intake funnel on top, orange level gauge, side panels with steel X-struts and an upgrade plate with three cyan lights, steel base with hazard stripes. Each bin is half full with a different ore and its yellow top and side panels get the ore's color: (1) iron: yellow panels as in the reference, grey-brown ore chunks with rusty orange spots; (2) copper: copper-orange panels, copper chunks with teal-green patina; (3) coal: dark graphite panels, black coal chunks with a few glowing orange cracks; (4) crystal: violet panels, glowing pink-purple crystal chunks; (5) titanium: pale silvery-blue panels, silvery blue metallic chunks."
+  },
+  "maschinenhalle-01": {
+   "bild": "referenz/bilder/raeume/maschinenhalle-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/basis-01.jpg",
+    "referenz/bilder/gebaeude/bohrer-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "4:3",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da71-0045-783a-ac7f-79d7628db517",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our finished game style: match its colors, materials, shading, bevels, bolts, hazard stripes and level of detail exactly. Use it only as a style reference unless the object text says otherwise. The attached images show our base exterior and our drill machine. Scene: an isometric cutaway diorama of one room inside a modular space colony base, seen from above at 45 degrees with the front wall and the roof removed. Rectangular room with orange wall panels in thick steel frames, a steel tread-plate floor, steel pillars in the corners. The room is a machine hall where players buy conveyor belts and upgrade their drills. Left wall: a belt workshop station with a dark steel plinth with hazard stripes and an orange back panel with steel X-struts and a cyan light strip on top; on it two big rolls of dark grey conveyor belt on a steel rack and a short demo conveyor segment with yellow arrow markings and a few grey ore chunks riding on it. Right wall: a drill upgrade station with the same plinth and back panel; on it the orange mining drill from the reference stands on a low round lift platform, a chunky steel robot arm with a wrench leans over it, and a vertical bar of five square lights (two glowing cyan, three dark) shows the drill level. Back wall: a yellow overhead gantry crane rail with a hook, a wall of big orange and steel pipes with a valve wheel, a stack of spare conveyor segments on a pallet, a red-orange toolbox. In front of each station a flat square walk-on buy pad with a hazard-striped border and a cyan glowing outline. Two orange industrial lamps hang from above. Clean readable layout, no UI."
+  },
+  "rucksack-01": {
+   "bild": "referenz/bilder/ausruestung/rucksack-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/bohrer-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "16:9",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-fe15-7fc4-b728-f31ff2a05600",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our finished game style: match its colors, materials, shading, bevels, bolts, hazard stripes and level of detail exactly. Use it only as a style reference unless the object text says otherwise. Layout: one single model sheet with two rows separated by a thin white line, five backpacks per row in the same order, evenly spaced, each one bigger and more impressive than the one before. Top row: isometric 3/4 view from behind (the outer side that other players see), bottom row: perfectly straight orthographic side view, no perspective, with the shoulder straps visible. Object: five tiers of a chunky toy-like mining backpack for a blocky Roblox character, boxy shapes, thick straps: (1) cloth backpack: small cream canvas sack with a flap, brown straps, one buckle, a sewn patch; (2) metal backpack: boxy steel-grey pack with an orange lid, rivets, two straps; (3) reinforced backpack: larger orange pack with steel corner frame, a yellow-black hazard band, a small side pocket, one cyan light; (4) pro backpack: bigger orange pack with a steel frame, a small glass window on the back showing grey ore chunks inside, two cyan lights, a vent; (5) titanium backpack: the biggest, pale silvery-blue titanium shell with orange frame accents, a glass ore window, a thin glowing cyan edge, two small decorative nozzles at the bottom."
+  },
+  "schmiede-01": {
+   "bild": "referenz/bilder/raeume/schmiede-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/basis-01.jpg",
+    "referenz/bilder/gebaeude/bohrer-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "4:3",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-ffca-7af1-b856-3d83be6f69a4",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our finished game style: match its colors, materials, shading, bevels, bolts, hazard stripes and level of detail exactly. Use it only as a style reference unless the object text says otherwise. The attached images show our base exterior and our drill machine. Scene: an isometric cutaway diorama of one room inside a modular space colony base, seen from above at 45 degrees with the front wall and the roof removed. Rectangular room with orange wall panels in thick steel frames, a steel tread-plate floor, steel pillars in the corners. The room is a small forge workshop. Back left corner: a chunky orange forge furnace on a dark steel base with hazard stripes, a glowing orange ember mouth in a steel frame, a round temperature gauge on the side and a tall dark steel chimney with orange bands going up, a small crate of black coal next to it. Left wall: an upgrade station with a dark steel plinth with hazard stripes, an orange back panel with steel X-struts and a cyan light strip on top, a chunky grey anvil with a hammer lying on it, and next to the anvil a glass display case on an orange pedestal with a cyan glowing ring, showing a pickaxe inside. A small steel water tank in front of it. Right wall: a matching upgrade station with the same plinth and back panel, a steel workbench with strap rolls and a small rivet press, and a backpack hanging on a stand with a cyan glowing base. Back wall center: a round dark steel teleporter platform with a glowing cyan ring and a steel arch with an orange top beam with hazard stripes and cyan light strips on the inside of the pillars. Back right wall: a tool rack with five pickaxes hanging in a row, two in color and three as dark silhouettes. In front of each station a flat square walk-on buy pad with a hazard-striped border and a cyan glowing outline. Two orange industrial lamps hang from above. Warm orange light from the furnace, cool cyan light from the teleporter, clean readable layout, no UI."
+  },
+  "spitzhacke-stahl-01": {
+   "bild": "referenz/bilder/ausruestung/spitzhacke-stahl-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/bohrer-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "16:9",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-fe07-7575-b8f9-ffc367a3d5f0",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our finished game style: match its colors, materials, shading, bevels, bolts, hazard stripes and level of detail exactly. Use it only as a style reference unless the object text says otherwise.\n\nLayout: one single model sheet divided into a grid of 7 panels separated by thin white lines. All 7 panels show the exact same object with identical design, proportions and colors. Top row: (1) large isometric 3/4 perspective view from front-left above, (2) straight orthographic front view, (3) straight orthographic side view. Bottom row: (4) straight orthographic top-down view, (5) medium close-up 3/4 view of the most important part, (6) and (7) two small macro close-ups of the smaller details. Orthographic views must be perfectly straight with no perspective distortion, exactly 90 degrees, so the shapes can be measured and rebuilt in Blender. Object: a chunky toy-like mining pickaxe for a kid-friendly game, standing upright, the steel tier of five: a thick octagonal steel handle with a black rubber grip with three ribs at the bottom and a small octagonal dark steel pommel, three stacked rings of yellow-black-yellow hazard color below the head, a dark steel collar, and a blocky orange head block with beveled edges, copper-colored bolts in the corners (four per side) and two small glowing cyan square lights on each side. From the head block a light steel pick point extends to the front, tapering and curving slightly downward to a blunt rounded tip, and a shorter flat chisel end extends to the back, getting wider and flatter. A small glowing cyan dot on a dark steel cap on top of the head block. Maximum about 14 distinct parts. All pickaxes share the same build: an octagonal steel handle with a grip at the bottom and a small octagonal pommel, stacked hazard-colored rings and a dark steel collar below the head, a blocky orange head block with beveled edges and bolts, a pick point to the front that tapers and curves slightly downward to a blunt rounded tip (not sharp, kid-friendly), and a shorter flat chisel end to the back that gets wider and flatter. Proportions: the head span is about three quarters of the total height, the pick point is about twice as long as the chisel end, the head block is roughly a cube about one fifth of the total height, the handle is thick and chunky like a toy."
+  },
+  "spitzhacken-koepfe-01": {
+   "bild": "referenz/bilder/ausruestung/spitzhacken-koepfe-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/bohrer-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "16:9",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-fe85-7ed9-adbf-15b15714796a",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our finished game style: match its colors, materials, shading, bevels, bolts, hazard stripes and level of detail exactly. Use it only as a style reference unless the object text says otherwise.\n\nLayout: one single detail sheet with two rows separated by a thin white line, five pickaxe heads per row in the same order, evenly spaced. Only the head and the top part of the handle (collar and rings) are shown, large and sharp. Top row: perfectly straight orthographic side view, pick point facing left. Bottom row: the same five heads in a perfectly straight orthographic top-down view, pick point facing left, so the width of the pick, the head block and the chisel end can be measured. Object: the heads of five tiers of a chunky toy-like mining pickaxe. All pickaxes share the same build: an octagonal steel handle with a grip at the bottom and a small octagonal pommel, stacked hazard-colored rings and a dark steel collar below the head, a blocky orange head block with beveled edges and bolts, a pick point to the front that tapers and curves slightly downward to a blunt rounded tip (not sharp, kid-friendly), and a shorter flat chisel end to the back that gets wider and flatter. Proportions: the head span is about three quarters of the total height, the pick point is about twice as long as the chisel end, the head block is roughly a cube about one fifth of the total height, the handle is thick and chunky like a toy. Left to right: (1) Rusty pickaxe: rust-brown head, dark rust-brown handle, grip wrapped in cream tape, a small bolted metal patch plate on the side of the head block, only two bolts, blunt chipped tip, no lights. (2) Iron pickaxe: plain steel-grey head, orange head block, black rubber grip with three ribs, one yellow ring below the head, one small cyan square light on the side of the head block. (3) Steel pickaxe: shiny light steel head, orange head block with copper-colored bolts, yellow-black-yellow hazard rings, two cyan lights, a small cyan dot on a dark steel cap on top of the head. (4) Crystal pickaxe: the pick point is a glowing pink-purple six-sided crystal held in a light steel ring at the head block, a small crystal inlay on the chisel end, orange head block, three cyan lights, soft purple glow. (5) Titanium pickaxe: pale silvery-blue titanium head with a thin glowing cyan edge strip along the top of the pick, slightly bigger orange head block, four cyan lights, a glowing cyan ring around the pommel."
+  },
+  "spitzhacken-reihe-01": {
+   "bild": "referenz/bilder/ausruestung/spitzhacken-reihe-01.jpg",
+   "model": "marketing-studio/image",
+   "refs": [
+    "referenz/bilder/gebaeude/bohrer-01.jpg"
+   ],
+   "settings": {
+    "resolution": "2k",
+    "aspect_ratio": "16:9",
+    "quality": "high",
+    "enhance_prompt": false
+   },
+   "request_id": "01a1da70-fe0a-7c86-9d98-8c7bb423bf64",
+   "prompt": "Art style: stylized low-poly 3D game asset inspired by the chunky industrial factory design of the game Satisfactory, translated into a cheerful space-colony look for a Roblox tycoon game. Chunky simple geometric shapes, thick steel frames, bolted panels, hazard stripes, a warm palette of orange, yellow and steel grey with white and soft cyan-teal glowing accents. Flat faceted surfaces with flat colors, soft clean lighting, no realistic textures, no scratches, no dirt, toy-like and friendly for kids, not futuristic and not overly complicated, so everything can be rebuilt in Blender from basic shapes (boxes, octagonal cylinders, tapered wedges). Plain light grey background, no text, no letters, no numbers, no logos, no watermark, no people.\n\nThe attached reference image shows our finished game style: match its colors, materials, shading, bevels, bolts, hazard stripes and level of detail exactly. Use it only as a style reference unless the object text says otherwise.\n\nLayout: one single model sheet with two rows separated by a thin white line, five pickaxes per row in the same order, evenly spaced, each one slightly taller and more impressive than the one before (total height grows from 3.4 to 4.3 units). Top row: all five standing upright in a perfectly straight orthographic side view with no perspective, the pick point facing left and the chisel end facing right, so the silhouettes can be measured. Bottom row: the same five pickaxes in an isometric 3/4 view from front-left above. Object: five tiers of a chunky toy-like mining pickaxe for a kid-friendly mining game. All pickaxes share the same build: an octagonal steel handle with a grip at the bottom and a small octagonal pommel, stacked hazard-colored rings and a dark steel collar below the head, a blocky orange head block with beveled edges and bolts, a pick point to the front that tapers and curves slightly downward to a blunt rounded tip (not sharp, kid-friendly), and a shorter flat chisel end to the back that gets wider and flatter. Proportions: the head span is about three quarters of the total height, the pick point is about twice as long as the chisel end, the head block is roughly a cube about one fifth of the total height, the handle is thick and chunky like a toy. Left to right: (1) Rusty pickaxe: rust-brown head, dark rust-brown handle, grip wrapped in cream tape, a small bolted metal patch plate on the side of the head block, only two bolts, blunt chipped tip, no lights. (2) Iron pickaxe: plain steel-grey head, orange head block, black rubber grip with three ribs, one yellow ring below the head, one small cyan square light on the side of the head block. (3) Steel pickaxe: shiny light steel head, orange head block with copper-colored bolts, yellow-black-yellow hazard rings, two cyan lights, a small cyan dot on a dark steel cap on top of the head. (4) Crystal pickaxe: the pick point is a glowing pink-purple six-sided crystal held in a light steel ring at the head block, a small crystal inlay on the chisel end, orange head block, three cyan lights, soft purple glow. (5) Titanium pickaxe: pale silvery-blue titanium head with a thin glowing cyan edge strip along the top of the pick, slightly bigger orange head block, four cyan lights, a glowing cyan ring around the pommel."
+  }
+ }
+}

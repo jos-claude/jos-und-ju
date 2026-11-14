@@ -1,121 +1,98 @@
 # Bauplan: Spitzhacke (5 Stufen)
 
-- **Status:** Vorschlag (Jos' Claude, 14.11.2026). Wartet auf das OK von Jos und Ju. Der Blender-Bau kommt danach.
+- **Status:** Vorschlag (Jos' Claude). **v2 in Blender gebaut (14.11.2026)** nach den Higgsfield-Bildern. Wartet auf das OK von Jos und Ju, Import in Studio offen.
 - **Modelle:** `PickaxeRust`, `PickaxeIron`, `PickaxeSteel`, `PickaxeCrystal`, `PickaxeTitan`
+- **Dateien:** `../pickaxe.glb`, `../pickaxe.fbx`, `../pickaxe.blend`, Skript `../blender-skripte/build_pickaxe.py`
+- **Vorschau:** `../vorschau/pickaxe_vergleich.jpg` (oben Higgsfield-Bild, unten Blender), `../vorschau/pickaxe.png` (schräg), `../vorschau/pickaxe_side.png` (Seite), Shop-Icons `../vorschau/pickaxe_<stufe>_icon.png`
+- **Referenzbilder (Higgsfield, 14.11.):** `../../../referenz/bilder/ausruestung/spitzhacken-reihe-01.jpg` (Hauptvorlage), `spitzhacke-stahl-01.jpg` (Modellblatt Stahl), `spitzhacken-koepfe-01.jpg` (Köpfe)
 - **Spiel-Werte:** `../../../spiel/16-raeume-und-spitzhacke.md`, `../../../daten/upgrades.md`, Code `src/ReplicatedStorage/Shared/Config/Pickaxe.luau`
-- **3D-Vorschau zum Drehen:** Link im Abschnitt „Vorschau“ unten
 - **Gehört zu:** `schmiede-einrichtung.md` (Schmiede, Raum 2)
 
 ## Route: Blender-Skript, nicht Tripo
-Die Spitzhacke ist ein mechanisches Werkzeug aus einfachen Formen (Stiel, Block, zwei Keile). Wir brauchen fünf Stufen mit fast gleicher Form, und unser Stil ist „flache Farben ohne Texturen“ (`../README.md`). Tripo liefert texturierte Einzel-Meshes und passt deshalb nicht. Gebaut wird später mit einem Skript `blender-skripte/build_pickaxe.py` auf Basis von `gmt_lib.py`, wie Förderband und Lager-Kasten.
+Die Spitzhacke ist ein mechanisches Werkzeug aus einfachen Formen. Wir brauchen fünf Stufen mit fast gleicher Form, und unser Stil ist „flache Farben ohne Texturen“ (`../README.md`). Tripo liefert texturierte Einzel-Meshes und passt deshalb nicht. Neu bauen: `blender -b -P build_pickaxe.py -- --render`.
 
 ## Die Idee in einem Satz
-**Ein Gerüst, fünf Häute:** Alle Stufen haben denselben Aufbau (Knauf, Griff, Stiel, Kragen, Kopf-Block, Spitze, Flachende). Von Stufe zu Stufe wird die Hacke etwas größer, das Kopf-Material ändert sich, es kommen Warnringe und **cyanfarbene Stufen-Lichter** dazu (Stufe 1 hat keins, Stufe 5 hat vier). Dazu hat jede Stufe **ein Erkennungsmerkmal**. So sieht man die Stufe auf einen Blick, auch klein in der Hand.
+**Ein Gerüst, fünf Häute:** Alle Stufen haben denselben Aufbau (Knauf, Griff, Stiel, Warnringe, Kragen, Kopf-Block mit Kappe, Sichel-Spitze, Hammer-Ende). Von Stufe zu Stufe wird die Hacke etwas größer, das Kopf-Material ändert sich, und es kommen **cyanfarbene Stufen-Lichter** dazu (Stufe 1 hat keins, Stufe 5 hat vier). Dazu hat jede Stufe **ein Erkennungsmerkmal**.
 
-Stil-Anker: wie der Bohrer (`../../../referenz/bilder/gebaeude/bohrer-01.jpg`) und der Lager-Kasten (`../vorschau/ore_bin.png`): Orange als Marken-Farbe am Kopf-Block, Stahlgrau, Warnstreifen Gelb/Schwarz, cyanfarbene Lichter, dicke Fasen, spielzeughaft. Die Spitze ist **stumpf** (Kinder-Spiel, nichts Spitzes, Gefährliches).
+Die Spitze ist **stumpf** (Kinder-Spiel, nichts Spitzes).
+
+## Was sich durch die Bilder geändert hat (v1 → v2)
+| Teil | v1 (Plan) | v2 (gebaut, wie im Bild) |
+|---|---|---|
+| Spitze | fast gerade, schnell dünn | **Sichel:** setzt oben am Block an, macht einen kleinen Buckel und biegt deutlich nach unten, bleibt lange dick |
+| Rückseite | breites, flaches Meißel-Ende | **kurzes Hammer-Ende:** dunkler Hals und ein etwas größeres Schlagstück mit Fasen |
+| Kappe | flache Platte | **achteckige Kappe**, ab Stahl mit Cyan-Licht oben |
+| Stiel | dünn, dunkel | dicker, mittleres Grau (`SteelMid`) |
+| Griff | 3 schmale Rillen | 4 dicke Gummi-Ringe, darunter Knauf mit orangem Endring |
+| Lichter | in einer Reihe | 1 = Mitte, 2 = nebeneinander, 3 = Reihe, 4 = 2×2, jeweils mit hellem Rahmen |
+| Bolzen | alle Stufen | nur Stahl (Kupfer) und Kristall (hell), wie im Bild |
+| Länge der Spitze | 1,05 bis 1,75 | 1,00 bis 1,55 (Spannweite etwa zwei Drittel der Höhe, wie im Bild) |
 
 ## Einheiten und Ausrichtung (wie alle unsere Modelle)
 - 1 Blender-Einheit = 1 Stud.
 - Die Hacke **steht aufrecht**: Stiel entlang +Z, Unterkante Knauf bei z = 0.
-- **Spitze zeigt nach −Y** (Vorderseite), Flachende nach +Y, die schmale Seite liegt in X.
-- Zum Vergleich: Eine Roblox-Figur (R15) ist etwa 5 Studs groß, die Hand hängt bei etwa 2,5 Studs. Die Hacke ist mit 3,4 bis 4,3 Studs absichtlich groß (Simulator-Look, gut lesbar).
+- **Spitze zeigt nach −Y** (Vorderseite), Hammer-Ende nach +Y, die schmale Seite liegt in X.
+- Eine Roblox-Figur (R15) ist etwa 5 Studs groß. Die Hacke ist mit 3,4 bis 4,3 Studs absichtlich groß (Simulator-Look, gut lesbar).
 
-## Maße je Stufe
+## Maße je Stufe (gebaut)
+`h` = Gesamthöhe ohne Licht auf der Kappe, `P` = Länge der Spitze, `Q` = Länge des Hammer-Endes (jeweils ab Block-Kante). Kopf-Mitte `Lc = h − 0,15 − Blockhöhe/2`.
 
-`Lc` = Höhe der Kopf-Mitte, `P` = Länge der Spitze, `Q` = Länge des Flachendes (jeweils ab der Block-Kante).
-
-| Stufe | Modell | Lc | P | Q | Gesamthöhe | Spannweite Kopf | Kopf-Block (X × Y × Z) |
+| Stufe | Modell | h | P | Q | Kopf-Block (X × Y × Z) | Spannweite | Dreiecke |
 |---|---|---|---|---|---|---|---|
-| 1 Rost | `PickaxeRust` | 3,0 | 1,05 | 0,55 | 3,4 | 2,5 | 0,6 × 0,9 × 0,8 |
-| 2 Eisen | `PickaxeIron` | 3,2 | 1,20 | 0,60 | 3,7 | 2,7 | 0,6 × 0,9 × 0,8 |
-| 3 Stahl | `PickaxeSteel` | 3,4 | 1,40 | 0,70 | 3,9 | 3,0 | 0,6 × 0,9 × 0,8 |
-| 4 Kristall | `PickaxeCrystal` | 3,6 | 1,55 | 0,75 | 4,1 | 3,2 | 0,6 × 0,9 × 0,8 |
-| 5 Titan | `PickaxeTitan` | 3,8 | 1,75 | 0,85 | 4,3 | 3,6 | 0,66 × 1,0 × 0,88 (+10 %) |
+| 1 Rost | `PickaxeRust` | 3,4 | 1,00 | 0,50 | 0,60 × 0,66 × 0,84 | 2,18 | 704 |
+| 2 Eisen | `PickaxeIron` | 3,7 | 1,15 | 0,50 | 0,62 × 0,68 × 0,88 | 2,33 | 724 |
+| 3 Stahl | `PickaxeSteel` | 3,9 | 1,30 | 0,55 | 0,62 × 0,68 × 0,90 | 2,53 | 1.016 |
+| 4 Kristall | `PickaxeCrystal` | 4,1 | 1,40 | 0,55 | 0,62 × 0,68 × 0,90 | 2,65 | 1.148 |
+| 5 Titan | `PickaxeTitan` | 4,3 | 1,55 | 0,60 | 0,68 × 0,75 × 0,98 | 2,93 | 1.000 |
 
-Gesamthöhe = Lc + halber Block + Deckplatte. Spannweite = Block-Tiefe + P + Q.
+Budget war höchstens 1.500 Dreiecke je Stufe, alle liegen darunter.
 
 ## Teile (Gerüst, gilt für alle Stufen)
+Alle Zylinder 8-eckig.
 
-Alle Zylinder 8-eckig (wie gedrechselt, low-poly), Fasen klein halten.
-
-| # | Teil | Form (gmt_lib) | Maße | Lage | Material |
-|---|---|---|---|---|---|
-| 1 | Knauf | `cylinder`, 8 Seg. | r 0,27, Höhe 0,30, Fase 0,05 | z 0 – 0,30 | SteelDark |
-| 2 | Griff | `cylinder`, 8 Seg. | r 0,21 | z 0,30 – 1,40 | Belt (Gummi) |
-| 2a | Griff-Rillen | 3 × `cylinder`, 8 Seg. | r 0,235, Höhe 0,08 | z 0,60 / 0,90 / 1,20 | wie Griff |
-| 3 | Stiel | `cylinder`, 8 Seg. | r 0,15 | z 1,40 – Lc (endet im Block) | SteelDark |
-| 4 | Warnringe | `cylinder`, 8 Seg., je Höhe 0,10 | r 0,18 | direkt unter dem Kragen, von unten: Gelb, Schwarz, Gelb | Yellow / Black |
-| 5 | Kragen | `cylinder`, 8 Seg. | r 0,22, Höhe 0,25 | z Lc − 0,65 – Lc − 0,40 | SteelDark |
-| 6 | Kopf-Block | `box`, Fase 0,08 | siehe Tabelle | Mitte (0, 0, Lc) | Orange (Rost: RustDark) |
-| 7 | Deckplatte | `box`, Fase 0,02 | 0,46 × 0,70 × 0,08 | oben auf dem Block | SteelDark |
-| 8 | Bolzen | je X-Seite 4 × `cylinder` (Achse X), 8 Seg. | r 0,07, Tiefe 0,05 | y ±0,30, z Lc ± 0,25 | SteelLight |
-| 9 | Stufen-Lichter | `box` | 0,04 × 0,10 × 0,10 | beide X-Seiten, z = Lc, in einer Reihe, Abstand 0,15, mittig | Cyan (Neon) |
-| 10 | Spitze | Loft aus 3 Querschnitten (XZ-Ebene) | siehe unten | nach −Y | Kopf-Material der Stufe |
-| 11 | Flachende | Loft aus 2 Querschnitten | siehe unten | nach +Y | Kopf-Material der Stufe |
-
-**Spitze (Teil 10)**, Querschnitte als Rechtecke in der XZ-Ebene, relativ zur Kopf-Mitte (0, 0, Lc). Die Spitze biegt sich leicht nach unten, wie bei einer echten Hacke. R0 sitzt an der Block-Kante (y = ±0,45, bei Titan ±0,50):
-
-| Querschnitt | y | Breite X | Höhe Z | Mitte z (relativ) |
-|---|---|---|---|---|
-| R0 (am Block) | −0,45 | 0,50 | 0,60 | 0 |
-| R1 (Mitte) | −0,45 − 0,55·P | 0,36 | 0,40 | −0,08 |
-| R2 (Spitze) | −0,45 − P | 0,10 | 0,10 | −0,28 |
-
-**Flachende (Teil 11)**, wird breiter und flacher (Meißel-Form):
-
-| Querschnitt | y | Breite X | Höhe Z | Mitte z (relativ) |
-|---|---|---|---|---|
-| R0 (am Block) | +0,45 | 0,50 | 0,60 | 0 |
-| R1 (Schneide) | +0,45 + Q | 0,70 | 0,14 | −0,12 |
-
-`gmt_lib.loft_rings` nimmt Ringe in der XY-Ebene. Für Spitze und Flachende braucht das Skript eine kleine Hilfsfunktion `rect_ring_xz(w, h, y, zc)`, die die vier Ecken in der XZ-Ebene liefert.
+| Teil | Maße | Lage (z) | Material |
+|---|---|---|---|
+| Endring | r 0,285, Höhe 0,07 | 0 – 0,07 | Orange (Titan: Cyan, Rost: keiner) |
+| Knauf | r 0,28, Fase 0,04 | bis 0,40 | SteelDark (Titan: Titan) |
+| Griff (Gruppe `Handle`) | r 0,215 | 0,40 – 1,35 | Belt (Rost: Cream = Klebeband) |
+| Griff-Ringe (Gruppe `Handle`) | 4 × r 0,26, je 0,16 hoch | Mitte bei 0,52 / 0,76 / 1,00 / 1,24 | wie Griff |
+| Stiel | r 0,19 | 1,35 – Lc | SteelMid (Rost: RustDark) |
+| Kragen | r 0,27, Höhe 0,20 | direkt unter dem Block | SteelDark (Rost: RustDark) |
+| Warnringe | r 0,245, Gelb 0,10 / Schwarz 0,07 hoch | unter dem Kragen, von oben Gelb, Schwarz, Gelb | Yellow / Black |
+| Kopf-Block | siehe Tabelle, Fase 0,08 | Mitte Lc | Orange (Rost: RustDark) |
+| Kappe | r 0,24, Höhe 0,15 (Rost r 0,18) | auf dem Block | SteelDark (Rost: RustDark) |
+| Kappen-Licht (ab Stahl) | r 0,08 (Titan 0,10) | oben auf der Kappe | Cyan |
+| Stufen-Lichter | 0,13 × 0,13 (ab 3 Lichtern 0,11), heller Rahmen 0,06 größer | beide X-Seiten, um Lc | Cyan, Rahmen SteelLight |
+| Spitze | Loft aus 5 Querschnitten (Achteck) entlang einer Bezier-Kurve: Ansatz (y −Block/2, z Lc + 0,08·Blockhöhe), Buckel +0,10 bei halber Länge, Ende 0,46·P tiefer. Querschnitt 0,42 × 0,56 am Block bis 0,09 × 0,10 an der Spitze (Rost 0,17 × 0,16, stumpf) | nach −Y | Kopf-Material |
+| Hammer-Ende | Hals 0,30 × 0,55·Q × 0,34 (dunkel), Schlagstück 0,38 × 0,45·Q × 0,44 mit Fase 0,06 | nach +Y, Mitte knapp über Lc | Hals SteelDark, Schlagstück Kopf-Material |
 
 ## Was jede Stufe anders macht
+| Stufe | Kopf-Material | Ringe | Lichter | Erkennungsmerkmal |
+|---|---|---|---|---|
+| 1 Rost | Rust (Block RustDark) | keine | 0 | **Zusammengeflickt:** Klebeband-Griff, brauner Stiel, graue Flicken-Platte mit 2 Bolzen auf der +X-Seite, stumpfe Spitze, kleine Kappe |
+| 2 Eisen | SteelGrey | 1 Gelb | 1 | **Ehrliches Werkzeug:** sauber, nichts Besonderes, oranger Endring |
+| 3 Stahl | SteelLight | Gelb/Schwarz/Gelb | 2 | **Kupfer-Bolzen** in den Block-Ecken, Cyan-Licht auf der Kappe |
+| 4 Kristall | Spitze Crystal, Rest SteelLight | Gelb/Schwarz/Gelb | 3 | **Kristall-Spitze:** 6-eckiger Kristall in einem hellen Halte-Ring, kleiner Kristall auf der Schlagfläche, helle Bolzen |
+| 5 Titan | Titan, Block 10 % größer | Gelb/Schwarz/Gelb | 4 (2×2) | **Leuchtkante** oben auf der Sichel, Cyan-Streifen auf der Schlagfläche, Titan-Knauf mit Cyan-Endring |
 
-| Stufe | Kopf-Material | Kopf-Block | Warnringe | Stufen-Lichter | Erkennungsmerkmal | Leuchten in Roblox |
-|---|---|---|---|---|---|---|
-| 1 Rost | Rust | RustDark | keine | 0 | **Zusammengeflickt:** Griff mit Klebeband (Cream statt Gummi), Stiel RustDark, Flicken-Platte (SteelGrey, 0,42 × 0,06 × 0,30, um 10° gekippt, 2 Bolzen) auf der +X-Seite, je Seite nur 2 statt 4 Bolzen (über Kreuz), keine Deckplatte, Spitze abgestumpft (R2: 0,20 × 0,18) | – |
-| 2 Eisen | SteelGrey | Orange | 1 (nur Gelb) | 1 | **Ehrliches Werkzeug:** sauber, nichts Besonderes. Die erste „richtige“ Hacke. | – |
-| 3 Stahl | SteelLight | Orange | 3 (Gelb/Schwarz/Gelb) | 2 | **Kupfer-Bolzen** (Copper statt SteelLight), cyanfarbener Status-Punkt auf der Deckplatte (0,12 × 0,12 × 0,04, Neon) | – |
-| 4 Kristall | Spitze: Crystal; Flachende: SteelLight | Orange | 3 | 3 | **Kristall-Spitze:** Statt des Lofts eine 6-eckige Kristall-Pyramide (r 0,24, Länge P, Achse −Y) in einem Halte-Ring (SteelLight, r 0,30, Tiefe 0,15, bei y −0,50). Kleiner Kristall-Einsatz oben auf dem Flachende (0,08 × 0,35 × 0,05, längs). | PointLight violett, Range 5 |
-| 5 Titan | Titan | Orange, 10 % größer | 3 | 4 | **Leuchtkante:** Cyan-Neonstreifen (0,08 breit, 0,04 hoch) auf dem Rücken von Spitze und Flachende, Cyan-Leuchtring um den Knauf (r 0,28, Höhe 0,06, bei z 0,15) | PointLight cyan, Range 5 |
+Leuchten in Roblox (macht das Setup-Skript oder Jus Code): Kristall PointLight violett, Titan PointLight cyan, je Range 5.
 
-Warum Orange für den Kopf-Block ab Stufe 2: Orange ist die Farbe unserer Maschinen (Bohrer, Basis, Lager). Die Hacke gehört so sichtbar zur Kolonie. Die Stufe erkennt man an Kopf-Material, Lichtern und Merkmal.
-
-## Neue Farben für `gmt_materials.py` (Vorschlag)
-Stimmen mit den Erzfarben im Code überein (`Config/BaseLayout.luau`, `oreColors`).
-
-| Name | Farbe | Typ | Wofür |
-|---|---|---|---|
-| `Rust` | `#A65A35` | paint | Kopf der Rost-Hacke |
-| `RustDark` | `#5E3524` | paint | Block und Stiel der Rost-Hacke |
-| `Copper` | `#D9853F` | steel | Bolzen der Stahl-Hacke |
-| `Crystal` | `#BE6EF0` | neon | Kristall-Spitze (= Erzfarbe Kristall) |
-| `Titan` | `#C8D6E4` | steel | Kopf der Titan-Hacke (= Erzfarbe Titan) |
-
-Vorhandene Farben, die benutzt werden: Orange, Yellow, Black, Cream, SteelGrey, SteelDark, SteelLight, Belt, Cyan.
+## Farben in `gmt_materials.py`
+Neu am 14.11.: `Rust` `#A65A35`, `RustDark` `#5E3524`, `Copper` `#D9853F`, `Crystal` `#BE6EF0` (Neon, = Erzfarbe), `Titan` `#C8D6E4` (= Erzfarbe), `SteelMid` `#5E656D` (Stiel).
 
 ## Objekte in Blender → Teile in Roblox
-Wie bei allen Modellen: **ein Objekt pro (Gruppe, Material)**, z. B. `PickaxeIron_SteelDark`, `PickaxeIron_Orange`.
+Wie bei allen Modellen: **ein Objekt pro (Gruppe, Material)**, z. B. `PickaxeIron_SteelMid`, `PickaxeIron_Orange`.
 
-- **Gruppe `Handle`:** nur der Griff mit den Rillen (`PickaxeIron_Handle_Belt`). Das Setup-Skript benennt ihn in Roblox in **`Handle`** um, alle anderen Teile werden daran geschweißt. Der Griff ist genau da, wo die Hand hält.
-- **Gruppe `Glow`:** alle Neon-Teile (Stufen-Lichter, Status-Punkt, Kristall, Leuchtkante). So kann der Code sie beim Schlag kurz aufblitzen lassen.
-- **Griffpunkt:** Mitte des Griffs bei (0, 0, 0,85). Weil das die Mitte der `Handle`-MeshPart ist, braucht `Tool.Grip` keine Verschiebung, nur die Drehung (Kopf oben, Spitze nach vorn). Die Drehung bitte einmal im Play einstellen, das Ergebnis hier eintragen.
-- **Budget:** höchstens 1.500 Dreiecke je Stufe (Erwartung: etwa 900 bis 1.300). Das ist wenig, weil die Hacke jeder Spieler ständig in der Hand hat.
-- **Export:** eine `.fbx`/`.glb` mit allen 5 Stufen nebeneinander (x = 0, 3, 6, 9, 12), wie bei den Erzbrocken.
-- **Icons:** Das Skript kann mit `-- --render` zusätzlich je Stufe ein quadratisches Icon (512²) für den Shop rendern.
+- **Gruppe `Handle`:** Griff mit den 4 Ringen (`PickaxeIron_Handle_Belt`). Das Setup-Skript benennt ihn in Roblox in **`Handle`** um, alle anderen Teile werden daran geschweißt.
+- **Gruppe `Glow`:** alle Neon-Teile (Lichter, Kappen-Licht, Kristall, Leuchtkante, Titan-Endring). So kann der Code sie beim Schlag kurz aufblitzen lassen.
+- **Griffpunkt:** Mitte des Griffs bei (0, 0, 0,875). Weil das die Mitte der `Handle`-MeshPart ist, braucht `Tool.Grip` keine Verschiebung, nur die Drehung (Kopf oben, Spitze nach vorn). Die Drehung bitte einmal im Play einstellen und hier eintragen.
+- **Export:** eine `.glb`/`.fbx` mit allen 5 Stufen nebeneinander (x = 0, 3, 6, 9, 12), wie bei den Erzbrocken.
 
 ## Wie die Hacke im Spiel auftaucht (offen, betrifft Jus Code)
 Im Moment sieht man beim Hacken keine Hacke (`PickaxeController` arbeitet nur mit dem Prompt). Vorschlag: Die Hacke ist ein Roblox-`Tool`, das beim Hacken automatisch in die Hand kommt, mit einer kurzen Schlag-Animation pro Schlag (Ausholen 0,15 s, Schlag 0,1 s). Das entscheidet Ju zusammen mit Jos.
 
-## Referenzbild für Gemini
-Wie bei Bohrer und Lager-Kasten kann Jos vorher ein Referenzbild machen. Die Prompts stehen in `../../../referenz/bild-prompts.md` unter „8. Spitzhacke“. Ohne Bild geht es auch: Dieser Bauplan reicht für den Blender-Bau.
-
-## Vorschau
-Eine drehbare 3D-Vorschau (grobe Klötzchen nach genau diesen Maßen, noch ohne Fasen) liegt als Artifact bei Jos. Sie ersetzt nicht den Blender-Bau, sie zeigt nur Proportionen und Farben.
-
 ## Offene Fragen
-- [ ] Passen Größe (3,4 bis 4,3 Studs) und die 5 Erkennungsmerkmale? (Jos, Ju)
-- [ ] Orange-Block ab Stufe 2 oder lieber je Stufe eine eigene Block-Farbe?
+- [ ] Passt v2 so (Form, Größe 3,4 bis 4,3 Studs, Erkennungsmerkmale)? (Jos, Ju)
+- [ ] Lichter: gebaut nach der Regel „Stufe minus 1“ (0 bis 4). Das Higgsfield-Bild zeigt bei Stahl und Kristall je eins weniger. Regel behalten?
 - [ ] Wie hält der Spieler die Hacke: `Tool` oder fest an der Hand, nur beim Hacken sichtbar? (Ju, Code)
-- [ ] Referenzbild erst in Gemini machen oder direkt nach diesem Plan bauen? (Jos)
+- [ ] Wer importiert in Studio (Upload über Open Cloud auf Jus Konto, wie bei den anderen Modellen)?
