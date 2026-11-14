@@ -35,7 +35,10 @@ function GameModels.clone(name: string): Model?
 	end
 	local copy = original:Clone()
 	for attribute in copy:GetAttributes() do
-		copy:SetAttribute(attribute, nil)
+		-- RBX_... (z. B. RBX_ReimportId vom Import) darf ein Spielskript nicht ändern: stehen lassen.
+		if string.sub(attribute, 1, 4) ~= "RBX_" then
+			copy:SetAttribute(attribute, nil)
+		end
 	end
 	for _, d in copy:GetDescendants() do
 		if d:IsA("BaseScript") then

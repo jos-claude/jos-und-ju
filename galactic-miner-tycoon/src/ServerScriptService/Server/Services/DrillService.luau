@@ -154,23 +154,32 @@ local function buildModel(world: World, state: DrillState)
 	local drill: GreyboxDrill.DrillModel? = nil
 	local modelName = BaseLayout.drills.modelName
 	if modelName then
-		-- 3D-Modell: Sockel auf der Seite des Felsens, die zur Basis zeigt (dort kommt der Spieler her).
-		local hall = BaseLayout.hall
-		drill = GreyboxDrill.buildFromModel(
-			modelName,
-			folder,
-			state.nodeId,
-			state.drillId,
-			node.x,
-			node.z,
-			Vector3.new(hall.centerX - node.x, 0, hall.centerZ - node.z),
-			BaseLayout.drills.modelOffset,
-			function(x: number, z: number): number
-				return (Ground.heightAt(x, z))
-			end,
-			oreColor,
-			BaseLayout.drills.promptDistance
-		)
+		-- Fehler beim 3D-Modell dürfen die Bohrer-Schleife nie anhalten: abfangen, dann Greybox.
+		local ok, result = pcall(function(): GreyboxDrill.DrillModel?
+			-- 3D-Modell: Sockel auf der Außenseite des Felsens (weg von der Basis). Dort stehen sicher keine
+			-- Gebäude, weil Vorkommen Abstand zu Halle und Schmiede halten.
+			local hall = BaseLayout.hall
+			return GreyboxDrill.buildFromModel(
+				modelName,
+				folder,
+				state.nodeId,
+				state.drillId,
+				node.x,
+				node.z,
+				Vector3.new(node.x - hall.centerX, 0, node.z - hall.centerZ),
+				BaseLayout.drills.modelOffset,
+				function(x: number, z: number): number
+					return (Ground.heightAt(x, z))
+				end,
+				oreColor,
+				BaseLayout.drills.promptDistance
+			)
+		end)
+		if ok then
+			drill = result
+		else
+			warn(`[DrillService] 3D-Modell {modelName} für {state.nodeId} gescheitert, nehme Greybox: {result}`)
+		end
 	end
 	if not drill then
 		drill = GreyboxDrill.buildDrill(

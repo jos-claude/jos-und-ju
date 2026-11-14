@@ -211,8 +211,12 @@ local function build()
 	end
 	local outsideY = Ground.heightAt(BaseLayout.pads.forgeRoom.x, BaseLayout.pads.forgeRoom.z)
 
-	-- 3D-Modell von Jos (BaseRoom), sonst Greybox
-	forgeRoom = GreyboxShop.buildForgeFromModel(root, f, forgeY) or GreyboxShop.buildForge(root, f, forgeY)
+	-- 3D-Modell von Jos (BaseRoom), sonst Greybox. Ein Fehler beim Modell darf den Shop nie anhalten.
+	local ok, room = pcall(GreyboxShop.buildForgeFromModel, root, f, forgeY)
+	if not ok then
+		warn(`[ShopService] Schmiede-Modell gescheitert, nehme Greybox: {room}`)
+	end
+	forgeRoom = (ok and room) or GreyboxShop.buildForge(root, f, forgeY)
 	GreyboxShop.closeDoor(forgeRoom :: GreyboxShop.Room, `GESPERRT\n{Wallet.describe(Rooms.byId.forge.cost)}`)
 
 	local p = BaseLayout.pads

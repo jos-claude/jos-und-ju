@@ -135,7 +135,7 @@ local function setCost(pad: Pad, entries: { CostEntry })
 		local icon = Instance.new("Frame")
 		icon.Name = `Icon_{entry.ore}`
 		icon.LayoutOrder = i * 2
-		icon.Size = UDim2.fromScale(0.12, 0.8)
+		icon.Size = UDim2.fromScale(0.8, 0.8) -- RelativeYY: beide Werte beziehen sich auf die Höhe → Quadrat
 		icon.SizeConstraint = Enum.SizeConstraint.RelativeYY
 		icon.BackgroundColor3 = entry.color
 		local c = Instance.new("UICorner")
